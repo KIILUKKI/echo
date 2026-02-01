@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>How To — Use Echo</title>
+<link rel="icon" type="image/png" sizes="512x512" href="images/echo_space_favicon.png">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#0f0b1a;
+  --card:#18122b;
+  --card-soft:#1f1836;
+  --accent:#8b5cf6;
+  --accent-soft:#a78bfa;
+  --text:#e9e7f5;
+  --muted:#b6b2d6;
+  --border:rgba(139,92,246,0.25);
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:Inter,system-ui,sans-serif;
+  background:
+    radial-gradient(1200px 600px at 20% -10%, rgba(139,92,246,0.15), transparent 60%),
+    radial-gradient(900px 500px at 90% 10%, rgba(167,139,250,0.12), transparent 60%),
+    var(--bg);
+  color:var(--text);
+  line-height:1.6;
+}
+
+.wrapper{
+  max-width:900px;
+  padding:32px 20px 56px;
+  margin:0 auto;
+}
+
+.header{
+  text-align:center;
+  margin-bottom:32px;
+}
+
+.header h1{
+  font-size:32px;
+  margin:0 0 8px;
+  background:linear-gradient(90deg,var(--accent),var(--accent-soft));
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+
+.header p{
+  margin:0;
+  color:var(--muted);
+}
+
+.section{
+  background:linear-gradient(180deg,var(--card),var(--card-soft));
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:22px 24px;
+  margin-bottom:18px;
+  box-shadow:0 20px 40px rgba(0,0,0,0.35);
+}
+
+.section h2{
+  margin:0 0 12px;
+  font-size:20px;
+  color:var(--accent-soft);
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.section ul{
+  margin:0;
+  padding-left:18px;
+}
+
+.section li{
+  margin:6px 0;
+}
+
+kbd{
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:6px;
+  padding:2px 6px;
+  font-size:12px;
+}
+
+.badge{
+  display:inline-block;
+  padding:2px 8px;
+  border-radius:999px;
+  font-size:12px;
+  background:rgba(139,92,246,0.15);
+  color:var(--accent-soft);
+  border:1px solid var(--border);
+}
+
+.footer{
+  text-align:center;
+  margin-top:28px;
+  font-size:13px;
+  color:var(--muted);
+}
+
+@media (max-width:600px){
+  .header h1{font-size:26px}
+  .section{padding:18px}
+}
+</style>
+</head>
+
+<body>
+<div class="wrapper">
+
+  <div class="header">
+    <h1>How To Use Echo</h1>
+    <p>Everything you need to get started, smooth & simple</p>
+  </div>
+
+  <div class="section">
+    <h2>✨ Getting Started</h2>
+    <ul>
+      <li>Create or join a room using <strong>Create / Join Room</strong>.</li>
+      <li>Pick a nickname and color. Guests are auto-assigned a soft grey tone.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>💬 Rooms</h2>
+    <ul>
+      <li><span class="badge">Desktop</span> Rooms list is on the left.</li>
+      <li>Use the lobby size control to resize the left panel.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>✍️ Sending Messages</h2>
+    <ul>
+      <li>Type your message and press <kbd>Enter</kbd>.</li>
+      <li>Use the emoji picker next to the input to add emojis.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>↩️ Replying</h2>
+    <ul>
+      <li><span class="badge">Desktop</span> Hover a message and click <strong>Reply</strong>.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>🛠️ Edit & Delete</h2>
+    <ul>
+      <li><span class="badge">Desktop</span> Use the <strong>⋯</strong> menu on your messages.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>👀 Typing & Seen</h2>
+    <ul>
+      <li>Typing indicator shows who is currently typing.</li>
+      <li><span class="badge">Desktop</span> Hover a message to see who has seen it.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>⌨️ Keyboard Shortcuts</h2>
+    <ul>
+      <li><kbd>Esc</kbd> Close menus</li>
+      <li><kbd>Ctrl</kbd> / <kbd>Cmd</kbd> + <kbd>Enter</kbd> Send message</li>
+      <li><kbd>?</kbd> Open How To</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>🖥️ Desktop Experience</h2>
+    <ul>
+      <li>Lobby and chat remain visible side-by-side.</li>
+      <li>Hover effects reveal profiles and seen receipts.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>👑 Admin & Roles</h2>
+    <ul>
+      <li>Room creators become <strong>Admins</strong> automatically.</li>
+      <li>Admins can <strong>/clear</strong> messages and <strong>/delete</strong> rooms.</li>
+      <li>Use <strong>/giveadmin [username]</strong> to promote other users to admin.</li>
+      <li>Type <strong>/roles</strong> to choose a role (Duck, Stoner, Chad, Coder).</li>
+      <li>Roles appear as colored badges next to your name.</li>
+      <li>Admins show both 👑 ADMIN badge + their role badge.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>👥 Online Users</h2>
+    <ul>
+      <li>Click the <strong>👥</strong> button in chat to see online users.</li>
+      <li>Green dot = online (active in last 5 minutes).</li>
+      <li>Grey dot = offline.</li>
+      <li>Only registered users appear (not guests).</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>⚙️ Account Settings</h2>
+    <ul>
+      <li>Settings gear lets you log out or delete your account.</li>
+      <li><strong>Change Username:</strong> Update your account name (requires password).</li>
+      <li><strong>Change Password:</strong> Update your account password.</li>
+      <li>Guests appear as <strong>Guest####</strong> and cannot change username/password.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>📝 Chat Commands</h2>
+    <ul>
+      <li><kbd>/help</kbd> — Show all available commands</li>
+      <li><kbd>/roll [n]</kbd> — Roll 1-10 dice (default 1)</li>
+      <li><kbd>/coin</kbd> — Flip a coin</li>
+      <li><kbd>/tableflip</kbd> — (╯°□°）╯︵ ┻━┻</li>
+      <li><kbd>/shrug</kbd> — ¯\_(ツ)_/¯</li>
+      <li><kbd>/clear</kbd> — Delete all messages (Admin only)</li>
+      <li><kbd>/delete</kbd> — Delete room (Admin only)</li>
+      <li><kbd>/giveadmin [username]</kbd> — Give admin rights (Admin only)</li>
+      <li><kbd>/roles</kbd> — Open role selection panel</li>
+    </ul>
+  </div>
+
+  <div class="footer">
+    <p>Happy chatting! 🚀</p>
+  </div>
+
+</div>
+</body>
+</html>

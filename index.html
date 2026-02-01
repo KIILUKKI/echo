@@ -1,0 +1,2606 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Echo</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" sizes="512x512" href="images/echo_space_favicon.png">
+
+
+<style>
+  :root{
+    --bg:#0b0f14;
+    --panel:#161b22;
+    --muted:#8b949e;
+    --accent:#7700ff;
+    --card:#21262d;
+    --text:#e6edf3;
+    --lobby-width:260px;
+    --drawer-duration: 200ms; /* smooth, brisk but not too fast */
+    --drawer-ease: cubic-bezier(.16,.84,.24,1);
+    --guest-gray: #9aa0a6;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}
+  #app{width:100%;height:100%;position:relative;overflow:hidden}
+
+/* TOP-RIGHT CONTROLS: container to avoid overlapping */
+#topRightControls{
+  position:fixed;
+  top:12px;
+  right:12px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  z-index:120; /* high so menus appear below but above main UI */
+  pointer-events:auto;
+}
+
+/* HOW / FULL / SETTINGS (buttons inside container) */
+#howBtn, #fullBtn, #settingsBtn{
+  background:transparent;
+  border:0;
+  color:var(--text);
+  font-size:14px;
+  padding:8px 12px;
+  border-radius:10px;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  min-height:40px;
+  min-width:40px;
+  justify-content:center;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+}
+#howBtn:hover, #fullBtn:hover, #settingsBtn:hover{ background:rgba(255,255,255,0.02) }
+
+/* Make fullscreen button slightly larger / more prominent */
+#fullBtn{
+  font-size:15px;
+  padding:10px 14px;
+  border-radius:12px;
+  font-weight:600;
+}
+
+/* SETTINGS MENU & HOW MENU anchored under container (aligned to right) */
+.settings-menu{position:fixed;top:56px;right:12px;background:var(--panel);border:1px solid #0d1117;padding:8px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.6);display:none;z-index:119}
+.settings-menu.show{display:block}
+.settings-menu button{display:block;width:100%;padding:8px 12px;background:transparent;border:0;color:var(--text);text-align:left;border-radius:8px;cursor:pointer}
+.settings-menu button:hover{background:rgba(255,255,255,0.03)}
+#settingsNotifications:hover{background:rgba(255,255,255,0.03)}
+
+.how-menu{position:fixed;top:56px;right:12px;width:360px;max-height:60vh;background:var(--panel);border:1px solid #0d1117;padding:12px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.6);display:none;z-index:121;overflow:auto}
+.how-menu.show{display:block}
+.how-menu h3{margin:0 0 8px 0;font-size:15px}
+.how-menu .section{margin-bottom:10px;font-size:13px;color:var(--muted)}
+.how-menu .section b{color:var(--text)}
+.how-menu .close-how{display:block;margin-top:8px;padding:8px;border-radius:8px;background:transparent;border:0;color:var(--text);cursor:pointer;text-align:right}
+.how-menu .close-how:hover{background:rgba(255,255,255,0.02)}
+
+/* PROFILE CARD */
+.profile-card{position:fixed;top:56px;right:12px;background:var(--panel);border:1px solid #0d1117;padding:12px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.6);display:none;z-index:118;width:220px}
+.profile-card.show{display:block}
+.profile-card .row{display:flex;justify-content:space-between;margin-bottom:6px}
+
+/* LOGIN */
+#login{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px;background:var(--bg);z-index:30;padding:20px;}
+#login input{padding:12px;border-radius:10px;border:none;background:var(--card);color:var(--text);width:100%;max-width:360px}
+#login button{padding:12px 18px;border:none;border-radius:10px;background:var(--accent);color:#000;font-weight:700;cursor:pointer;max-width:360px;width:100%}
+#login .small{background:transparent;border:1px solid #333;padding:8px;border-radius:8px;color:var(--muted);cursor:pointer}
+#loginMsg{margin-top:10px;font-size:13px;color:var(--muted);min-height:18px}
+
+/* APP LAYOUT */
+#home,#main{position:absolute;inset:0;display:none}
+#home{display:flex;flex-direction:row}
+
+/* Lobby (left) */
+#homeLeft{
+  width:var(--lobby-width);
+  min-width:120px;
+  background:var(--panel);
+  padding:12px;
+  border-right:1px solid #0d1117;
+  height:100%;
+  overflow:auto;
+  transition:
+    width 200ms ease,
+    transform 220ms cubic-bezier(.2,.9,.3,1);
+  position:relative;
+}
+
+#homeLeft.collapsed{
+  width:40px;
+  padding:8px;
+}
+
+#lobbyHeader{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:10px;
+}
+
+#lobbyTitle{
+  flex:1;
+  font-weight:700;
+}
+
+.room{
+  padding:10px 12px;
+  border-radius:10px;
+  background:var(--card);
+  margin-bottom:8px;
+  cursor:pointer;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.room:hover{
+  background:var(--accent);
+  color:#000;
+}
+
+
+/* lobby controls */
+#lobbyControls{display:flex;gap:6px;align-items:center;margin-bottom:8px}
+.iconbtn{background:transparent;border:0;color:var(--text);padding:6px;border-radius:8px;cursor:pointer}
+.iconbtn:active{transform:scale(0.98)}
+#lobbySizeBtn{font-weight:700;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.03)}
+
+/* ================== Home Center ================== */
+#homeCenter {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  padding: 18px;
+  overflow: hidden;
+}
+
+/* TAUSTA (vain Lobby) */
+#homeCenter::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+
+  background-image: url('images/lobby_bg.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-attachment: fixed; /* lukitsee taustan */
+
+  pointer-events: none;
+}
+
+/* LOGO (lukittu samaan kohtaan) */
+#homeLogo {
+  position: absolute;
+  top: -50px;
+  left: 48%;
+  transform: translateX(-50%);
+  width: 80%;
+  max-width: 920px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+
+/* LOBBYN MUU SISÄLTÖ (nimi, napit jne.) */
+#homeCenter > *:not(#homeLogo) {
+  position: relative;
+  z-index: 1;
+}
+
+
+/* ==== ALLA OLEVAT JÄÄ ENNALLEEN ==== */
+
+.createRoom {
+  padding: 14px 28px;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+
+
+/* MAIN chat */
+#main{display:flex;flex-direction:column}
+#header{height:56px;background:var(--panel);display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid #0d1117;position:relative;z-index:100}
+#header .left{display:flex;align-items:center;gap:8px}
+#roomName{font-weight:700}
+#chatWrapper{display:flex;flex:1;overflow:hidden;min-height:0;position:relative}
+#chatSidebar{width:var(--lobby-width);background:var(--panel);border-right:1px solid #0d1117;padding:8px;overflow:auto;transition:width 200ms ease;box-sizing:border-box;}
+#chatSidebar.collapsed{width:40px;padding:6px}
+#chatWrapperMain{flex:1;display:flex;flex-direction:column;min-height:0;position:relative}
+#chat{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,transparent, rgba(255,255,255,0.01));transition:padding-bottom 120ms ease}
+.message{display:flex;gap:10px;align-items:flex-start;transition:transform 160ms ease}
+.avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000}
+/* Reserve horizontal space on the right for action buttons (reply & more) so they don't overlap message text */
+.msg{background:var(--panel);padding:10px 96px 10px 14px;border-radius:12px;position:relative;max-width:70%}
+.msg-text{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;max-width:100%;}
+.time{font-size:11px;color:var(--muted);margin-left:6px}
+.reply-btn{position:absolute;right:52px;top:8px;font-size:12px;color:var(--muted);cursor:pointer;opacity:0}
+.msg:hover .reply-btn{opacity:1}
+.reply-preview{background:rgba(255,255,255,0.02);border-left:3px solid var(--accent);padding:6px;font-size:13px;margin-bottom:8px;border-radius:6px;max-width:calc(100% - 96px);}
+
+/* edited note */
+.edited-note{font-size:12px;color:var(--muted);margin-left:8px;display:inline-block}
+
+/* typing indicator: new stylish component */
+#typingIndicator{
+  display:none;
+  position:relative;
+  padding:8px 12px;
+  margin:0 12px 8px 12px;
+  border-radius:12px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255,255,255,0.02);
+  color:var(--muted);
+  font-size:13px;
+  align-items:center;
+  gap:10px;
+  z-index:90;
+  transition:opacity 180ms ease, transform 180ms ease;
+  display:flex;
+  align-items:center;
+}
+
+/* avatars stack inside typing indicator */
+.typing-avatars{display:flex;gap:6px;align-items:center}
+.typing-avatars .typ-av{
+  width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;border:2px solid rgba(255,255,255,0.04);font-size:12px;background:var(--guest-gray);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+
+/* text & animated dots */
+.typing-text{display:flex;flex-direction:row;align-items:center;gap:8px;color:var(--muted);font-size:13px}
+.typing-dots{display:inline-flex;gap:6px;align-items:flex-end;height:14px}
+.typing-dots span{
+  width:6px;height:6px;border-radius:50%;display:inline-block;background:var(--muted);opacity:0.45;
+  transform: translateY(0);
+  animation: typing-bounce 1s infinite;
+}
+.typing-dots span:nth-child(1){animation-delay:0s}
+.typing-dots span:nth-child(2){animation-delay:0.12s}
+.typing-dots span:nth-child(3){animation-delay:0.24s}
+
+@keyframes typing-bounce{
+  0% { transform: translateY(0); opacity:0.45; }
+  40% { transform: translateY(-6px); opacity:1; }
+  80% { transform: translateY(0); opacity:0.45; }
+  100% { transform: translateY(0); opacity:0.45; }
+}
+
+/* smaller on tiny screens */
+@media (max-width:480px){
+  .typing-avatars .typ-av{ width:24px;height:24px;font-size:11px }
+  #typingIndicator{ margin:0 10px 8px 10px; padding:8px; border-radius:10px }
+  #replyBox { bottom:72px; width:calc(100% - 24px) }
+}
+
+/* reply box: fixed so it never becomes part of message flow */
+#replyBox{
+  display:none;
+  position:fixed;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:86px;
+  width:calc(100% - 36px);
+  max-width:920px;
+  background:var(--card);
+  padding:8px 14px;
+  font-size:13px;
+  color:var(--text);
+  border-radius:10px;
+  z-index:999;
+  box-shadow:0 8px 26px rgba(0,0,0,0.45);
+  box-sizing:border-box;
+}
+
+/* input bar */
+#inputBar{padding:12px;background:var(--panel);border-top:1px solid #0d1117;display:flex;gap:8px;align-items:center;position:relative;z-index:80}
+#msg{flex:1;padding:12px;border-radius:10px;border:none;background:var(--card);color:var(--text)}
+#emojiPicker{display:none;flex-wrap:wrap;gap:6px;padding:8px;background:var(--card);border-radius:8px;position:absolute;bottom:72px;left:12px;max-width:320px;max-height:300px;overflow:auto}
+#emojiPicker .tabs{display:flex;gap:6px;margin-bottom:8px}
+#emojiPicker .tabbtn{padding:6px 8px;border-radius:8px;border:none;background:transparent;color:var(--text);cursor:pointer}
+#emojiPicker .tabbtn.active{background:rgba(255,255,255,0.03)}
+#emojiPicker div.emoji{cursor:pointer;font-size:18px}
+
+/* nicer emoji button */
+#emojiBtn{
+  background: linear-gradient(180deg, rgba(88,166,255,0.10), rgba(88,166,255,0.03));
+  border: 1px solid rgba(88,166,255,0.10);
+  padding: 6px;
+  border-radius: 10px;
+  width:44px;
+  height:44px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px;
+  cursor:pointer;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+  color: var(--accent);
+}
+#emojiBtn:active{transform:scale(0.98)}
+.emoji-icon{font-size:18px;line-height:1;transform:translateY(1px);}
+
+/* MORE (three-dots) button next to reply — positioned at the far right (z-axis on top) */
+.more-btn{position:absolute;right:12px;top:8px;font-size:16px;color:var(--muted);cursor:pointer;opacity:0;padding:4px;border-radius:6px;z-index:12;transform:none}
+.msg:hover .more-btn{opacity:1}
+
+/* mobile specifics (kept visually hidden to avoid UI differences) */
+.mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:40;display:none;transition:background var(--drawer-duration) var(--drawer-ease)}
+.mobile-overlay.show{display:block;background:rgba(0,0,0,0.45)}
+.mobile-lobby-drawer{position:fixed;left:0;top:0;height:100%;width:80%;max-width:340px;background:var(--panel);z-index:50;padding:12px;transform:translateX(-110%);transition:transform var(--drawer-duration) var(--drawer-ease),opacity calc(var(--drawer-duration) * 0.9) var(--drawer-ease);opacity:0;will-change:transform}
+.mobile-lobby-drawer.show{transform:translateX(0);opacity:1}
+#openLobbyBtn{position:fixed;left:12px;bottom:12px;background:var(--accent);border:none;padding:12px;border-radius:999px;z-index:60;font-weight:800;color:#000;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,0.5)}
+
+/* Floating scroll to bottom button (now centered) */
+#scrollBottomBtn{position:fixed;left:50%;transform:translateX(-50%);bottom:86px;background:var(--accent);border:none;padding:10px;border-radius:999px;z-index:99;font-weight:800;color:#000;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,0.4);display:none}
+
+/* simple tooltip for seen receipts */
+.tooltip{position:fixed;padding:6px 8px;background:var(--panel);border:1px solid #0d1117;border-radius:8px;font-size:13px;color:var(--muted);z-index:120;display:none}
+
+/* context menu (right-click) */
+.context-menu{position:fixed;background:var(--panel);border:1px solid #0d1117;padding:6px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.6);display:none;z-index:130}
+.context-menu button{display:block;padding:8px 10px;border:0;background:transparent;color:var(--text);text-align:left;width:160px;border-radius:6px;cursor:pointer}
+.context-menu button:hover{background:rgba(255,255,255,0.03)}
+
+/* custom thin scrollbars for desktop */
+#chat::-webkit-scrollbar, #homeLeft::-webkit-scrollbar, #chatSidebar::-webkit-scrollbar{height:8px;width:8px}
+#chat::-webkit-scrollbar-thumb, #homeLeft::-webkit-scrollbar-thumb, #chatSidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:999px}
+#chat, #homeLeft, #chatSidebar{scrollbar-color: rgba(255,255,255,0.06) transparent;scrollbar-width:thin}
+
+/* Online Users Drawer */
+#onlineUsersDrawer.show{transform:translateX(0)}
+.online-user{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;margin-bottom:4px;cursor:pointer;transition:background 150ms}
+.online-user:hover{background:rgba(255,255,255,0.03)}
+.online-user-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#000}
+.online-user-info{flex:1;min-width:0}
+.online-user-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.online-user-status{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px}
+.online-indicator{width:8px;height:8px;border-radius:50%;background:#3fb950}
+.offline-indicator{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+
+</style>
+
+</head>
+<body>
+<div id="app">
+
+  <!-- TOP-RIGHT CONTROLS CONTAINER -->
+  <div id="topRightControls" aria-hidden="false">
+    <!-- HOW TO button -->
+    <button id="howBtn" title="How To">How To</button>
+    <!-- FULLSCREEN button -->
+    <button id="fullBtn" title="Toggle fullscreen" aria-label="Fullscreen">⤢</button>
+    <!-- SETTINGS GEAR -->
+    <button id="settingsBtn" title="Settings">⚙️</button>
+  </div>
+
+  <div id="settingsMenu" class="settings-menu" aria-hidden="true">
+    <button id="settingsChangeUsername">Change Username</button>
+<button id="settingsChangePassword">Change Password</button>
+  <label id="settingsNotifications" style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;border-radius:8px;transition:background 150ms;margin:0;font-size:14px;">
+    <input type="checkbox" id="notificationsToggle" style="cursor:pointer">
+    <span>Enable Notifications</span>
+  </label>
+  <button id="settingsLogout">Logout</button>
+    <button id="settingsDelete">Delete user</button>
+  </div>
+
+  <!-- Change Username Modal -->
+  <div id="changeUsernameModal" class="modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--panel);padding:20px;border-radius:12px;z-index:200;min-width:300px;box-shadow:0 10px 40px rgba(0,0,0,0.6)">
+    <h3 style="margin-top:0">Change Username</h3>
+    <input id="newUsername" placeholder="New username" style="width:100%;margin-bottom:10px;padding:10px;border-radius:8px;border:none;background:var(--card);color:var(--text)">
+    <input id="currentPasswordForUsername" type="password" placeholder="Current password" style="width:100%;margin-bottom:15px;padding:10px;border-radius:8px;border:none;background:var(--card);color:var(--text)">
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button id="cancelChangeUsername" style="padding:8px 16px;border-radius:8px;border:none;background:transparent;color:var(--muted);cursor:pointer">Cancel</button>
+      <button id="confirmChangeUsername" style="padding:8px 16px;border-radius:8px;border:none;background:var(--accent);color:#000;font-weight:600;cursor:pointer">Change</button>
+    </div>
+    <div id="changeUsernameMsg" style="margin-top:10px;font-size:13px;color:var(--muted)"></div>
+  </div>
+
+  <!-- Change Password Modal -->
+  <div id="changePasswordModal" class="modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--panel);padding:20px;border-radius:12px;z-index:200;min-width:300px;box-shadow:0 10px 40px rgba(0,0,0,0.6)">
+    <h3 style="margin-top:0">Change Password</h3>
+    <input id="currentPassword" type="password" placeholder="Current password" style="width:100%;margin-bottom:10px;padding:10px;border-radius:8px;border:none;background:var(--card);color:var(--text)">
+    <input id="newPassword" type="password" placeholder="New password" style="width:100%;margin-bottom:10px;padding:10px;border-radius:8px;border:none;background:var(--card);color:var(--text)">
+    <input id="confirmNewPassword" type="password" placeholder="Confirm new password" style="width:100%;margin-bottom:15px;padding:10px;border-radius:8px;border:none;background:var(--card);color:var(--text)">
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button id="cancelChangePassword" style="padding:8px 16px;border-radius:8px;border:none;background:transparent;color:var(--muted);cursor:pointer">Cancel</button>
+      <button id="confirmChangePassword" style="padding:8px 16px;border-radius:8px;border:none;background:var(--accent);color:#000;font-weight:600;cursor:pointer">Change</button>
+    </div>
+    <div id="changePasswordMsg" style="margin-top:10px;font-size:13px;color:var(--muted)"></div>
+  </div>
+
+  <!-- Edit Room Description Modal (Admin only) -->
+  <div id="editDescriptionModal" class="modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--panel);padding:20px;border-radius:12px;z-index:200;min-width:400px;max-width:500px;box-shadow:0 10px 40px rgba(0,0,0,0.6)">
+    <h3 style="margin-top:0">Edit Room Description</h3>
+    <textarea id="roomDescriptionInput" placeholder="Enter room description..." style="width:100%;min-height:100px;margin-bottom:15px;padding:10px;border-radius:8px;border:none;background:var(--card);color:var(--text);resize:vertical;font-family:inherit"></textarea>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button id="cancelEditDescription" style="padding:8px 16px;border-radius:8px;border:none;background:transparent;color:var(--muted);cursor:pointer">Cancel</button>
+      <button id="confirmEditDescription" style="padding:8px 16px;border-radius:8px;border:none;background:var(--accent);color:#000;font-weight:600;cursor:pointer">Save</button>
+    </div>
+    <div id="editDescriptionMsg" style="margin-top:10px;font-size:13px;color:var(--muted)"></div>
+  </div>
+
+  <!-- Room Description Tooltip -->
+  <div id="roomDescriptionTooltip" class="room-tooltip" style="position:fixed;display:none;background:var(--panel);border:1px solid #0d1117;padding:12px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.6);z-index:125;max-width:300px;font-size:13px;color:var(--text)">
+    <div id="roomDescriptionText" style="color:var(--muted)"></div>
+  </div>
+
+  <!-- Create Room Modal -->
+  <div id="createRoomModal" class="modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--panel);padding:20px;border-radius:12px;z-index:200;min-width:350px;max-width:450px;box-shadow:0 10px 40px rgba(0,0,0,0.6)">
+    <h3 style="margin-top:0">Create Room</h3>
+    <input id="newRoomName" placeholder="Room name" style="width:100%;margin-bottom:10px;padding:10px;border-radius:8px;border:none;background:var(--card);color:var(--text)">
+    <input id="newRoomPassword" type="password" placeholder="Password (optional)" style="width:100%;margin-bottom:10px;padding:10px;border-radius:8px;border:none;background:var(--card);color:var(--text)">
+    <textarea id="newRoomDescription" placeholder="Description (optional)" style="width:100%;min-height:80px;margin-bottom:15px;padding:10px;border-radius:8px;border:none;background:var(--card);color:var(--text);resize:vertical;font-family:inherit"></textarea>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button id="cancelCreateRoom" style="padding:8px 16px;border-radius:8px;border:none;background:transparent;color:var(--muted);cursor:pointer">Cancel</button>
+      <button id="confirmCreateRoom" style="padding:8px 16px;border-radius:8px;border:none;background:var(--accent);color:#000;font-weight:600;cursor:pointer">Create</button>
+    </div>
+    <div id="createRoomMsg" style="margin-top:10px;font-size:13px;color:var(--muted)"></div>
+  </div>
+
+  <!-- Roles Modal -->
+  <div id="rolesModal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--panel);padding:20px;border-radius:12px;z-index:200;min-width:300px;max-width:400px;max-height:80vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.6)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+      <h3 style="margin:0">🎭 Choose Your Role</h3>
+      <button id="closeRoles" class="iconbtn" style="font-size:20px;background:transparent;border:none;color:var(--text);cursor:pointer">✕</button>
+    </div>
+    <div id="rolesList"></div>
+    <div style="margin-top:15px;padding-top:15px;border-top:1px solid #0d1117">
+      <button id="viewAllRoles" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;font-weight:600">View All Roles</button>
+    </div>
+  </div>
+
+  <!-- HOW TO PANEL (text moved to how.html; kept small link here so DOM & ids remain) -->
+  <div id="howMenu" class="how-menu" aria-hidden="true">
+    <h3>How to use — Features &amp; Tips</h3>
+    <div class="section">Full "How To" text has been moved to <a href="how.html" target="_blank" rel="noopener">how.html</a>. Click the button or press '?' to open it in a new tab.</div>
+    <button id="closeHow" class="close-how">Close</button>
+  </div>
+
+  <!-- PROFILE CARD (also used when hovering/clicking a user) -->
+  <div id="profileCard" class="profile-card" aria-hidden="true">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <div id="profileAvatar" style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;background:var(--guest-gray)"></div>
+      <div>
+        <div id="profileName" style="font-weight:700"></div>
+        <div id="profileJoined" style="font-size:13px;color:var(--muted)"></div>
+      </div>
+    </div>
+    <div class="row"><div>Color</div><div id="profileColor"></div></div>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="login" aria-hidden="false">
+    <input id="loginUser" placeholder="Username" autocomplete="username">
+    <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password">
+    <button id="loginBtn">Login / Register</button>
+    <button id="demoBtn" class="small">Continue as Guest</button>
+    <div id="loginMsg"></div>
+  </div>
+
+  <!-- HOME -->
+  <div id="home">
+    <!-- Desktop lobby (keeps desktop visible) -->
+    <aside id="homeLeft" aria-label="Lobby">
+      <div id="lobbyHeader">
+        <div id="lobbyTitle">Rooms</div>
+        <div id="lobbyControls">
+          <button id="lobbyToggle" class="iconbtn" title="Collapse/Expand lobby">◀</button>
+          <button id="lobbySizeBtn" class="iconbtn" title="Change lobby size">A</button>
+        </div>
+      </div>
+      <div id="roomList"></div>
+    </aside>
+
+    <!-- Center -->
+    <main id="homeCenter">
+      <img id="homeLogo" src="images/echo_space.png" alt="">
+
+      <button id="createRoom" class="createRoom">Create / Join Room</button>
+    </main>
+
+  </div>
+
+  <!-- MAIN CHAT -->
+  <div id="main" aria-hidden="true">
+    <div id="header">
+      <div class="left">
+        <button id="back" class="iconbtn" title="Back">←</button>
+        <div id="roomName">#room</div>
+        <button id="editDescriptionBtn" class="iconbtn" title="Edit Description" style="display:none;font-size:12px;margin-left:8px">✎</button>
+      </div>
+      <div style="flex:1"></div>
+    </div>
+
+    <div id="chatWrapper">
+      <aside id="chatSidebar" aria-label="Chat sidebar">
+        <div id="chatRoomsHeader" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-weight:700">Rooms</div>
+          <button id="sidebarToggle" class="iconbtn" title="Collapse">◀</button>
+        </div>
+        <div id="roomListSidebar"></div>
+      </aside>
+
+      <div id="chatWrapperMain">
+        <div id="chat"></div>
+
+        <!-- TYPING INDICATOR: appears between chat and input -->
+        <div id="typingIndicator" aria-live="polite"></div>
+
+        <div id="replyBox"></div>
+        <div id="inputBar">
+          <button id="emojiBtn" aria-label="Emoji picker"><span class="emoji-icon" aria-hidden="true">😊</span></button>
+          <input id="msg" placeholder="Message... (/clear /delete)" autocomplete="off">
+          <div id="emojiPicker"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  
+  <!-- Online Users Floating Button -->
+  <button id="toggleOnlineUsers" class="iconbtn" title="Online Users" style="position:fixed;top:120px;right:16px;z-index:96;display:none;font-size:16px;padding:8px 12px;background:var(--panel);border:1px solid var(--border);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.3)">👥</button>
+
+  <!-- Online Users Drawer (positioned relative to viewport) -->
+  <aside id="onlineUsersDrawer" style="position:fixed;right:0;top:56px;height:calc(100% - 56px);width:240px;background:var(--panel);border-left:1px solid #0d1117;padding:12px;transform:translateX(100%);transition:transform 300ms ease;z-index:95;overflow-y:auto;box-shadow:-4px 0 20px rgba(0,0,0,0.4);pointer-events:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-weight:700;font-size:14px">Online Users</div>
+      <button id="closeOnlineUsers" class="iconbtn" style="font-size:18px">✕</button>
+    </div>
+    <div id="onlineUsersList"></div>
+  </aside>
+
+  <!-- Mobile overlay and drawer (kept in DOM but mobile logic removed) -->
+  <div id="mobileOverlay" class="mobile-overlay" aria-hidden="true"></div>
+  <div id="mobileDrawer" class="mobile-lobby-drawer" aria-hidden="true">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="font-weight:700">Rooms</div>
+      <button id="closeDrawer" class="iconbtn">✕</button>
+    </div>
+    <div id="roomListMobile"></div>
+  </div>
+
+  <!-- Blue three-line button (mobile) -->
+  <button id="openLobbyBtn" title="Open lobby">☰</button>
+
+  <!-- Floating scroll to bottom button (now centered) -->
+  <button id="scrollBottomBtn" title="Scroll to bottom">↓</button>
+
+  <!-- tooltip element -->
+  <div id="tooltip" class="tooltip" aria-hidden="true"></div>
+
+  <!-- context menu element (right-click / three-dots / long-press) -->
+  <div id="contextMenu" class="context-menu" aria-hidden="true"></div>
+
+</div>
+
+<script type="module">
+/* ===================
+   Tehty: poistettu käyttämättömiä mobiilikoodin osia, mutta
+   kaikki funktiot ja ID:t säilytetty nimillään (ei refaktorointia).
+   - isMobile/isTouch säilytetty false (mobiilituki pois päältä)
+   - Edge-swipe ja monimutkainen drawer-drag-logiikka poistettu
+   - attachMobileInteractions supistettu turvalliseksi no-opiksi
+   =================== */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore, doc, getDoc, setDoc, collection,
+  addDoc, getDocs, query, orderBy, where, limit,
+  onSnapshot, serverTimestamp, deleteDoc, updateDoc, writeBatch
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+/* Firebase init - replace config if needed */
+const firebaseConfig = {
+  apiKey:"AIzaSyDbYLUXJjHQ-V5uFvtyzwq-IwIKM7xTcyc",
+  projectId:"chat-fc8ef"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* DOM refs */
+const howBtn = document.getElementById('howBtn');
+const howMenu = document.getElementById('howMenu');
+const fullBtn = document.getElementById('fullBtn');
+
+const login = document.getElementById('login');
+const home = document.getElementById('home');
+const main = document.getElementById('main');
+const loginBtn = document.getElementById('loginBtn');
+const demoBtn = document.getElementById('demoBtn');
+const loginUser = document.getElementById('loginUser');
+const loginPass = document.getElementById('loginPass');
+const loginMsg = document.getElementById('loginMsg');
+
+const roomList = document.getElementById('roomList');
+const roomListSidebar = document.getElementById('roomListSidebar');
+const roomListMobile = document.getElementById('roomListMobile');
+
+const createRoomBtn = document.getElementById('createRoom');
+const editDescriptionBtn = document.getElementById('editDescriptionBtn');
+const editDescriptionModal = document.getElementById('editDescriptionModal');
+const roomDescriptionInput = document.getElementById('roomDescriptionInput');
+const cancelEditDescription = document.getElementById('cancelEditDescription');
+const confirmEditDescription = document.getElementById('confirmEditDescription');
+const editDescriptionMsg = document.getElementById('editDescriptionMsg');
+const roomDescriptionTooltip = document.getElementById('roomDescriptionTooltip');
+const roomDescriptionText = document.getElementById('roomDescriptionText');
+
+const toggleOnlineUsers = document.getElementById('toggleOnlineUsers');
+const onlineUsersDrawer = document.getElementById('onlineUsersDrawer');
+const closeOnlineUsers = document.getElementById('closeOnlineUsers');
+const onlineUsersList = document.getElementById('onlineUsersList');
+
+const createRoomModal = document.getElementById('createRoomModal');
+const newRoomName = document.getElementById('newRoomName');
+const newRoomPassword = document.getElementById('newRoomPassword');
+const newRoomDescription = document.getElementById('newRoomDescription');
+const cancelCreateRoom = document.getElementById('cancelCreateRoom');
+const confirmCreateRoom = document.getElementById('confirmCreateRoom');
+const createRoomMsg = document.getElementById('createRoomMsg');
+
+// Roles modal DOM references
+const rolesModal = document.getElementById('rolesModal');
+const rolesList = document.getElementById('rolesList');
+const closeRoles = document.getElementById('closeRoles');
+const viewAllRoles = document.getElementById('viewAllRoles');
+
+const lobby = document.getElementById('homeLeft');
+const lobbyToggle = document.getElementById('lobbyToggle');
+const lobbySizeBtn = document.getElementById('lobbySizeBtn');
+
+const chatSidebar = document.getElementById('chatSidebar');
+const sidebarToggle = document.getElementById('sidebarToggle');
+
+const openLobbyBtn = document.getElementById('openLobbyBtn');
+const mobileOverlay = document.getElementById('mobileOverlay');
+const mobileDrawer = document.getElementById('mobileDrawer');
+const closeDrawer = document.getElementById('closeDrawer');
+
+const chat = document.getElementById('chat');
+const chatWrapperMain = document.getElementById('chatWrapperMain');
+const msg = document.getElementById('msg');
+const replyBox = document.getElementById('replyBox');
+const roomName = document.getElementById('roomName');
+const emojiPicker = document.getElementById('emojiPicker');
+const emojiBtn = document.getElementById('emojiBtn');
+const typingIndicator = document.getElementById('typingIndicator');
+
+// Typing
+
+typingIndicator.innerHTML = `
+  <div class="typing-avatars"></div>
+  <div class="typing-text">
+    <div class="typing-label"></div>
+    <div class="typing-dots">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+`;
+
+
+const back = document.getElementById('back');
+
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsMenu = document.getElementById('settingsMenu');
+const settingsLogout = document.getElementById('settingsLogout');
+const settingsDelete = document.getElementById('settingsDelete');
+
+const notificationsToggle = document.getElementById('notificationsToggle');
+
+// Load notification preference
+if(notificationsToggle) {
+  notificationsToggle.checked = localStorage.getItem('notificationsEnabled') === 'true';
+  notificationsToggle.addEventListener('change', () => {
+    localStorage.setItem('notificationsEnabled', notificationsToggle.checked ? 'true' : 'false');
+    if(notificationsToggle.checked && 'Notification' in window && Notification.permission !== 'granted') {
+      Notification.requestPermission();
+    }
+  });
+}
+
+const profileCard = document.getElementById('profileCard');
+const profileAvatar = document.getElementById('profileAvatar');
+const profileName = document.getElementById('profileName');
+const profileJoined = document.getElementById('profileJoined');
+const profileColor = document.getElementById('profileColor');
+
+const scrollBottomBtn = document.getElementById('scrollBottomBtn');
+const tooltip = document.getElementById('tooltip');
+const contextMenu = document.getElementById('contextMenu');
+
+let users = JSON.parse(localStorage.getItem('users')||'{}');
+let nick = '';
+let nickColor = localStorage.getItem('nickColor')||'#58a6ff';
+let room = '';
+let replyTo = null;
+let lastMessageTime = 0;
+let typingTimeout = null;
+let messagesUnsub = null;
+let typingUnsub = null;
+let roomsUnsub = null; // <--- listener for rooms collection
+
+/* Track if current user is admin of current room and who the admins are */
+let isAdmin = false;
+let roomAdmins = [];
+
+/* cache for user docs to avoid repeated reads */
+const userCache = new Map();
+
+/* Device detection - mobile support disabled per request */
+const isTouch = false; // mobile support disabled
+const isMobile = false; // mobile support disabled
+
+/* UI init */
+
+/* Ensure desktop lobby visible and cannot be collapsed */
+function enforceDesktopLobby(){
+  if(!isMobile){
+    lobby.style.display = 'block';
+    chatSidebar.style.display = 'block';
+    if(lobbyToggle) lobbyToggle.style.display = 'none';
+    if(sidebarToggle) sidebarToggle.style.display = 'none';
+  } else {
+    lobby.style.display = 'none';
+    chatSidebar.style.display = 'none';
+  }
+}
+enforceDesktopLobby();
+
+/* NOTE:
+   Edge-swipe touch handlers and complex drawer drag logic removed because isMobile is false.
+   Keeping DOM elements and function names to avoid breaking existing references.
+*/
+
+/* Session helpers */
+function showHome(){
+  login.style.display = 'none';
+  home.style.display = 'flex';
+  main.style.display = 'none';
+  // show top-right controls on home
+  if(howBtn) howBtn.style.display = '';
+  if(fullBtn) fullBtn.style.display = '';
+  if(settingsBtn) settingsBtn.style.display = '';
+  // hide online users button and close drawer
+  if(toggleOnlineUsers) toggleOnlineUsers.style.display = 'none';
+  if(onlineUsersDrawer) {
+    onlineUsersDrawer.classList.remove('show');
+    onlineUsersDrawer.setAttribute('aria-hidden', 'true');
+  }
+  updateOpenLobbyBtnVisibility();
+  // Request notification permission once in lobby (if not already decided)
+  if('Notification' in window && Notification.permission === 'default' && !localStorage.getItem('notificationsAsked')) {
+    localStorage.setItem('notificationsAsked', 'true');
+    Notification.requestPermission().then(permission => {
+      if(permission === 'granted') {
+        localStorage.setItem('notificationsEnabled', 'true');
+      }
+    });
+  }
+}
+function showLogin(){
+  login.style.display = 'flex';
+  home.style.display = 'none';
+  main.style.display = 'none';
+  main.setAttribute('aria-hidden', 'true');
+  localStorage.removeItem('session');
+  // hide top-right controls on login screen
+  if(howBtn) howBtn.style.display = 'none';
+  if(fullBtn) fullBtn.style.display = 'none';
+  if(settingsBtn) settingsBtn.style.display = 'none';
+  // hide online users button and close drawer
+  if(toggleOnlineUsers) toggleOnlineUsers.style.display = 'none';
+  if(onlineUsersDrawer) {
+    onlineUsersDrawer.classList.remove('show');
+    onlineUsersDrawer.setAttribute('aria-hidden', 'true');
+  }
+  updateOpenLobbyBtnVisibility();
+}
+function showMain(){
+  login.style.display = 'none';
+  home.style.display = 'none';
+  main.style.display = 'flex';
+  main.setAttribute('aria-hidden', 'false');
+  // show top-right controls on main
+  if(howBtn) howBtn.style.display = '';
+  if(fullBtn) fullBtn.style.display = '';
+  if(settingsBtn) settingsBtn.style.display = '';
+  // show online users button in chat
+  if(toggleOnlineUsers) toggleOnlineUsers.style.display = 'block';
+  updateOpenLobbyBtnVisibility();
+}
+
+/* restore session */
+if(localStorage.getItem('session')) showHome();
+else showLogin();
+
+/* HOW TO click changed to open how.html in a new tab */
+howBtn.addEventListener('click', (e) => { e.stopPropagation(); window.open('how.html','_blank'); });
+document.getElementById('closeHow').addEventListener('click', (e) => {
+  e.stopPropagation();
+  howMenu.classList.remove('show');
+  howMenu.setAttribute('aria-hidden','true');
+});
+
+/* Fullscreen toggle */
+async function toggleFullScreen(){
+  try{
+    if(!document.fullscreenElement){
+      await document.documentElement.requestFullscreen();
+      fullBtn.title = "Exit fullscreen";
+    } else {
+      await document.exitFullscreen();
+      fullBtn.title = "Enter fullscreen";
+    }
+  }catch(e){}
+}
+fullBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleFullScreen(); });
+
+/* SETTINGS menu (gear) */
+settingsBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const open = settingsMenu.classList.toggle('show');
+  settingsMenu.setAttribute('aria-hidden', !open);
+  profileCard.classList.remove('show'); profileCard.setAttribute('aria-hidden','true');
+  // hide how menu if open
+  howMenu.classList.remove('show'); howMenu.setAttribute('aria-hidden','true');
+});
+settingsMenu.addEventListener('click', (e) => e.stopPropagation());
+document.addEventListener('click', () => {
+  if(settingsMenu.classList.contains('show')){
+    settingsMenu.classList.remove('show');
+    settingsMenu.setAttribute('aria-hidden','true');
+  }
+  if(profileCard.classList.contains('show')){
+    profileCard.classList.remove('show');
+    profileCard.setAttribute('aria-hidden','true');
+  }
+  // hide context menu too
+  if(contextMenu.style.display === 'block') contextMenu.style.display = 'none';
+  // hide How To panel
+  if(howMenu.classList.contains('show')){ howMenu.classList.remove('show'); howMenu.setAttribute('aria-hidden','true'); }
+});
+
+/* Logout via settings */
+settingsLogout.addEventListener('click', () => {
+  settingsMenu.classList.remove('show');
+  localStorage.removeItem('session');
+  showLogin();
+});
+
+/* Delete user via settings */
+settingsDelete.addEventListener('click', async () => {
+  settingsMenu.classList.remove('show');
+  const session = localStorage.getItem('session');
+  if(!session){ alert('No logged-in user'); return; }
+  if(session.startsWith('Guest')){ alert('Guest account cannot be deleted.'); return; }
+  if(!confirm(`Delete user "${session}" and their stored credentials? This cannot be undone.`)) return;
+  try{
+    users = JSON.parse(localStorage.getItem('users')||'{}');
+    delete users[session];
+    localStorage.setItem('users', JSON.stringify(users));
+    // remove Firestore user doc if you want (optional)
+    await deleteDoc(doc(db,'users',session)).catch(()=>{});
+  }catch(e){}
+  localStorage.removeItem('session');
+  localStorage.removeItem('nick');
+  showLogin();
+});
+
+/* Change Username via settings */
+const settingsChangeUsername = document.getElementById('settingsChangeUsername');
+const changeUsernameModal = document.getElementById('changeUsernameModal');
+const cancelChangeUsername = document.getElementById('cancelChangeUsername');
+const confirmChangeUsername = document.getElementById('confirmChangeUsername');
+const newUsernameInput = document.getElementById('newUsername');
+const currentPasswordForUsernameInput = document.getElementById('currentPasswordForUsername');
+const changeUsernameMsg = document.getElementById('changeUsernameMsg');
+
+settingsChangeUsername.addEventListener('click', () => {
+  settingsMenu.classList.remove('show');
+  const session = localStorage.getItem('session');
+  if(!session){ alert('No logged-in user'); return; }
+  if(session.startsWith('Guest')){ alert('Guest accounts cannot change username.'); return; }
+  changeUsernameModal.style.display = 'block';
+  newUsernameInput.value = '';
+  currentPasswordForUsernameInput.value = '';
+  changeUsernameMsg.textContent = '';
+});
+
+cancelChangeUsername.addEventListener('click', () => {
+  changeUsernameModal.style.display = 'none';
+});
+
+confirmChangeUsername.addEventListener('click', async () => {
+  const currentSession = localStorage.getItem('session');
+  const newUsername = newUsernameInput.value.trim();
+  const currentPassword = currentPasswordForUsernameInput.value;
+  
+  if(!newUsername){ changeUsernameMsg.textContent = 'Please enter a new username.'; return; }
+  if(newUsername === currentSession){ changeUsernameMsg.textContent = 'New username must be different.'; return; }
+  if(newUsername.startsWith('Guest')){ changeUsernameMsg.textContent = 'Username cannot start with "Guest".'; return; }
+  
+  changeUsernameMsg.textContent = 'Checking...';
+  
+  try {
+    // Verify current password
+    const userRef = doc(db, 'users', currentSession);
+    const snap = await getDoc(userRef);
+    if(!snap.exists()){ changeUsernameMsg.textContent = 'Error: User not found.'; return; }
+    
+    const currentPassHash = await sha256(currentPassword);
+    if(snap.data().passwordHash !== currentPassHash){ 
+      changeUsernameMsg.textContent = 'Wrong current password.'; 
+      return; 
+    }
+    
+    // Check if new username is taken
+    const newUserRef = doc(db, 'users', newUsername);
+    const newSnap = await getDoc(newUserRef);
+    if(newSnap.exists()){ 
+      changeUsernameMsg.textContent = 'Username already taken.'; 
+      return; 
+    }
+    
+    // Create new user doc with same data
+    const userData = snap.data();
+    await setDoc(newUserRef, {
+      passwordHash: userData.passwordHash,
+      created: userData.created,
+      color: userData.color
+    });
+    
+    // Delete old user doc
+    await deleteDoc(userRef);
+    
+    // Update localStorage
+    users = JSON.parse(localStorage.getItem('users')||'{}');
+    delete users[currentSession];
+    users[newUsername] = currentPassword;
+    localStorage.setItem('users', JSON.stringify(users));
+    localStorage.setItem('session', newUsername);
+    localStorage.setItem('nick', newUsername);
+    
+    changeUsernameMsg.textContent = 'Username changed successfully!';
+    setTimeout(() => {
+      changeUsernameModal.style.display = 'none';
+    }, 1500);
+    
+  } catch(err) {
+    console.error(err);
+    changeUsernameMsg.textContent = 'Error: ' + (err.message || String(err));
+  }
+});
+
+/* Change Password via settings */
+const settingsChangePassword = document.getElementById('settingsChangePassword');
+const changePasswordModal = document.getElementById('changePasswordModal');
+const cancelChangePassword = document.getElementById('cancelChangePassword');
+const confirmChangePassword = document.getElementById('confirmChangePassword');
+const currentPasswordInput = document.getElementById('currentPassword');
+const newPasswordInput = document.getElementById('newPassword');
+const confirmNewPasswordInput = document.getElementById('confirmNewPassword');
+const changePasswordMsg = document.getElementById('changePasswordMsg');
+
+settingsChangePassword.addEventListener('click', () => {
+  settingsMenu.classList.remove('show');
+  const session = localStorage.getItem('session');
+  if(!session){ alert('No logged-in user'); return; }
+  if(session.startsWith('Guest')){ alert('Guest accounts cannot change password.'); return; }
+  changePasswordModal.style.display = 'block';
+  currentPasswordInput.value = '';
+  newPasswordInput.value = '';
+  confirmNewPasswordInput.value = '';
+  changePasswordMsg.textContent = '';
+});
+
+cancelChangePassword.addEventListener('click', () => {
+  changePasswordModal.style.display = 'none';
+});
+
+confirmChangePassword.addEventListener('click', async () => {
+  const currentSession = localStorage.getItem('session');
+  const currentPassword = currentPasswordInput.value;
+  const newPassword = newPasswordInput.value;
+  const confirmNewPassword = confirmNewPasswordInput.value;
+  
+  if(!currentPassword){ changePasswordMsg.textContent = 'Please enter current password.'; return; }
+  if(!newPassword){ changePasswordMsg.textContent = 'Please enter new password.'; return; }
+  if(newPassword !== confirmNewPassword){ changePasswordMsg.textContent = 'New passwords do not match.'; return; }
+  if(newPassword.length < 4){ changePasswordMsg.textContent = 'Password must be at least 4 characters.'; return; }
+  
+  changePasswordMsg.textContent = 'Checking...';
+  
+  try {
+    // Verify current password
+    const userRef = doc(db, 'users', currentSession);
+    const snap = await getDoc(userRef);
+    if(!snap.exists()){ changePasswordMsg.textContent = 'Error: User not found.'; return; }
+    
+    const currentPassHash = await sha256(currentPassword);
+    if(snap.data().passwordHash !== currentPassHash){ 
+      changePasswordMsg.textContent = 'Wrong current password.'; 
+      return; 
+    }
+    
+    // Update password
+    const newPassHash = await sha256(newPassword);
+    await updateDoc(userRef, { passwordHash: newPassHash });
+    
+    // Update localStorage
+    users = JSON.parse(localStorage.getItem('users')||'{}');
+    users[currentSession] = newPassword;
+    localStorage.setItem('users', JSON.stringify(users));
+    
+    changePasswordMsg.textContent = 'Password changed successfully!';
+    setTimeout(() => {
+      changePasswordModal.style.display = 'none';
+    }, 1500);
+    
+  } catch(err) {
+    console.error(err);
+    changePasswordMsg.textContent = 'Error: ' + (err.message || String(err));
+  }
+});
+
+/* Edit Room Description (Admin only) */
+editDescriptionBtn.addEventListener('click', async () => {
+  if(!isAdmin) {
+    alert('Only the room admin can edit the description.');
+    return;
+  }
+  
+  // Fetch current description
+  try {
+    const roomRef = doc(db, 'rooms', room);
+    const roomSnap = await getDoc(roomRef);
+    if(roomSnap.exists()) {
+      roomDescriptionInput.value = roomSnap.data().description || '';
+    }
+  } catch(e) {
+    console.error('Error fetching room description:', e);
+  }
+  
+  editDescriptionModal.style.display = 'block';
+  editDescriptionMsg.textContent = '';
+});
+
+cancelEditDescription.addEventListener('click', () => {
+  editDescriptionModal.style.display = 'none';
+});
+
+confirmEditDescription.addEventListener('click', async () => {
+  if(!isAdmin) {
+    editDescriptionMsg.textContent = 'Only admin can edit description.';
+    return;
+  }
+  
+  const newDescription = roomDescriptionInput.value.trim();
+  
+  try {
+    const roomRef = doc(db, 'rooms', room);
+    await updateDoc(roomRef, { description: newDescription });
+    editDescriptionMsg.textContent = 'Description updated successfully!';
+    setTimeout(() => {
+      editDescriptionModal.style.display = 'none';
+    }, 1500);
+  } catch(e) {
+    console.error('Error updating description:', e);
+    editDescriptionMsg.textContent = 'Error updating description.';
+  }
+});
+
+/* profile card show when hovering (desktop) or clicking (mobile) a name */
+function showProfileCardFor(name, color, joined, anchorEl){
+  profileAvatar.textContent = name?.[0] || '?';
+  profileAvatar.style.background = color || getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim();
+  profileName.textContent = name;
+  profileColor.textContent = color || '';
+  profileJoined.textContent = joined ? `Joined: ${new Date(joined).toLocaleDateString()}` : '';
+  if(anchorEl){
+    const r = anchorEl.getBoundingClientRect();
+    profileCard.style.top = (r.bottom + 8) + 'px';
+    profileCard.style.right = Math.max(12, window.innerWidth - r.right) + 'px';
+  }
+  profileCard.classList.add('show'); profileCard.setAttribute('aria-hidden','false');
+}
+
+/* rooms load/render */
+async function loadRooms(){
+  roomList.innerHTML = '';
+  roomListSidebar.innerHTML = '';
+  roomListMobile.innerHTML = '';
+  try{
+    const s = await getDocs(collection(db,'rooms'));
+    s.forEach(r => renderRoomEntry(r.id, r.data()));
+  }catch(e){ console.error('loadRooms error', e); }
+}
+
+function renderRoomEntry(id, roomData = {}){
+  const createEl = (container) => {
+    const d = document.createElement('div');
+    d.className = 'room';
+    d.textContent = '# ' + id;
+    d.onclick = ()=> joinRoom(id);
+    
+    // Add hover tooltip for description
+    if(roomData.description) {
+      d.addEventListener('mouseenter', (e) => {
+        roomDescriptionText.textContent = roomData.description;
+        roomDescriptionTooltip.style.display = 'block';
+        const rect = d.getBoundingClientRect();
+        roomDescriptionTooltip.style.left = rect.right + 10 + 'px';
+        roomDescriptionTooltip.style.top = rect.top + 'px';
+      });
+      d.addEventListener('mouseleave', () => {
+        roomDescriptionTooltip.style.display = 'none';
+      });
+    }
+    
+    container.appendChild(d);
+  };
+  createEl(roomList);
+  createEl(roomListSidebar);
+  createEl(roomListMobile);
+}
+
+/* NEW: real-time rooms listener so rooms appear immediately */
+function setupRoomsListener(){
+  if(roomsUnsub) roomsUnsub();
+  try{
+    const roomsCol = collection(db,'rooms');
+    roomsUnsub = onSnapshot(roomsCol, snap => {
+      roomList.innerHTML = '';
+      roomListSidebar.innerHTML = '';
+      roomListMobile.innerHTML = '';
+      snap.forEach(docSnap => {
+        renderRoomEntry(docSnap.id, docSnap.data());
+      });
+    }, err => {
+      console.error('rooms listener error', err);
+      // fallback to one-time load if realtime fails
+      loadRooms().catch(()=>{});
+    });
+  }catch(e){
+    console.error('setupRoomsListener error', e);
+    loadRooms().catch(()=>{});
+  }
+}
+
+/* Create Room Modal handlers */
+createRoomBtn.onclick = () => {
+  createRoomModal.style.display = 'block';
+  newRoomName.value = '';
+  newRoomPassword.value = '';
+  newRoomDescription.value = '';
+  createRoomMsg.textContent = '';
+  newRoomName.focus();
+};
+
+cancelCreateRoom.addEventListener('click', () => {
+  createRoomModal.style.display = 'none';
+});
+
+confirmCreateRoom.addEventListener('click', async () => {
+  const r = newRoomName.value.trim();
+  const p = newRoomPassword.value;
+  const desc = newRoomDescription.value.trim();
+  
+  if(!r){ 
+    createRoomMsg.textContent = 'Please enter a room name.'; 
+    return; 
+  }
+  
+  createRoomMsg.textContent = 'Creating room...';
+  
+  try {
+    const ref = doc(db,'rooms',r);
+    const snap = await getDoc(ref);
+    // Use session (permanent account ID) instead of nick for admin
+    const currentUser = localStorage.getItem('session') || '';
+    
+    if(!snap.exists()) {
+      // Create room with admins array (using session, not nick)
+      await setDoc(ref,{
+        password:p||'', 
+        description:desc||'',
+        created:serverTimestamp(),
+        admins: [currentUser]
+      });
+    }
+    
+    createRoomModal.style.display = 'none';
+    joinRoom(r);
+  } catch(err) {
+    console.error(err);
+    createRoomMsg.textContent = 'Error: ' + (err.message || String(err));
+  }
+});
+
+/* joinRoom handles mobile drawer smooth close when applicable, then calls enterRoom */
+async function joinRoom(r){
+  const ref = doc(db,'rooms',r);
+  const snap = await getDoc(ref);
+  if(!snap.exists()) return alert("Room not found");
+  
+  const roomData = snap.data();
+  // Only ask for password if room has a password set
+  if(roomData.password) {
+    const pass = prompt('Password');
+    if(pass !== roomData.password) return alert('Wrong room password');
+  }
+  
+  // Check if current user is admin using session (permanent account ID), not nick
+  const currentSession = localStorage.getItem('session') || '';
+  isAdmin = (roomData.admin === currentSession);
+
+  // Save nick/color
+  nick = localStorage.getItem('nick') || ('Anon'+Math.floor(Math.random()*1000));
+  const session = localStorage.getItem('session') || '';
+  if(session.startsWith('Guest')){
+    nickColor = getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim() || '#9aa0a6';
+  } else {
+    nickColor = localStorage.getItem('nickColor') || '#58a6ff';
+  }
+  localStorage.setItem('nick', nick);
+  localStorage.setItem('nickColor', nickColor);
+
+  // If mobile & drawer open -> animate drawer close smoothly, THEN enter room
+  const durationMs = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--drawer-duration')) || 200;
+  const drawerOpen = mobileDrawer.classList.contains('show');
+  if(isMobile && drawerOpen){
+    mobileDrawer.classList.remove('show');
+    mobileOverlay.classList.remove('show');
+    setTimeout(()=> {
+      mobileOverlay.style.display = 'none';
+      mobileDrawer.style.display = 'none';
+      enterRoom(r);
+      updateOpenLobbyBtnVisibility();
+    }, durationMs + 20);
+  } else {
+    enterRoom(r);
+  }
+}
+
+/* enterRoom performs the actual subscription and view switch */
+async function enterRoom(r){
+  showMain();
+  room = r;
+  roomName.textContent = '# ' + r;
+  
+  // Fetch room data to get admin and check if current user is admin
+  try {
+    const roomRef = doc(db, 'rooms', r);
+    const roomSnap = await getDoc(roomRef);
+    if(roomSnap.exists()) {
+      const roomData = roomSnap.data();
+      // Support both legacy single admin and new multi-admin array
+      if(Array.isArray(roomData.admins)) {
+        roomAdmins = roomData.admins;
+      } else if(roomData.admin) {
+        roomAdmins = [roomData.admin];
+      } else {
+        roomAdmins = [];
+      }
+      // Check if current user is admin (in the roomAdmins array)
+      const currentSession = localStorage.getItem('session') || '';
+      isAdmin = roomAdmins.includes(currentSession);
+      // Show/hide edit description button
+      if(editDescriptionBtn) {
+        editDescriptionBtn.style.display = isAdmin ? 'inline-block' : 'none';
+      }
+    }
+  } catch(e) {
+    console.error('Error fetching room admin:', e);
+  }
+  
+  // cleanup previous listeners
+  if(messagesUnsub) messagesUnsub();
+  if(typingUnsub) typingUnsub();
+
+  // clear chat area
+  chat.innerHTML = '';
+  
+  // Reload online users list if drawer is open (for when switching rooms)
+  const drawer = document.getElementById('onlineUsersDrawer');
+  if(drawer && drawer.style.transform === 'translateX(0px)') {
+    loadOnlineUsersList();
+  }
+  lastMessageTime = Date.now();
+
+  // incremental messages snapshot using docChanges
+  const msgsQuery = query(collection(db,'rooms',room,'messages'), orderBy('time'));
+  messagesUnsub = onSnapshot(msgsQuery, snap => {
+    const shouldScroll = (chat.scrollHeight - chat.scrollTop - chat.clientHeight) < 160;
+    snap.docChanges().forEach(change => {
+      const d = change.doc;
+      const m = d.data();
+      if(change.type === 'added'){
+        renderMessage(d.id, m);
+        // Show notification for new messages from others
+        const localNick = localStorage.getItem('nick') || nick;
+        const notificationsEnabled = localStorage.getItem('notificationsEnabled') === 'true';
+        if(m.name !== localNick && m.name !== 'System' && 'Notification' in window && Notification.permission === 'granted' && document.hidden && notificationsEnabled) {
+          const notif = new Notification('New message in #' + room, {
+            body: m.name + ': ' + (m.text.length > 60 ? m.text.substring(0, 60) + '...' : m.text),
+            icon: 'images/echo_space_favicon.png',
+            tag: 'echo-message-' + d.id
+          });
+          notif.onclick = () => {
+            window.focus();
+            notif.close();
+          };
+        }
+        // mark as seen for this user (only for new messages)
+        if(localNick){
+          setDoc(doc(db, 'rooms', room, 'messages', d.id, 'seen', localNick), {name: localNick, t: serverTimestamp()}).catch(()=>{});
+        }
+      } else if(change.type === 'modified'){
+        updateMessage(d.id, m);
+      } else if(change.type === 'removed'){
+        removeMessage(d.id);
+      }
+    });
+    // use RAF to make autoscroll robust (fixes missed scrolls)
+    requestAnimationFrame(() => scrollChatToBottom());
+  });
+
+  // typing snapshot (robust handling of timestamp field)
+  typingUnsub = onSnapshot(collection(db,'rooms',room,'typing'), snap => {
+    const now = Date.now();
+    const usersTyping = [];
+    snap.forEach(d=> {
+      if(d.id === (localStorage.getItem('nick')||nick)) return; // skip self
+      const tField = d.data().t;
+      let tMs = null;
+      if(tField && typeof tField.toMillis === 'function') tMs = tField.toMillis();
+      else if(typeof tField === 'number') tMs = tField;
+      else if(tField && typeof tField._seconds === 'number') tMs = (tField._seconds*1000) + (tField._nanoseconds ? Math.floor(tField._nanoseconds/1e6) : 0);
+      if(tMs && (now - tMs) < 4000) usersTyping.push(d.id);
+    });
+
+    // render stylish indicator (with controlled animation restarts)
+    renderTypingIndicator(usersTyping);
+  });
+}
+
+/* --- Animation restart control vars:
+   We avoid restarting the dot animation on every typing heartbeat (otherwise it's too snappy).
+   Restart only when the set of users changes OR if enough time has passed since last restart.
+*/
+let _lastTypingKey = '';
+let _lastTypingAnimRestart = 0;
+const TYPING_ANIM_MIN_RESTART_INTERVAL = 1200; // ms; don't restart animation more often than this unless users changed
+
+/* renderTypingIndicator: shows avatars + animated dots + text (up to 4 users)
+   Uses userCache for colors where possible; falls back to guest gray.
+   Animation will be restarted only when users list changes OR minimum interval elapsed.
+*/
+function renderTypingIndicator(usersTyping){
+  if(!usersTyping || usersTyping.length === 0){
+    typingIndicator.style.display = 'none';
+    _lastTypingKey = '';
+    return;
+  }
+
+  typingIndicator.style.display = 'flex';
+
+  const avatarsWrap = typingIndicator.querySelector('.typing-avatars');
+  const label = typingIndicator.querySelector('.typing-label');
+
+  // muodostetaan avain nykyisestä typing-tilasta
+  const typingKey = usersTyping.join('|');
+
+  /*
+    AVATARIT:
+    Rakenna avatarit vain jos typing-kokoonpano on OIKEASTI muuttunut
+    → estää animaation uudelleenkäynnistymisen
+  */
+  if (typingKey !== _lastTypingKey) {
+    avatarsWrap.innerHTML = usersTyping.slice(0,4).map(n=>{
+      const color =
+        (userCache.get(n)?.color) ||
+        getComputedStyle(document.documentElement)
+          .getPropertyValue('--guest-gray').trim();
+
+      return `<div class="typ-av" style="background:${color}">
+        ${escapeHtml((n || '?')[0])}
+      </div>`;
+    }).join('');
+
+    _lastTypingKey = typingKey;
+  }
+
+  // LABEL (saa päivittyä JOKA KERTA, ei käynnistä animaatiota)
+  if(usersTyping.length === 1)
+    label.textContent = `${usersTyping[0]} is typing`;
+  else if(usersTyping.length === 2)
+    label.textContent = `${usersTyping[0]} and ${usersTyping[1]} are typing`;
+  else if(usersTyping.length === 3)
+    label.textContent = `${usersTyping[0]}, ${usersTyping[1]} and ${usersTyping[2]} are typing`;
+  else
+    label.textContent = `${usersTyping[0]}, ${usersTyping[1]} and ${usersTyping.length - 2} others are typing`;
+}
+
+
+/* DOM helpers for incremental updates */
+function makeMessageElement(id, m){
+  const el = document.createElement('div');
+  el.className = 'message';
+  el.dataset.msgid = id;
+  el.dataset.owner = m.name;
+
+  const replyHtml = m.reply?`<div class="reply-preview"><b>${escapeHtml(m.reply.name)}</b>: ${escapeHtml(m.reply.text)}</div>`:'';
+  const safeTextHtml = linkify(escapeHtml(m.text || ''));
+  const editedNoteHtml = m.editedNote ? `<span class="edited-note">${escapeHtml(m.editedNote)}</span>` : '';
+
+  // Check if sender is admin by checking if session is in roomAdmins array
+  const isSenderAdmin = roomAdmins.includes(m.session);
+  const adminBadge = isSenderAdmin ? '<span style="background:var(--accent);color:#000;font-size:10px;margin-left:6px;padding:2px 8px;border-radius:4px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;display:inline-flex;align-items:center;gap:3px"><span style="font-size:9px">👑</span>ADMIN</span>' : '';
+  
+  // Get cached role for this user - everyone can have 1 role (admins get admin + 1 role = 2 badges max)
+  const cachedUser = userCache.get(m.name);
+  const roleBadge = (cachedUser && cachedUser.role) ? getRoleBadge(cachedUser.role) : '';
+
+  // Build inner message WITHOUT reply button when mobile.
+  // Admins: admin badge + 1 role badge (2 max), Regular users: 1 role badge only
+  let msgInner = `
+    <div class="avatar" style="background:${m.color || getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim()}">${escapeHtml((m.name||'?')[0]||'?')}</div>
+    <div class="msg">
+      ${replyHtml}
+      <b class="msg-sender" style="color:${m.color || '#999'};cursor:pointer">${escapeHtml(m.name)}</b>${adminBadge}${roleBadge}
+      <span class="time">${m.time?.toMillis ? new Date(m.time.toMillis()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : ''}</span>
+      <div class="msg-text">${safeTextHtml}${editedNoteHtml}</div>
+    </div>
+  `;
+
+  el.innerHTML = msgInner;
+
+  // Add reply button ONLY for non-mobile (desktop)
+  if(!isMobile){
+    const replyBtn = document.createElement('div');
+    replyBtn.className = 'reply-btn';
+    replyBtn.setAttribute('data-name', escapeAttr(m.name));
+    replyBtn.setAttribute('data-text', escapeAttr(m.text));
+    replyBtn.textContent = 'reply';
+    el.querySelector('.msg').appendChild(replyBtn);
+  }
+
+  // Add the three-dot MORE button for own messages (desktop only)
+  const localNick = localStorage.getItem('nick') || nick;
+  if(m.name === localNick && !isMobile){
+    const msgInnerEl = el.querySelector('.msg');
+    const moreBtn = document.createElement('div');
+    moreBtn.className = 'more-btn';
+    moreBtn.title = 'More';
+    moreBtn.textContent = '⋯';
+    moreBtn.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      const rect = moreBtn.getBoundingClientRect();
+      // show the same context menu but positioned near the button
+      showEditDeleteMenu(Math.round(rect.left + 8), Math.round(rect.bottom + 6), id, m.text);
+    });
+    msgInnerEl.appendChild(moreBtn);
+  }
+
+  // Fetch and cache user role for this message
+  (async () => {
+    try {
+      const cached = userCache.get(m.name);
+      if(!cached || !cached.hasOwnProperty('role')) {
+        const us = await getDoc(doc(db,'users',m.name));
+        if(us.exists()) {
+          const ud = us.data();
+          const role = ud.role || null;
+          userCache.set(m.name, { ...(cached || {}), role });
+          // Update role badge if role exists
+          if(role && ROLES[role]) {
+            const senderEl = el.querySelector('.msg-sender');
+            if(senderEl) {
+              const existingRoleBadge = senderEl.parentElement.querySelector('[data-role-badge]');
+              if(!existingRoleBadge) {
+                const roleBadgeEl = document.createElement('span');
+                roleBadgeEl.dataset.roleBadge = 'true';
+                roleBadgeEl.innerHTML = getRoleBadge(role);
+                senderEl.insertAdjacentElement('afterend', roleBadgeEl);
+              }
+            }
+          }
+        }
+      }
+    } catch(e) {}
+  })();
+
+  // attach interactions
+  const senderEl = el.querySelector('.msg-sender');
+  if(senderEl){
+    if(!isMobile){
+      senderEl.addEventListener('mouseenter', async (ev)=>{
+        ev.stopPropagation();
+        let joined = null; let color = m.color;
+        try{
+          const cached = userCache.get(m.name);
+          if(cached && cached.color) color = cached.color;
+          else {
+            const us = await getDoc(doc(db,'users',m.name));
+            if(us.exists()){
+              const ud = us.data();
+              joined = ud.joined?.toMillis ? new Date(ud.joined.toMillis()) : ud.joined;
+              color = ud.color || color;
+              const role = ud.role || null;
+              userCache.set(m.name, { color, role });
+            }
+          }
+        }catch(e){}
+        showProfileCardFor(m.name, color, joined, senderEl);
+      });
+      senderEl.addEventListener('mouseleave', ()=>{
+        setTimeout(()=>{ if(document.querySelector(':hover') !== senderEl) { profileCard.classList.remove('show'); profileCard.setAttribute('aria-hidden','true'); } }, 120);
+      });
+    } else {
+      senderEl.addEventListener('click', async (ev)=>{
+        ev.stopPropagation();
+        let joined = null; let color = m.color;
+        try{
+          const cached = userCache.get(m.name);
+          if(cached && cached.color) color = cached.color;
+          else {
+            const us = await getDoc(doc(db,'users',m.name));
+            if(us.exists()){
+              const ud = us.data();
+              joined = ud.joined?.toMillis ? new Date(ud.joined.toMillis()) : ud.joined;
+              color = ud.color || color;
+              const role = ud.role || null;
+              userCache.set(m.name, { color, role });
+            }
+          }
+        }catch(e){}
+        showProfileCardFor(m.name, color, joined, senderEl);
+      });
+    }
+  }
+
+  // hover to show who has seen this message
+  el.addEventListener('mouseenter', async (ev)=>{
+    if(m.name === (localStorage.getItem('nick')||nick)) return;
+    const rect = el.getBoundingClientRect();
+    tooltip.style.left = (rect.right + 8) + 'px';
+    tooltip.style.top = (rect.top) + 'px';
+    tooltip.textContent = 'Loading...';
+    tooltip.style.display = 'block';
+    tooltip.setAttribute('aria-hidden','false');
+    try{
+      const seenDocs = await getDocs(collection(db, 'rooms', room, 'messages', id, 'seen'));
+      const names = [];
+      seenDocs.forEach(sd=> names.push(sd.data().name));
+      tooltip.textContent = names.length ? ('Seen by: ' + names.join(', ')) : 'No one has seen this yet';
+    }catch(e){ tooltip.textContent = '—'; }
+  });
+  el.addEventListener('mouseleave', ()=>{ tooltip.style.display = 'none'; tooltip.setAttribute('aria-hidden','true'); });
+
+  // attach mobile interactions including swipe-to-reply and long-press edit/delete
+  attachMobileInteractions(el, id, m);
+
+  // reply button click handler (desktop only)
+  el.querySelectorAll('.reply-btn').forEach(b => b.addEventListener('click', (e)=>{
+    replyTo = { name: b.dataset.name, text: b.dataset.text };
+    replyBox.style.display = 'block';
+    replyBox.innerHTML = `Replying to <b>${escapeHtml(replyTo.name)}</b> <button id="cancelReply" style="margin-left:8px">x</button>`;
+    const btn = document.getElementById('cancelReply'); if(btn) btn.onclick = cancelReply;
+  }));
+
+  return el;
+}
+
+function renderMessage(id, m){
+  // skip if already exists
+  if(chat.querySelector(`[data-msgid="${id}"]`)) return;
+  const el = makeMessageElement(id, m);
+  chat.appendChild(el);
+}
+
+function updateMessage(id, m){
+  const el = chat.querySelector(`[data-msgid="${id}"]`);
+  if(!el) { renderMessage(id, m); return; }
+  const replyHtml = m.reply?`<div class="reply-preview"><b>${escapeHtml(m.reply.name)}</b>: ${escapeHtml(m.reply.text)}</div>`:'';
+  const safeTextHtml = linkify(escapeHtml(m.text || ''));
+  const editedNoteHtml = m.editedNote ? `<span class="edited-note">${escapeHtml(m.editedNote)}</span>` : '';
+  const avatar = el.querySelector('.avatar');
+  const sender = el.querySelector('.msg-sender');
+  const time = el.querySelector('.time');
+  const msgText = el.querySelector('.msg-text');
+  if(avatar) avatar.style.background = m.color || getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim();
+  if(sender) { 
+    sender.textContent = m.name; 
+    sender.style.color = m.color || '#999'; 
+    // Update admin badge using session (check if in roomAdmins array)
+    const isSenderAdmin = roomAdmins.includes(m.session);
+    // Remove existing admin and role badges
+    let nextEl = sender.nextElementSibling;
+    while(nextEl && (nextEl.style.background === 'var(--accent)' || nextEl.dataset.roleBadge)) {
+      const toRemove = nextEl;
+      nextEl = nextEl.nextElementSibling;
+      toRemove.remove();
+    }
+    // Add admin badge if admin
+    if(isSenderAdmin) {
+      const adminBadge = document.createElement('span');
+      adminBadge.style.cssText = 'background:var(--accent);color:#000;font-size:10px;margin-left:6px;padding:2px 8px;border-radius:4px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;display:inline-flex;align-items:center;gap:3px';
+      adminBadge.innerHTML = '<span style="font-size:9px">👑</span>ADMIN';
+      sender.after(adminBadge);
+    }
+    // Add role badge if cached (everyone can have 1 role, admins get admin + role = 2 badges max)
+    const cached = userCache.get(m.name);
+    if(cached && cached.role && ROLES[cached.role]) {
+      const roleBadge = document.createElement('span');
+      roleBadge.dataset.roleBadge = 'true';
+      roleBadge.innerHTML = getRoleBadge(cached.role);
+      sender.after(roleBadge);
+    }
+  }
+  
+  // Fetch and cache user role
+  (async () => {
+    try {
+      const cached = userCache.get(m.name);
+      // Always fetch fresh role data to ensure we have the latest
+      const us = await getDoc(doc(db,'users',m.name));
+      if(us.exists()) {
+        const ud = us.data();
+        const role = ud.role || null;
+        // Update cache with fresh role data
+        userCache.set(m.name, { ...(cached || {}), role });
+        
+        // Update role badge if element still exists
+        if(el.isConnected) {
+          const senderEl = el.querySelector('.msg-sender');
+          if(senderEl) {
+            // Remove existing role badge first (prevents duplicates)
+            const existingRoleBadges = senderEl.parentElement.querySelectorAll('[data-role-badge]');
+            existingRoleBadges.forEach(badge => badge.remove());
+            
+            // Add new role badge if role exists and user is not admin (admins already have admin badge added above)
+            const isSenderAdmin = roomAdmins.includes(m.session);
+            if(role && ROLES[role] && !isSenderAdmin) {
+              const roleBadgeEl = document.createElement('span');
+              roleBadgeEl.dataset.roleBadge = 'true';
+              roleBadgeEl.innerHTML = getRoleBadge(role);
+              senderEl.insertAdjacentElement('afterend', roleBadgeEl);
+            }
+          }
+        }
+      }
+    } catch(e) {}
+  })();
+  if(time) time.textContent = m.time?.toMillis ? new Date(m.time.toMillis()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
+  if(msgText) msgText.innerHTML = safeTextHtml + editedNoteHtml;
+  // reply preview update
+  const replyPrev = el.querySelector('.reply-preview');
+  if(replyPrev && !m.reply) replyPrev.remove();
+  else if(!replyPrev && m.reply) el.querySelector('.msg').insertAdjacentHTML('afterbegin', replyHtml);
+
+  // ensure more-btn exists for own messages (desktop only)
+  const localNick = localStorage.getItem('nick') || nick;
+  const hasMore = !!el.querySelector('.more-btn');
+  if(m.name === localNick && !isMobile && !hasMore){
+    const msgInner = el.querySelector('.msg');
+    const moreBtn = document.createElement('more-btn');
+    // create proper more button (kept consistent)
+    const mb = document.createElement('div');
+    mb.className = 'more-btn';
+    mb.title = 'More';
+    mb.textContent = '⋯';
+    mb.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      const rect = mb.getBoundingClientRect();
+      showEditDeleteMenu(Math.round(rect.left + 8), Math.round(rect.bottom + 6), id, m.text);
+    });
+    msgInner.appendChild(mb);
+  } else if((m.name !== localNick || isMobile) && hasMore){
+    const mb = el.querySelector('.more-btn');
+    if(mb) mb.remove();
+  }
+}
+
+function removeMessage(id){
+  const el = chat.querySelector(`[data-msgid="${id}"]`);
+  if(el) el.remove();
+}
+
+/* context menu implementation (dropdown on three-dots / replaced right-click / long-press) */
+function showEditDeleteMenu(x,y,msgId, currentText){
+  contextMenu.innerHTML = '';
+  // Edit
+  const editBtn = document.createElement('button');
+  editBtn.textContent = 'Edit';
+  editBtn.onclick = async (ev)=>{
+    ev.stopPropagation();
+    const newText = prompt('Edit message', currentText);
+    if(newText == null) { hideContextMenu(); return; }
+    try{ await updateDoc(doc(db,'rooms',room,'messages',msgId), { text: newText, editedNote: 'Edited' }).catch(console.error); }catch(e){}
+    hideContextMenu();
+  };
+  contextMenu.appendChild(editBtn);
+  // Delete
+  const delBtn = document.createElement('button');
+  delBtn.textContent = 'Delete';
+  delBtn.onclick = async (ev)=>{
+    ev.stopPropagation();
+    if(confirm('Delete this message?')){
+      try{ await deleteDoc(doc(db,'rooms',room,'messages',msgId)).catch(console.error); }catch(e){}
+    }
+    hideContextMenu();
+  };
+  contextMenu.appendChild(delBtn);
+
+  // position
+  const pad = 6;
+  const menuWidth = 180;
+  const menuHeight = 80;
+  let left = x;
+  let top = y;
+  if(left + menuWidth > window.innerWidth) left = window.innerWidth - menuWidth - pad;
+  if(top + menuHeight > window.innerHeight) top = window.innerHeight - menuHeight - pad;
+  contextMenu.style.left = left + 'px';
+  contextMenu.style.top = top + 'px';
+  contextMenu.style.display = 'block';
+  contextMenu.setAttribute('aria-hidden','false');
+}
+function hideContextMenu(){
+  contextMenu.style.display = 'none';
+  contextMenu.setAttribute('aria-hidden','true');
+}
+
+/* MOBILE INTERACTIONS: simplified/no-op (mobile support disabled)
+   attachMobileInteractions kept as function with same signature, but it now
+   performs no touch handling because isMobile is false and we removed the
+   unused mobile touch/drag code to keep the bundle lean.
+*/
+function attachMobileInteractions(el, msgId, messageData){
+  // mobile support intentionally disabled; keep function for compatibility
+  if(!isMobile) return;
+  // (no further code — previously heavy touch handlers removed)
+}
+
+/* typing indicator management (client writes typing docs elsewhere) */
+msg.addEventListener('input', ()=> {
+  if(!room || !nick) return;
+  if(msg.value.trim()===''){
+    deleteDoc(doc(db,'rooms',room,'typing',localStorage.getItem('nick')||nick)).catch(()=>{});
+    return;
+  }
+  setDoc(doc(db,'rooms',room,'typing',localStorage.getItem('nick')||nick),{t:serverTimestamp()});
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(()=> { deleteDoc(doc(db,'rooms',room,'typing',localStorage.getItem('nick')||nick)).catch(()=>{}); }, 1500);
+});
+msg.addEventListener('blur', ()=> { if(room && (localStorage.getItem('nick')||nick)) deleteDoc(doc(db,'rooms',room,'typing',localStorage.getItem('nick')||nick)).catch(()=>{}); });
+
+/* reply UI */
+chat.addEventListener('click', (e)=>{
+  const b = e.target.closest('.reply-btn');
+  if(!b) return;
+  replyTo = { name: b.dataset.name, text: b.dataset.text };
+  replyBox.style.display = 'block';
+  replyBox.innerHTML = `Replying to <b>${escapeHtml(replyTo.name)}</b> <button id="cancelReply" style="margin-left:8px">x</button>`;
+  document.getElementById('cancelReply').onclick = cancelReply;
+});
+function cancelReply(){ replyTo = null; replyBox.style.display = 'none'; }
+
+/* send messages */
+msg.addEventListener('keydown', async (e)=>{
+  if(e.key !== 'Enter') return;
+  const textRaw = msg.value.trim(); msg.value = ''; if(!textRaw) return;
+  if(!room){ alert('You are not in a room'); return; }
+  deleteDoc(doc(db,'rooms',room,'typing',localStorage.getItem('nick')||nick)).catch(()=>{});
+
+  // Commands handling
+  if(textRaw.startsWith('/')){
+    await handleCommand(textRaw);
+    return;
+  }
+
+  // compute color deterministically
+  const colorToSend = (localStorage.getItem('session') && !localStorage.getItem('session').startsWith('Guest')) ? (localStorage.getItem('nickColor') || '#58a6ff') : getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim();
+
+  await addDoc(collection(db,'rooms',room,'messages'), {
+    name: localStorage.getItem('nick') || nick,
+    session: localStorage.getItem('session') || '',
+    text: textRaw,
+    reply: replyTo,
+    color: colorToSend,
+    time: serverTimestamp()
+  }).catch(console.error);
+  replyTo = null; replyBox.style.display = 'none';
+});
+
+/* Helper: robust autoscroll (used after updates) */
+function scrollChatToBottom(force = false){
+  if(force){
+    chat.scrollTop = chat.scrollHeight;
+    return;
+  }
+  const nearBottom = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 160;
+  if(nearBottom){
+    chat.scrollTop = chat.scrollHeight;
+  }
+}
+
+/* Helper: chunked batch deletes (handles >500 deletes safely) */
+async function deleteDocsInBatches(refs){
+  const CHUNK = 400; // safe chunk under Firestore limit
+  let i = 0;
+  while(i < refs.length){
+    const b = writeBatch(db);
+    const end = Math.min(i + CHUNK, refs.length);
+    for(let j=i;j<end;j++) b.delete(refs[j]);
+    await b.commit();
+    i = end;
+  }
+}
+
+/* command processor */
+async function handleCommand(cmdText){
+  const parts = cmdText.split(/\s+/);
+  const c = parts[0].toLowerCase();
+  // help: visible only to you -> show via alert
+  if(c === '/help'){
+    const helpText = [
+      "Commands:",
+      "/help — Show this list (only visible to you).",
+      "/roll [n] — Roll 1–10 dice (default 1).",
+      "/coin — Flip a coin.",
+      "/tableflip — Table flip effect.",
+      "/shrug — ¯\\_(ツ)_/¯",
+      "/clear — Delete all messages (Admin only).",
+      "/delete (or /delet) — Delete the room (Admin only).",
+      "/giveadmin <username> — Give admin rights to a user (Admin only).",
+      "/roles — Open the role selector to choose a role badge.",
+      "",
+      "Room Admin:",
+      "- The user who creates a room becomes the Admin",
+      "- Admin can delete the room and clear all messages",
+      "- Admin can give admin rights to other users",
+      "- Admin has 👑 ADMIN badge next to their name",
+      "",
+      "Roles:",
+      "- Use /roles to choose a role badge for your profile",
+      "- Roles are displayed next to your name in chat"
+    ].join("\n\n");
+    alert(helpText);
+    return;
+  }
+
+  if(c === '/roll'){
+    let n = 1; if(parts[1]) n = Math.min(10, Math.max(1, parseInt(parts[1])||1));
+    const rolls = [];
+    for(let i=0;i<n;i++) rolls.push(Math.floor(Math.random()*6)+1);
+    const txt = `${localStorage.getItem('nick')||nick} rolled 🎲 ${rolls.map(r=>`🎲 ${r}`).join(n>1?' + ':'')}${n>1?` = ${rolls.reduce((a,b)=>a+b,0)}`:''}`;
+    await addDoc(collection(db,'rooms',room,'messages'), {name:'System', text:txt, color:'#888', time:serverTimestamp()});
+    return;
+  }
+  if(c === '/coin'){
+    const r = Math.random() < 0.5 ? 'Heads' : 'Tails';
+    const txt = `${localStorage.getItem('nick')||nick} flipped a coin → ${r}`;
+    await addDoc(collection(db,'rooms',room,'messages'), {name:'System', text:txt, color:'#888', time:serverTimestamp()});
+    return;
+  }
+  if(c === '/tableflip'){
+    const txt = `${localStorage.getItem('nick')||nick} (╯°□°）╯︵ ┻━┻`;
+    await addDoc(collection(db,'rooms',room,'messages'), {name:'System', text:txt, color:'#888', time:serverTimestamp()});
+    return;
+  }
+  if(c === '/shrug'){
+    const txt = `${localStorage.getItem('nick')||nick} ¯\\_(ツ)_/¯`;
+    await addDoc(collection(db,'rooms',room,'messages'), {name:'System', text:txt, color:'#888', time:serverTimestamp()});
+    return;
+  }
+
+  // /clear: delete messages (ask for confirmation) -> use batched deletes
+  // Only admin can clear messages
+  if(c === '/clear'){
+    if(!isAdmin) {
+      alert('Only the room admin can clear messages.');
+      return;
+    }
+    if(!confirm('Delete all messages in this room?')) return;
+    try{
+      const msgs = await getDocs(collection(db,'rooms',room,'messages'));
+      const refsToDelete = [];
+      for(const d of msgs.docs){
+        const seenSnap = await getDocs(collection(db,'rooms',room,'messages',d.id,'seen'));
+        for(const sd of seenSnap.docs) refsToDelete.push(sd.ref);
+        refsToDelete.push(d.ref);
+      }
+      if(refsToDelete.length) await deleteDocsInBatches(refsToDelete);
+    }catch(e){ console.error('/clear error', e); }
+    return;
+  }
+
+  // /delete or /delet: delete room and messages (ask for confirmation) -> use batched deletes
+  // Only admin can delete room
+  if(c === '/delete' || c === '/delet'){
+    if(!isAdmin) {
+      alert('Only the room admin can delete the room.');
+      return;
+    }
+    if(!confirm('Delete the room and all messages?')) return;
+    try{
+      // delete typing docs
+      const typingDocs = await getDocs(collection(db,'rooms',room,'typing'));
+      const refsToDelete = [];
+      typingDocs.forEach(t => refsToDelete.push(t.ref));
+
+      // delete messages & their seen subcollections
+      const msgs = await getDocs(collection(db,'rooms',room,'messages'));
+      for(const d of msgs.docs){
+        const seenSnap = await getDocs(collection(db,'rooms',room,'messages',d.id,'seen'));
+        for(const sd of seenSnap.docs) refsToDelete.push(sd.ref);
+        refsToDelete.push(d.ref);
+      }
+
+      // perform deletes in batches
+      if(refsToDelete.length) await deleteDocsInBatches(refsToDelete);
+
+      // attempt to delete room doc (last)
+      try{ await deleteDoc(doc(db,'rooms',room)); }catch(e){ /* ignore */ }
+
+      // navigate back to home
+      if(messagesUnsub) messagesUnsub();
+      if(typingUnsub) typingUnsub();
+      room = '';
+      showHome();
+      chat.innerHTML = '';
+    }catch(e){ console.error('/delete error', e); }
+    return;
+  }
+
+  // /giveadmin <username>: Give admin rights to a user
+  if(c === '/giveadmin'){
+    if(!isAdmin) {
+      alert('Only room admins can give admin rights.');
+      return;
+    }
+    if(!parts[1]) {
+      alert('Usage: /giveadmin <username>');
+      return;
+    }
+    const targetUser = parts[1].trim();
+    if(targetUser === (localStorage.getItem('session') || '')) {
+      alert('You are already an admin.');
+      return;
+    }
+    
+    try {
+      // Check if user exists
+      const userRef = doc(db, 'users', targetUser);
+      const userSnap = await getDoc(userRef);
+      if(!userSnap.exists() && !targetUser.startsWith('Guest')) {
+        alert(`User "${targetUser}" not found.`);
+        return;
+      }
+      
+      // Update room admins
+      const roomRef = doc(db, 'rooms', room);
+      const roomSnap = await getDoc(roomRef);
+      if(!roomSnap.exists()) {
+        alert('Room not found.');
+        return;
+      }
+      
+      const roomData = roomSnap.data();
+      let newAdmins;
+      if(Array.isArray(roomData.admins)) {
+        newAdmins = [...roomData.admins];
+      } else if(roomData.admin) {
+        newAdmins = [roomData.admin];
+      } else {
+        newAdmins = [];
+      }
+      
+      if(!newAdmins.includes(targetUser)) {
+        newAdmins.push(targetUser);
+        await updateDoc(roomRef, { admins: newAdmins });
+        roomAdmins = newAdmins;
+        alert(`✅ Admin rights given to ${targetUser}`);
+        // Post system message
+        await addDoc(collection(db,'rooms',room,'messages'), {
+          name:'System', 
+          text:`${targetUser} has been promoted to admin by ${localStorage.getItem('session') || nick}`, 
+          color:'#888', 
+          time:serverTimestamp()
+        });
+      } else {
+        alert(`${targetUser} is already an admin.`);
+      }
+    } catch(e) {
+      console.error('/giveadmin error', e);
+      alert('Error giving admin rights: ' + (e.message || String(e)));
+    }
+    return;
+  }
+
+  // /roles: Open role selector modal
+  if(c === '/roles'){
+    openRolesModal();
+    return;
+  }
+
+  // unknown command -> echo to system
+  await addDoc(collection(db,'rooms',room,'messages'), {name:'System', text:`Unknown command: ${cmdText}`, color:'#888', time:serverTimestamp()});
+}
+
+/* emojis picker */
+const emojiList = [
+"😀","😃","😄","😁","😆","😂","🤣","🙂","🙃","😉","😊","😇",
+"😍","🥰","😘","😗","😙","😚","😋","😛","😜","🤪","😝",
+"🤗","🤭","🤫","🤔","🤨","😐","😑","😶","🙄","😏",
+"😣","😥","😮","😯","😲","😪","😫","🥱","😴","😌",
+"😤","😠","😡","🤬","😢","😭","🥺","😳","😱","😨","😰","😓",
+"👍","👎","👌","✌️","🤞","🤟","🤘","🤙","👋","👏","🙌","🙏"
+];
+
+function buildEmojiPicker(){
+  emojiPicker.innerHTML = '';
+  const grid = document.createElement('div'); grid.style.display='flex'; grid.style.flexWrap='wrap'; grid.style.gap='6px';
+  emojiPicker.appendChild(grid);
+  emojiList.forEach(e=>{ const d=document.createElement('div'); d.className='emoji'; d.textContent=e; d.onclick=()=>{ msg.value += e; emojiPicker.style.display='none'; msg.focus(); }; grid.appendChild(d); });
+}
+buildEmojiPicker();
+emojiBtn.onclick = ()=> emojiPicker.style.display = emojiPicker.style.display === 'flex' ? 'none' : 'flex';
+
+/* back button */
+back.onclick = ()=>{
+  if(messagesUnsub) messagesUnsub();
+  if(typingUnsub) typingUnsub();
+  // Close online users drawer when leaving room
+  closeOnlineUsersDrawer();
+  showHome();
+  room = '';
+  chat.innerHTML = '';
+  typingIndicator.textContent = '';
+};
+
+/* lobby size (kept) */
+const LOBBY_SIZES = [
+  {name:'small', width:'120px'},
+  {name:'normal', width:'260px'},
+  {name:'large', width:'360px'}
+];
+let lobbySizeIndex = parseInt(localStorage.getItem('lobbySizeIndex')||'1',10);
+applyLobbySize();
+
+lobbySizeBtn.addEventListener('click', ()=> {
+  lobbySizeIndex = (lobbySizeIndex + 1) % LOBBY_SIZES.length;
+  applyLobbySize();
+  localStorage.setItem('lobbySizeIndex', lobbySizeIndex);
+});
+function applyLobbySize(){
+  const s = LOBBY_SIZES[lobbySizeIndex];
+  document.documentElement.style.setProperty('--lobby-width', s.width);
+  lobbySizeBtn.textContent = s.name[0].toUpperCase();
+  if(isMobile) {
+    const collapse = (s.name === 'small');
+    lobby.classList.toggle('collapsed', collapse);
+    chatSidebar.classList.toggle('collapsed', collapse);
+  } else {
+    lobby.classList.remove('collapsed');
+    chatSidebar.classList.remove('collapsed');
+  }
+}
+
+/* Mobile drawer open/close simplified:
+   Keep functions and names but make behavior safe and minimal,
+   because mobile logic was removed. This preserves calls from other code.
+*/
+function openMobileDrawer(){
+  // No active mobile UI — keep DOM state consistent and hidden.
+  if(!mobileOverlay || !mobileDrawer) return;
+  mobileOverlay.classList.add('show');
+  mobileDrawer.classList.add('show');
+  mobileOverlay.style.display = 'block';
+  mobileDrawer.style.display = 'block';
+  mobileOverlay.setAttribute('aria-hidden','false'); mobileDrawer.setAttribute('aria-hidden','false');
+  updateOpenLobbyBtnVisibility();
+}
+function closeMobileDrawer(){
+  if(!mobileOverlay || !mobileDrawer) return;
+  mobileDrawer.classList.remove('show');
+  mobileOverlay.classList.remove('show');
+  const durationMs = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--drawer-duration')) || 200;
+  setTimeout(()=>{
+    if(!mobileDrawer.classList.contains('show')){
+      mobileOverlay.style.display = 'none';
+      mobileDrawer.style.display = 'none';
+      mobileOverlay.setAttribute('aria-hidden','true'); mobileDrawer.setAttribute('aria-hidden','true');
+      updateOpenLobbyBtnVisibility();
+    }
+  }, durationMs + 20);
+}
+
+/* Visibility logic for blue button (mobile) */
+function updateOpenLobbyBtnVisibility(){
+  const drawerOpen = mobileDrawer && mobileDrawer.classList.contains('show') || false;
+  if(!isMobile){
+    openLobbyBtn.style.display = 'none'; return;
+  }
+  const isHomeVisible = home.style.display !== 'none';
+  if(isHomeVisible && !drawerOpen) openLobbyBtn.style.display = 'block';
+  else openLobbyBtn.style.display = 'none';
+}
+const origShowHome = showHome;
+showHome = function(){ origShowHome(); updateOpenLobbyBtnVisibility(); };
+const origShowMain = showMain;
+showMain = function(){ origShowMain(); updateOpenLobbyBtnVisibility(); };
+const origShowLogin = showLogin;
+showLogin = function(){ origShowLogin(); updateOpenLobbyBtnVisibility(); };
+
+/* utility helpers */
+function escapeHtml(s){
+  if(!s && s !== 0) return '';
+  return String(s).replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]); });
+}
+function escapeAttr(s){ return (s||'').replace(/"/g,'&quot;'); }
+
+function linkify(text){
+  const urlRe = /((https?:\/\/|www\.)[\w\-@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([\w\-@:%_\+.~#?&//=]*))/gi;
+  return text.replace(urlRe, function(match){
+    let url = match;
+    if(!/^https?:\/\//i.test(url)) url = 'https://' + url;
+    return `<a href="${url}" target="_blank" rel="noopener">${match}</a>`;
+  });
+}
+
+/* helper to get user color from cache or default */
+function getUserColor(name){
+  const cached = userCache.get(name);
+  if(cached && cached.color) return cached.color;
+  return getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim();
+}
+
+/* Check if a name is already taken by a registered user */
+async function isNameTaken(name) {
+  if(!name) return false;
+  try {
+    const userRef = doc(db, 'users', name);
+    const snap = await getDoc(userRef);
+    return snap.exists();
+  } catch(e) {
+    console.error('Error checking name:', e);
+    return false;
+  }
+}
+
+// SHA-256 helper (uses SubtleCrypto)
+async function sha256(text) {
+  const data = new TextEncoder().encode(text);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+loginBtn.addEventListener('click', async (e) => {
+  e.preventDefault();
+  const username = (loginUser.value || '').trim();
+  const password = loginPass.value || '';
+  if(!username || !password){ loginMsg.textContent = 'Please enter username and password.'; return; }
+  loginMsg.textContent = 'Checking...';
+  try {
+    const userRef = doc(db, 'users', username);
+    const snap = await getDoc(userRef);
+    const passHash = await sha256(password);
+
+    if(!snap.exists()){
+      // REGISTER
+      await setDoc(userRef, {
+        passwordHash: passHash,
+        created: serverTimestamp(),
+        color: '#58a6ff'
+      });
+
+      localStorage.setItem('session', username);
+      localStorage.setItem('nick', username);
+      localStorage.setItem('nickColor', '#58a6ff');
+
+      loginMsg.textContent = 'registered and logged in';
+      showHome();
+      return;
+    }
+
+    // LOGIN
+    const data = snap.data();
+    if(data.passwordHash === passHash){
+      localStorage.setItem('session', username);
+      localStorage.setItem('nick', username);
+      if (data.color) localStorage.setItem('nickColor', data.color);
+      loginMsg.textContent = 'Login successful ✅';
+      showHome();
+    } else {
+      loginMsg.textContent = 'Wrong password ❌';
+    }
+  } catch (err) {
+    console.error(err);
+    loginMsg.textContent = 'Error: ' + (err.message || String(err));
+  }
+});
+
+loginPass.addEventListener('keydown', e => { if (e.key === 'Enter') loginBtn.click(); });
+
+// Demo/guest button with duplicate name check
+demoBtn.addEventListener('click', async (e) => {
+  e.preventDefault();
+  let g = 'Guest' + Math.floor(Math.random()*9000 + 1000);
+  
+  // Ensure guest name doesn't conflict with registered user
+  let attempts = 0;
+  while(await isNameTaken(g) && attempts < 10) {
+    g = 'Guest' + Math.floor(Math.random()*9000 + 1000);
+    attempts++;
+  }
+  
+  if(attempts >= 10) {
+    alert('Unable to generate unique guest name. Please try again.');
+    return;
+  }
+  
+  localStorage.setItem('session', g);
+  localStorage.setItem('nick', g);
+  const guestColor = getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim() || '#9aa0a6';
+  localStorage.setItem('nickColor', guestColor);
+  showHome();
+});
+
+/* Ensure rooms are loaded (real-time) */
+setupRoomsListener();
+
+/* ========== Online Users Drawer - SIMPLIFIED ========== */
+const ONLINE_THRESHOLD = 5 * 60 * 1000; // 5 minutes in milliseconds
+let usersUnsub = null;
+
+// Simple toggle function
+function toggleOnlineUsersDrawer() {
+  const drawer = document.getElementById('onlineUsersDrawer');
+  if(!drawer) return;
+  
+  const isCurrentlyOpen = drawer.style.transform === 'translateX(0px)';
+  
+  if(isCurrentlyOpen) {
+    drawer.style.transform = 'translateX(100%)';
+    drawer.setAttribute('aria-hidden', 'true');
+  } else {
+    drawer.style.transform = 'translateX(0px)';
+    drawer.setAttribute('aria-hidden', 'false');
+    loadOnlineUsersList();
+  }
+}
+
+// Close function
+function closeOnlineUsersDrawer() {
+  const drawer = document.getElementById('onlineUsersDrawer');
+  if(drawer) {
+    drawer.style.transform = 'translateX(100%)';
+    drawer.setAttribute('aria-hidden', 'true');
+  }
+}
+
+// Add click listeners
+const toggleOnlineUsersBtn = document.getElementById('toggleOnlineUsers');
+const closeOnlineUsersBtn = document.getElementById('closeOnlineUsers');
+
+if(toggleOnlineUsersBtn) {
+  toggleOnlineUsersBtn.onclick = toggleOnlineUsersDrawer;
+}
+
+if(closeOnlineUsersBtn) {
+  closeOnlineUsersBtn.onclick = closeOnlineUsersDrawer;
+}
+
+// Track user activity
+function updateUserActivity() {
+  const session = localStorage.getItem('session');
+  if(!session || session.startsWith('Guest')) return;
+  
+  try {
+    const userRef = doc(db, 'users', session);
+    setDoc(userRef, { lastSeen: serverTimestamp() }, { merge: true }).catch(() => {});
+  } catch(e) {}
+}
+
+setInterval(updateUserActivity, 60000);
+updateUserActivity();
+
+/* ========== Roles Management ========== */
+// To add a new role, copy this template:
+// [ROLE_KEY]: { name: 'RoleName', icon: '🎭', color: '#HEXCODE' }
+// Example: wizard: { name: 'Wizard', icon: '🔮', color: '#9370DB' }
+const ROLES = {
+  duck: { name: 'Duck', icon: '🦆', color: '#FFD700' },
+  stoner: { name: 'Stoner', icon: '🌿', color: '#228B22' },
+  chad: { name: 'Chad', icon: '🔥', color: '#FF4500' },
+  coder: { name: 'Coder', icon: '💻', color: '#00CED1' }
+  // Add new roles here - don't forget to also update roles.html!
+};
+
+// Current user's selected role
+let currentUserRole = null;
+
+// Load user's role from their user doc
+async function loadUserRole() {
+  const session = localStorage.getItem('session');
+  if(!session) return;
+  
+  try {
+    const userRef = doc(db, 'users', session);
+    const userSnap = await getDoc(userRef);
+    if(userSnap.exists()) {
+      const userData = userSnap.data();
+      currentUserRole = userData.role || null;
+    }
+  } catch(e) {
+    console.error('Error loading user role:', e);
+  }
+}
+
+// Save user's role to their user doc
+async function saveUserRole(roleKey) {
+  const session = localStorage.getItem('session');
+  if(!session) return false;
+  
+  try {
+    const userRef = doc(db, 'users', session);
+    await updateDoc(userRef, { role: roleKey });
+    currentUserRole = roleKey;
+    
+    // Update user cache immediately
+    const cached = userCache.get(session) || {};
+    userCache.set(session, { ...cached, role: roleKey });
+    
+    // Refresh all existing messages from current user to show new role
+    refreshUserRoleBadges(session, roleKey);
+    
+    return true;
+  } catch(e) {
+    console.error('Error saving user role:', e);
+    return false;
+  }
+}
+
+// Refresh role badges on all messages from the current user
+function refreshUserRoleBadges(userSession, newRole) {
+  const currentNick = localStorage.getItem('nick') || nick;
+  const isCurrentUserAdmin = roomAdmins.includes(userSession);
+  
+  // Find all messages in the chat
+  const allMessages = chat.querySelectorAll('.message');
+  
+  allMessages.forEach(msgEl => {
+    const senderEl = msgEl.querySelector('.msg-sender');
+    if(!senderEl) return;
+    
+    // Check if this message is from the current user (by name)
+    if(senderEl.textContent !== currentNick) return;
+    
+    // Remove existing role badges
+    const msgContainer = senderEl.parentElement;
+    const existingRoleBadges = msgContainer.querySelectorAll('[data-role-badge]');
+    existingRoleBadges.forEach(badge => badge.remove());
+    
+    // Add new role badge if user has a role and is not admin
+    // (admins already have admin badge which is handled separately)
+    if(!isCurrentUserAdmin && newRole && ROLES[newRole]) {
+      const roleBadge = document.createElement('span');
+      roleBadge.dataset.roleBadge = 'true';
+      roleBadge.innerHTML = getRoleBadge(newRole);
+      senderEl.insertAdjacentElement('afterend', roleBadge);
+    }
+  });
+}
+
+// Get role badge HTML for a user
+function getRoleBadge(roleKey) {
+  if(!roleKey || !ROLES[roleKey]) return '';
+  const role = ROLES[roleKey];
+  return `<span style="background:${role.color};color:#000;font-size:10px;margin-left:6px;padding:2px 8px;border-radius:4px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;display:inline-flex;align-items:center;gap:3px"><span style="font-size:9px">${role.icon}</span>${role.name}</span>`;
+}
+
+// Build and show the roles modal
+function openRolesModal() {
+  if(!rolesList) return;
+  
+  rolesList.innerHTML = '';
+  
+  Object.entries(ROLES).forEach(([key, role]) => {
+    const roleEl = document.createElement('div');
+    roleEl.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px;border-radius:8px;cursor:pointer;transition:background 150ms;margin-bottom:8px;border:1px solid transparent';
+    roleEl.innerHTML = `
+      <div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;background:${role.color}20">${role.icon}</div>
+      <div style="flex:1">
+        <div style="font-weight:600;color:${role.color}">${role.name}</div>
+        <div style="font-size:12px;color:var(--muted)">${role.icon} Role</div>
+      </div>
+      ${currentUserRole === key ? '<span style="color:#3fb950;font-size:14px">✓</span>' : ''}
+    `;
+    
+    roleEl.addEventListener('mouseenter', () => {
+      roleEl.style.background = 'rgba(255,255,255,0.03)';
+      roleEl.style.borderColor = role.color + '40';
+    });
+    roleEl.addEventListener('mouseleave', () => {
+      roleEl.style.background = 'transparent';
+      roleEl.style.borderColor = 'transparent';
+    });
+    
+    roleEl.addEventListener('click', async () => {
+      const success = await saveUserRole(key);
+      if(success) {
+        // Update checkmarks
+        openRolesModal();
+        // Show confirmation
+        await addDoc(collection(db,'rooms',room,'messages'), {
+          name:'System', 
+          text:`${localStorage.getItem('nick') || nick} is now a ${role.icon} ${role.name}`, 
+          color:'#888', 
+          time:serverTimestamp()
+        });
+      }
+    });
+    
+    rolesList.appendChild(roleEl);
+  });
+  
+  rolesModal.style.display = 'block';
+}
+
+// Close roles modal
+function closeRolesModal() {
+  if(rolesModal) rolesModal.style.display = 'none';
+}
+
+// Roles modal event listeners
+if(closeRoles) {
+  closeRoles.addEventListener('click', closeRolesModal);
+}
+
+if(viewAllRoles) {
+  viewAllRoles.addEventListener('click', () => {
+    const allRolesText = Object.values(ROLES).map(r => `${r.icon} ${r.name}`).join(' • ');
+    alert('Available Roles:\n\n' + allRolesText);
+  });
+}
+
+// Load user role on login
+loadUserRole();
+
+// Load online users
+async function loadOnlineUsersList() {
+  const listEl = document.getElementById('onlineUsersList');
+  if(!listEl) return;
+  
+  listEl.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">Loading...</div>';
+  
+  try {
+    const usersCol = collection(db, 'users');
+    const snapshot = await getDocs(usersCol);
+    
+    const now = Date.now();
+    const users = [];
+    
+    snapshot.forEach(doc => {
+      const userData = doc.data();
+      const userId = doc.id;
+      
+      if(userId.startsWith('Guest')) return;
+      
+      let isOnline = false;
+      if(userData.lastSeen) {
+        const lastSeenTime = userData.lastSeen.toMillis ? userData.lastSeen.toMillis() : userData.lastSeen;
+        isOnline = (now - lastSeenTime) < ONLINE_THRESHOLD;
+      }
+      
+      users.push({
+        id: userId,
+        color: userData.color || '#58a6ff',
+        isOnline: isOnline
+      });
+    });
+    
+    users.sort((a, b) => {
+      if(a.isOnline && !b.isOnline) return -1;
+      if(!a.isOnline && b.isOnline) return 1;
+      return a.id.localeCompare(b.id);
+    });
+    
+    listEl.innerHTML = '';
+    
+    if(users.length === 0) {
+      listEl.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">No registered users found</div>';
+      return;
+    }
+    
+    users.forEach(user => {
+      const userEl = document.createElement('div');
+      userEl.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;margin-bottom:4px;cursor:pointer;transition:background 150ms';
+      userEl.innerHTML = `
+        <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#000;background:${user.color}">${user.id[0]}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${user.id}</div>
+          <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px">
+            <span style="width:8px;height:8px;border-radius:50%;background:${user.isOnline ? '#3fb950' : 'var(--muted)'}"></span>
+            ${user.isOnline ? 'Online' : 'Offline'}
+          </div>
+        </div>
+      `;
+      userEl.onmouseenter = () => userEl.style.background = 'rgba(255,255,255,0.03)';
+      userEl.onmouseleave = () => userEl.style.background = 'transparent';
+      listEl.appendChild(userEl);
+    });
+    
+  } catch(err) {
+    console.error('Error loading online users:', err);
+    listEl.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">Error loading users</div>';
+  }
+}
+
+function setupUsersListener() {
+  if(usersUnsub) usersUnsub();
+  
+  try {
+    const usersCol = collection(db, 'users');
+    usersUnsub = onSnapshot(usersCol, () => {
+      const drawer = document.getElementById('onlineUsersDrawer');
+      if(drawer && drawer.style.transform === 'translateX(0px)') {
+        loadOnlineUsersList();
+      }
+    });
+  } catch(e) {
+    console.error('users listener error', e);
+  }
+}
+
+setupUsersListener();
+
+/* ========== New global keyboard handling ========== */
+/* Open How To only on bare '?' (no Alt/AltGraph/Ctrl/Meta) and close on Escape */
+document.addEventListener('keydown', (e) => {
+  // If user is focused in an input/textarea, don't hijack (except when they press Esc)
+  const active = document.activeElement;
+  const isTypingField = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable);
+
+  if(e.key === '?' && !e.altKey && !e.ctrlKey && !e.metaKey){
+    // don't open when focus is in input (user probably meant to type '?')
+    if(isTypingField) return;
+    e.preventDefault();
+    // open external how.html in a new tab
+    window.open('how.html','_blank');
+  }
+
+  if(e.key === 'Escape'){
+    // close menus
+    if(howMenu.classList.contains('show')) { howMenu.classList.remove('show'); howMenu.setAttribute('aria-hidden','true'); }
+    if(settingsMenu.classList.contains('show')) { settingsMenu.classList.remove('show'); settingsMenu.setAttribute('aria-hidden','true'); }
+    if(profileCard.classList.contains('show')) { profileCard.classList.remove('show'); profileCard.setAttribute('aria-hidden','true'); }
+    if(contextMenu.style.display === 'block') { contextMenu.style.display = 'none'; contextMenu.setAttribute('aria-hidden','true'); }
+    if(changeUsernameModal.style.display === 'block') { changeUsernameModal.style.display = 'none'; }
+    if(changePasswordModal.style.display === 'block') { changePasswordModal.style.display = 'none'; }
+    if(editDescriptionModal.style.display === 'block') { editDescriptionModal.style.display = 'none'; }
+    if(createRoomModal.style.display === 'block') { createRoomModal.style.display = 'none'; }
+    if(onlineUsersDrawer.classList.contains('show')) { onlineUsersDrawer.classList.remove('show'); onlineUsersDrawer.setAttribute('aria-hidden','true'); }
+    if(rolesModal && rolesModal.style.display === 'block') { rolesModal.style.display = 'none'; }
+  }
+});
+</script>
+</body>
+</html>
