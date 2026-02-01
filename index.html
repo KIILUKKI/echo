@@ -235,6 +235,26 @@
 /* edited note */
 .edited-note{font-size:12px;color:var(--muted);margin-left:8px;display:inline-block}
 
+/* reactions - compact inline style */
+.reactions-container{display:inline-flex;gap:3px;align-items:center;margin-left:8px;vertical-align:middle}
+.reaction-btn{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:1px 5px;font-size:11px;cursor:pointer;transition:all 120ms ease;display:inline-flex;align-items:center;gap:2px;user-select:none;line-height:1}
+.reaction-btn:hover{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.12);transform:scale(1.05)}
+.reaction-btn.active{background:rgba(88,166,255,0.12);border-color:rgba(88,166,255,0.3)}
+.reaction-btn .emoji{font-size:12px}
+.reaction-btn .count{font-size:10px;color:var(--muted);font-weight:500;min-width:10px;text-align:center}
+.reaction-btn.active .count{color:var(--accent)}
+.add-reaction-btn{background:transparent;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:1px 4px;font-size:10px;cursor:pointer;transition:all 120ms ease;color:var(--muted);opacity:0.4;display:inline-flex;align-items:center;line-height:1;font-weight:500}
+.add-reaction-btn:hover{opacity:1;background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.18);color:var(--text);transform:scale(1.1)}
+.reaction-picker{display:none;position:fixed;background:var(--card);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:8px;z-index:1000;box-shadow:0 8px 26px rgba(0,0,0,0.45);gap:4px;flex-wrap:wrap;max-width:240px}
+.reaction-picker.show{display:flex}
+.reaction-picker .emoji-option{cursor:pointer;font-size:18px;padding:3px;border-radius:5px;transition:background 150ms ease}
+.reaction-picker .emoji-option:hover{background:rgba(255,255,255,0.08)}
+
+/* GIF display in messages */
+.gif-container{margin-top:6px;border-radius:10px;overflow:hidden;max-width:300px;background:rgba(255,255,255,0.03);cursor:pointer;transition:transform 150ms ease}
+.gif-container:hover{transform:scale(1.01)}
+.gif-container img{width:100%;height:auto;display:block;border-radius:10px}
+
 /* typing indicator: new stylish component */
 #typingIndicator{
   display:none;
@@ -333,6 +353,102 @@
 }
 #emojiBtn:active{transform:scale(0.98)}
 .emoji-icon{font-size:18px;line-height:1;transform:translateY(1px);}
+
+/* GIF picker styles */
+#gifBtn{
+  background: linear-gradient(180deg, rgba(88,166,255,0.10), rgba(88,166,255,0.03));
+  border: 1px solid rgba(88,166,255,0.25);
+  color: var(--accent);
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  transition: all 200ms ease;
+}
+#gifBtn:hover{
+  background: linear-gradient(180deg, rgba(88,166,255,0.18), rgba(88,166,255,0.06));
+  border-color: rgba(88,166,255,0.4);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+  color: var(--accent);
+}
+#gifBtn:active{transform:scale(0.98)}
+
+#gifPicker{
+  display:none;
+  flex-direction:column;
+  gap:8px;
+  padding:10px;
+  background:var(--card);
+  border-radius:10px;
+  position:absolute;
+  bottom:72px;
+  left:12px;
+  width:320px;
+  max-height:360px;
+  z-index:100;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5);
+  border:1px solid rgba(255,255,255,0.08);
+}
+#gifPicker.show{display:flex}
+
+#gifSearch{
+  width:100%;
+  padding:10px 12px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.03);
+  color:var(--text);
+  font-size:14px;
+  box-sizing:border-box;
+}
+#gifSearch:focus{
+  outline:none;
+  border-color:rgba(88,166,255,0.4);
+  background:rgba(255,255,255,0.05);
+}
+
+#gifResults{
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:8px;
+  overflow-y:auto;
+  max-height:280px;
+  padding-right:4px;
+}
+#gifResults::-webkit-scrollbar{width:6px}
+#gifResults::-webkit-scrollbar-track{background:transparent}
+#gifResults::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
+
+.gif-item{
+  position:relative;
+  aspect-ratio:16/10;
+  border-radius:8px;
+  overflow:hidden;
+  cursor:pointer;
+  background:rgba(255,255,255,0.03);
+  transition:transform 150ms ease;
+}
+.gif-item:hover{transform:scale(1.02)}
+.gif-item img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.gif-loading{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--muted);
+  font-size:12px;
+}
+.gif-item:hover::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:rgba(88,166,255,0.15);
+  pointer-events:none;
+}
 
 /* MORE (three-dots) button next to reply — positioned at the far right (z-axis on top) */
 .more-btn{position:absolute;right:12px;top:8px;font-size:16px;color:var(--muted);cursor:pointer;opacity:0;padding:4px;border-radius:6px;z-index:12;transform:none}
@@ -545,8 +661,13 @@
         <div id="replyBox"></div>
         <div id="inputBar">
           <button id="emojiBtn" aria-label="Emoji picker"><span class="emoji-icon" aria-hidden="true">😊</span></button>
+          <button id="gifBtn" aria-label="GIF picker">GIF</button>
           <input id="msg" placeholder="Message... (/clear /delete)" autocomplete="off">
           <div id="emojiPicker"></div>
+          <div id="gifPicker">
+            <input type="text" id="gifSearch" placeholder="Search GIFs..." autocomplete="off">
+            <div id="gifResults"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -586,6 +707,18 @@
 
   <!-- context menu element (right-click / three-dots / long-press) -->
   <div id="contextMenu" class="context-menu" aria-hidden="true"></div>
+
+  <!-- reaction picker popup -->
+  <div id="reactionPicker" class="reaction-picker" aria-hidden="true">
+    <span class="emoji-option" data-emoji="👍">👍</span>
+    <span class="emoji-option" data-emoji="❤️">❤️</span>
+    <span class="emoji-option" data-emoji="😂">😂</span>
+    <span class="emoji-option" data-emoji="😮">😮</span>
+    <span class="emoji-option" data-emoji="😢">😢</span>
+    <span class="emoji-option" data-emoji="🔥">🔥</span>
+    <span class="emoji-option" data-emoji="🎉">🎉</span>
+    <span class="emoji-option" data-emoji="🤔">🤔</span>
+  </div>
 
 </div>
 
@@ -679,6 +812,10 @@ const replyBox = document.getElementById('replyBox');
 const roomName = document.getElementById('roomName');
 const emojiPicker = document.getElementById('emojiPicker');
 const emojiBtn = document.getElementById('emojiBtn');
+const gifPicker = document.getElementById('gifPicker');
+const gifBtn = document.getElementById('gifBtn');
+const gifSearch = document.getElementById('gifSearch');
+const gifResults = document.getElementById('gifResults');
 const typingIndicator = document.getElementById('typingIndicator');
 
 // Typing
@@ -723,6 +860,7 @@ const profileColor = document.getElementById('profileColor');
 const scrollBottomBtn = document.getElementById('scrollBottomBtn');
 const tooltip = document.getElementById('tooltip');
 const contextMenu = document.getElementById('contextMenu');
+const reactionPicker = document.getElementById('reactionPicker');
 
 let users = JSON.parse(localStorage.getItem('users')||'{}');
 let nick = '';
@@ -1437,6 +1575,117 @@ function renderTypingIndicator(usersTyping){
     label.textContent = `${usersTyping[0]}, ${usersTyping[1]} and ${usersTyping.length - 2} others are typing`;
 }
 
+/* Reactions functionality */
+const currentReactions = new Map(); // msgId -> {emoji -> Set of usernames}
+
+function setupReactionsListener(msgId, el){
+  const reactionsRef = collection(db, 'rooms', room, 'messages', msgId, 'reactions');
+  const unsubscribe = onSnapshot(reactionsRef, (snapshot) => {
+    const reactions = new Map();
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      const emoji = data.emoji;
+      const username = data.name;
+      if(!reactions.has(emoji)) reactions.set(emoji, new Set());
+      reactions.get(emoji).add(username);
+    });
+    currentReactions.set(msgId, reactions);
+    renderReactions(msgId, el, reactions);
+  });
+  
+  // Store unsubscribe function on element for cleanup
+  el._reactionsUnsubscribe = unsubscribe;
+}
+
+function renderReactions(msgId, el, reactions){
+  const container = el.querySelector('.reactions-container');
+  if(!container) return;
+  
+  const localNick = localStorage.getItem('nick') || nick;
+  container.innerHTML = '';
+  
+  reactions.forEach((users, emoji) => {
+    const btn = document.createElement('div');
+    btn.className = 'reaction-btn';
+    if(users.has(localNick)) btn.classList.add('active');
+    btn.innerHTML = `<span class="emoji">${emoji}</span><span class="count">${users.size}</span>`;
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleReaction(msgId, emoji);
+    });
+    container.appendChild(btn);
+  });
+  
+  // Always show add-reaction button at the end
+  if(!isMobile){
+    const addBtn = document.createElement('div');
+    addBtn.className = 'add-reaction-btn';
+    addBtn.title = 'Add reaction';
+    addBtn.textContent = '+';
+    addBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showReactionPicker(msgId, addBtn);
+    });
+    container.appendChild(addBtn);
+  }
+}
+
+async function toggleReaction(msgId, emoji){
+  const localNick = localStorage.getItem('nick') || nick;
+  const reactionRef = doc(db, 'rooms', room, 'messages', msgId, 'reactions', localNick);
+  
+  try {
+    const existing = await getDoc(reactionRef);
+    if(existing.exists() && existing.data().emoji === emoji){
+      // Remove reaction if clicking the same emoji
+      await deleteDoc(reactionRef);
+    } else {
+      // Add or change reaction
+      await setDoc(reactionRef, { 
+        emoji: emoji, 
+        name: localNick, 
+        time: serverTimestamp() 
+      });
+    }
+  } catch(e) {
+    console.error('Error toggling reaction:', e);
+  }
+}
+
+let currentReactionMsgId = null;
+
+function showReactionPicker(msgId, triggerEl){
+  currentReactionMsgId = msgId;
+  const rect = triggerEl.getBoundingClientRect();
+  reactionPicker.style.left = (rect.left) + 'px';
+  reactionPicker.style.top = (rect.bottom + 8) + 'px';
+  reactionPicker.classList.add('show');
+  reactionPicker.setAttribute('aria-hidden', 'false');
+}
+
+function hideReactionPicker(){
+  reactionPicker.classList.remove('show');
+  reactionPicker.setAttribute('aria-hidden', 'true');
+  currentReactionMsgId = null;
+}
+
+// Reaction picker click handlers
+reactionPicker.querySelectorAll('.emoji-option').forEach(btn => {
+  btn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    if(currentReactionMsgId){
+      await toggleReaction(currentReactionMsgId, btn.dataset.emoji);
+      hideReactionPicker();
+    }
+  });
+});
+
+// Hide reaction picker when clicking outside
+document.addEventListener('click', (e) => {
+  if(!reactionPicker.contains(e.target) && !e.target.closest('.add-reaction-btn')){
+    hideReactionPicker();
+  }
+});
 
 /* DOM helpers for incremental updates */
 function makeMessageElement(id, m){
@@ -1446,8 +1695,19 @@ function makeMessageElement(id, m){
   el.dataset.owner = m.name;
 
   const replyHtml = m.reply?`<div class="reply-preview"><b>${escapeHtml(m.reply.name)}</b>: ${escapeHtml(m.reply.text)}</div>`:'';
-  const safeTextHtml = linkify(escapeHtml(m.text || ''));
+  
+  // Handle GIF messages
+  let contentHtml = '';
+  if(m.gif){
+    contentHtml = `<div class="gif-container"><img src="${escapeAttr(m.gif)}" alt="GIF" loading="lazy" onclick="window.open('${escapeAttr(m.gif)}', '_blank')"></div>`;
+  } else {
+    contentHtml = linkify(escapeHtml(m.text || ''));
+  }
+  const safeTextHtml = contentHtml;
   const editedNoteHtml = m.editedNote ? `<span class="edited-note">${escapeHtml(m.editedNote)}</span>` : '';
+  
+  // Update reply button data-text to handle GIFs
+  const replyText = m.gif ? '[GIF]' : (m.text || '');
 
   // Check if sender is admin by checking if session is in roomAdmins array
   const isSenderAdmin = roomAdmins.includes(m.session);
@@ -1466,6 +1726,7 @@ function makeMessageElement(id, m){
       <b class="msg-sender" style="color:${m.color || '#999'};cursor:pointer">${escapeHtml(m.name)}</b>${adminBadge}${roleBadge}
       <span class="time">${m.time?.toMillis ? new Date(m.time.toMillis()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : ''}</span>
       <div class="msg-text">${safeTextHtml}${editedNoteHtml}</div>
+      <div class="reactions-container" data-msgid="${id}"></div>
     </div>
   `;
 
@@ -1476,7 +1737,7 @@ function makeMessageElement(id, m){
     const replyBtn = document.createElement('div');
     replyBtn.className = 'reply-btn';
     replyBtn.setAttribute('data-name', escapeAttr(m.name));
-    replyBtn.setAttribute('data-text', escapeAttr(m.text));
+    replyBtn.setAttribute('data-text', escapeAttr(replyText));
     replyBtn.textContent = 'reply';
     el.querySelector('.msg').appendChild(replyBtn);
   }
@@ -1497,6 +1758,9 @@ function makeMessageElement(id, m){
     });
     msgInnerEl.appendChild(moreBtn);
   }
+
+  // Set up real-time listener for reactions (also adds the add-reaction button)
+  setupReactionsListener(id, el);
 
   // Fetch and cache user role for this message
   (async () => {
@@ -1618,7 +1882,15 @@ function updateMessage(id, m){
   const el = chat.querySelector(`[data-msgid="${id}"]`);
   if(!el) { renderMessage(id, m); return; }
   const replyHtml = m.reply?`<div class="reply-preview"><b>${escapeHtml(m.reply.name)}</b>: ${escapeHtml(m.reply.text)}</div>`:'';
-  const safeTextHtml = linkify(escapeHtml(m.text || ''));
+  
+  // Handle GIF updates
+  let contentHtml = '';
+  if(m.gif){
+    contentHtml = `<div class="gif-container"><img src="${escapeAttr(m.gif)}" alt="GIF" loading="lazy" onclick="window.open('${escapeAttr(m.gif)}', '_blank')"></div>`;
+  } else {
+    contentHtml = linkify(escapeHtml(m.text || ''));
+  }
+  const safeTextHtml = contentHtml;
   const editedNoteHtml = m.editedNote ? `<span class="edited-note">${escapeHtml(m.editedNote)}</span>` : '';
   const avatar = el.querySelector('.avatar');
   const sender = el.querySelector('.msg-sender');
@@ -1736,6 +2008,22 @@ function showEditDeleteMenu(x,y,msgId, currentText){
     hideContextMenu();
   };
   contextMenu.appendChild(editBtn);
+  // React
+  const reactBtn = document.createElement('button');
+  reactBtn.textContent = 'React';
+  reactBtn.onclick = async (ev)=>{
+    ev.stopPropagation();
+    hideContextMenu();
+    // Show reaction picker near the message
+    const msgEl = chat.querySelector(`[data-msgid="${msgId}"]`);
+    if(msgEl){
+      const addReactionBtn = msgEl.querySelector('.add-reaction-btn');
+      if(addReactionBtn){
+        showReactionPicker(msgId, addReactionBtn);
+      }
+    }
+  };
+  contextMenu.appendChild(reactBtn);
   // Delete
   const delBtn = document.createElement('button');
   delBtn.textContent = 'Delete';
@@ -2062,6 +2350,111 @@ function buildEmojiPicker(){
 }
 buildEmojiPicker();
 emojiBtn.onclick = ()=> emojiPicker.style.display = emojiPicker.style.display === 'flex' ? 'none' : 'flex';
+
+/* GIF picker functionality - Using Tenor API */
+const TENOR_API_KEY = 'LIVDSRZULELA'; // Demo key - get your own at https://tenor.com/gifapi
+let gifSearchTimeout;
+
+async function searchGifs(query){
+  if(!query.trim()){
+    // Show featured GIFs if no query (Tenor doesn't have a direct trending endpoint)
+    const res = await fetch(`https://g.tenor.com/v1/featured?key=${TENOR_API_KEY}&limit=10&contentfilter=medium`);
+    const data = await res.json();
+    return data.results || [];
+  }
+  
+  const res = await fetch(`https://g.tenor.com/v1/search?q=${encodeURIComponent(query)}&key=${TENOR_API_KEY}&limit=10&contentfilter=medium`);
+  const data = await res.json();
+  return data.results || [];
+}
+
+function displayGifs(gifs){
+  gifResults.innerHTML = '';
+  
+  if(!gifs || gifs.length === 0){
+    gifResults.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;font-size:13px;">No GIFs found</div>';
+    return;
+  }
+  
+  gifs.forEach(gif => {
+    // Tenor media structure: media[0] contains different formats
+    const media = gif.media[0];
+    if(!media) return;
+    
+    const item = document.createElement('div');
+    item.className = 'gif-item';
+    
+    const img = document.createElement('img');
+    // Use tinygif for preview (smaller, faster loading)
+    img.src = media.tinygif?.url || media.gif?.url;
+    img.alt = gif.title || 'GIF';
+    img.loading = 'lazy';
+    
+    item.appendChild(img);
+    // Use full-size gif for sending
+    item.onclick = () => sendGifMessage(media.gif?.url || media.tinygif?.url);
+    gifResults.appendChild(item);
+  });
+}
+
+async function sendGifMessage(gifUrl){
+  if(!room || !nick) return;
+  
+  // Close picker
+  gifPicker.classList.remove('show');
+  gifSearch.value = '';
+  gifResults.innerHTML = '';
+  
+  // Send as message with GIF
+  const colorToSend = (localStorage.getItem('session') && !localStorage.getItem('session').startsWith('Guest')) 
+    ? (localStorage.getItem('nickColor') || '#58a6ff') 
+    : getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim();
+  
+  await addDoc(collection(db,'rooms',room,'messages'), {
+    name: localStorage.getItem('nick') || nick,
+    session: localStorage.getItem('session') || '',
+    text: '',
+    gif: gifUrl,
+    reply: replyTo,
+    color: colorToSend,
+    time: serverTimestamp()
+  }).catch(console.error);
+  
+  replyTo = null;
+  replyBox.style.display = 'none';
+}
+
+// GIF button click
+gifBtn.onclick = ()=>{
+  const isOpen = gifPicker.classList.contains('show');
+  
+  // Close emoji picker if open
+  emojiPicker.style.display = 'none';
+  
+  if(!isOpen){
+    gifPicker.classList.add('show');
+    gifSearch.focus();
+    // Load trending GIFs initially
+    searchGifs('').then(displayGifs);
+  } else {
+    gifPicker.classList.remove('show');
+  }
+};
+
+// GIF search input
+gifSearch.addEventListener('input', (e)=>{
+  clearTimeout(gifSearchTimeout);
+  gifSearchTimeout = setTimeout(()=>{
+    searchGifs(e.target.value).then(displayGifs);
+  }, 300);
+});
+
+// Close GIF picker when clicking outside
+document.addEventListener('click', (e)=>{
+  if(!gifPicker.contains(e.target) && !gifBtn.contains(e.target)){
+    gifPicker.classList.remove('show');
+  }
+});
 
 /* back button */
 back.onclick = ()=>{

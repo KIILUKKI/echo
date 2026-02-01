@@ -11,20 +11,36 @@ service cloud.firestore {
       match /messages/{msgId} {
         allow read: if true;
 
-        // Create: basic validation
+        // Create: basic validation - allows text-only, gif-only, or both
         allow create: if
           request.resource.data.name is string &&
           request.resource.data.name.size() > 0 &&
-          request.resource.data.text is string &&
-          request.resource.data.text.size() <= 4000 &&
           request.resource.data.color is string &&
-          request.resource.data.time is timestamp;
+          request.resource.data.time is timestamp &&
+          (
+            // Either has text content
+            (request.resource.data.keys().hasAll(['text']) && 
+             request.resource.data.text is string && 
+             request.resource.data.text.size() <= 4000) ||
+            // Or has GIF content
+            (request.resource.data.keys().hasAll(['gif']) && 
+             request.resource.data.gif is string &&
+             request.resource.data.gif.matches('^https://.*')) ||
+            // Or has both
+            (request.resource.data.keys().hasAll(['text', 'gif']) && 
+             request.resource.data.text is string && 
+             request.resource.data.text.size() <= 4000 &&
+             request.resource.data.gif is string &&
+             request.resource.data.gif.matches('^https://.*'))
+          );
 
         // Update: only original author can update (works because request.resource exists on update)
         allow update: if
           request.resource.data.name == resource.data.name &&
-          request.resource.data.text is string &&
-          request.resource.data.text.size() <= 4000;
+          (
+            (request.resource.data.text is string && request.resource.data.text.size() <= 4000) ||
+            (request.resource.data.gif is string && request.resource.data.gif.matches('^https://.*'))
+          );
 
         // Delete: because client performs batch deletes (no Auth), allow deletes.
         // NOTE: This allows deletion by any client. Secure with Auth when possible.
@@ -38,6 +54,19 @@ service cloud.firestore {
         // allow deletion of seen records (so /clear can remove them)
         allow delete: if true;
         allow update: if false;
+      }
+
+      // reactions subcollection
+      match /messages/{msgId}/reactions/{userId} {
+        allow read: if true;
+        allow create: if 
+          request.resource.data.name is string &&
+          request.resource.data.emoji is string &&
+          request.resource.data.time is timestamp;
+        allow update: if 
+          request.resource.data.name == resource.data.name &&
+          request.resource.data.emoji is string;
+        allow delete: if true;
       }
 
       // typing docs
