@@ -245,10 +245,15 @@
 .reaction-btn.active .count{color:var(--accent)}
 .add-reaction-btn{background:transparent;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:1px 4px;font-size:10px;cursor:pointer;transition:all 120ms ease;color:var(--muted);opacity:0.4;display:inline-flex;align-items:center;line-height:1;font-weight:500}
 .add-reaction-btn:hover{opacity:1;background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.18);color:var(--text);transform:scale(1.1)}
-.reaction-picker{display:none;position:fixed;background:var(--card);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:8px;z-index:1000;box-shadow:0 8px 26px rgba(0,0,0,0.45);gap:4px;flex-wrap:wrap;max-width:240px}
+
+/* Enhanced reaction picker */
+.reaction-picker{display:none;position:fixed;background:var(--card);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:0;z-index:1000;box-shadow:0 10px 30px rgba(0,0,0,0.5);flex-direction:column;max-width:280px;overflow:hidden}
 .reaction-picker.show{display:flex}
-.reaction-picker .emoji-option{cursor:pointer;font-size:18px;padding:3px;border-radius:5px;transition:background 150ms ease}
-.reaction-picker .emoji-option:hover{background:rgba(255,255,255,0.08)}
+.reaction-picker-header{padding:10px 12px 8px;border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02)}
+.reaction-picker-header span{font-size:12px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:0.5px}
+.reaction-picker-grid{display:grid;grid-template-columns:repeat(5, 1fr);gap:4px;padding:10px;max-height:200px;overflow-y:auto}
+.reaction-picker .emoji-option{cursor:pointer;font-size:22px;padding:6px;border-radius:8px;transition:all 150ms ease;display:flex;align-items:center;justify-content:center;height:36px;width:36px}
+.reaction-picker .emoji-option:hover{background:rgba(88,166,255,0.15);transform:scale(1.15)}
 
 /* GIF display in messages */
 .gif-container{margin-top:6px;border-radius:10px;overflow:hidden;max-width:300px;background:rgba(255,255,255,0.03);cursor:pointer;transition:transform 150ms ease}
@@ -329,11 +334,108 @@
 /* input bar */
 #inputBar{padding:12px;background:var(--panel);border-top:1px solid #0d1117;display:flex;gap:8px;align-items:center;position:relative;z-index:80}
 #msg{flex:1;padding:12px;border-radius:10px;border:none;background:var(--card);color:var(--text)}
-#emojiPicker{display:none;flex-wrap:wrap;gap:6px;padding:8px;background:var(--card);border-radius:8px;position:absolute;bottom:72px;left:12px;max-width:320px;max-height:300px;overflow:auto}
-#emojiPicker .tabs{display:flex;gap:6px;margin-bottom:8px}
-#emojiPicker .tabbtn{padding:6px 8px;border-radius:8px;border:none;background:transparent;color:var(--text);cursor:pointer}
-#emojiPicker .tabbtn.active{background:rgba(255,255,255,0.03)}
-#emojiPicker div.emoji{cursor:pointer;font-size:18px}
+
+/* Enhanced Emoji Picker */
+#emojiPicker{
+  display:none;
+  flex-direction:column;
+  gap:8px;
+  padding:10px;
+  background:var(--card);
+  border-radius:12px;
+  position:absolute;
+  bottom:72px;
+  left:12px;
+  width:280px;
+  max-height:340px;
+  overflow:hidden;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5);
+  border:1px solid rgba(255,255,255,0.08);
+  z-index:100;
+}
+#emojiPicker.show{display:flex}
+#emojiPicker .emoji-tabs{
+  display:flex;
+  gap:4px;
+  margin-bottom:8px;
+  padding-bottom:8px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  overflow-x:auto;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+  flex-shrink:0;
+}
+#emojiPicker .emoji-tabs::-webkit-scrollbar{display:none}
+#emojiPicker .emoji-tab{
+  background:transparent;
+  border:1px solid transparent;
+  color:var(--muted);
+  padding:4px 8px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:16px;
+  min-width:32px;
+  height:32px;
+  transition:all 150ms ease;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+}
+#emojiPicker .emoji-tab:hover{
+  background:rgba(255,255,255,0.05);
+  border-color:rgba(255,255,255,0.1);
+  color:var(--text);
+}
+#emojiPicker .emoji-tab.active{
+  background:rgba(88,166,255,0.2);
+  border-color:rgba(88,166,255,0.3);
+  color:var(--accent);
+}
+#emojiPicker > div:nth-child(2){
+  display:grid;
+  grid-template-columns:repeat(7, 1fr);
+  gap:3px;
+  max-height:200px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding-right:4px;
+}
+#emojiPicker .emoji-item{
+  cursor:pointer;
+  font-size:20px;
+  padding:4px;
+  border-radius:6px;
+  text-align:center;
+  transition:all 120ms ease;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:32px;
+  width:32px;
+}
+#emojiPicker .emoji-item:hover{
+  background:rgba(88,166,255,0.15);
+  transform:scale(1.1);
+}
+#emojiPicker input[type="text"]{
+  width:100%;
+  padding:6px 10px;
+  margin-top:6px;
+  border-radius:6px;
+  border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.03);
+  color:var(--text);
+  font-size:13px;
+  box-sizing:border-box;
+  outline:none;
+  transition:all 150ms ease;
+  flex-shrink:0;
+}
+#emojiPicker input[type="text"]:focus{
+  border-color:rgba(88,166,255,0.4);
+  background:rgba(255,255,255,0.05);
+}
 
 /* nicer emoji button */
 #emojiBtn{
@@ -354,7 +456,7 @@
 #emojiBtn:active{transform:scale(0.98)}
 .emoji-icon{font-size:18px;line-height:1;transform:translateY(1px);}
 
-/* GIF picker styles */
+/* Enhanced GIF picker styles */
 #gifBtn{
   background: linear-gradient(180deg, rgba(88,166,255,0.10), rgba(88,166,255,0.03));
   border: 1px solid rgba(88,166,255,0.25);
@@ -365,6 +467,9 @@
   font-size: 12px;
   font-weight: 700;
   transition: all 200ms ease;
+  display:flex;
+  align-items:center;
+  gap:4px;
 }
 #gifBtn:hover{
   background: linear-gradient(180deg, rgba(88,166,255,0.18), rgba(88,166,255,0.06));
@@ -380,7 +485,7 @@
   gap:8px;
   padding:10px;
   background:var(--card);
-  border-radius:10px;
+  border-radius:12px;
   position:absolute;
   bottom:72px;
   left:12px;
@@ -389,21 +494,24 @@
   z-index:100;
   box-shadow:0 8px 32px rgba(0,0,0,0.5);
   border:1px solid rgba(255,255,255,0.08);
+  overflow:hidden;
 }
 #gifPicker.show{display:flex}
 
 #gifSearch{
   width:100%;
-  padding:10px 12px;
+  padding:8px 12px;
   border-radius:8px;
   border:1px solid rgba(255,255,255,0.1);
   background:rgba(255,255,255,0.03);
   color:var(--text);
   font-size:14px;
   box-sizing:border-box;
+  outline:none;
+  transition:all 150ms ease;
+  flex-shrink:0;
 }
 #gifSearch:focus{
-  outline:none;
   border-color:rgba(88,166,255,0.4);
   background:rgba(255,255,255,0.05);
 }
@@ -413,8 +521,10 @@
   grid-template-columns:repeat(2, 1fr);
   gap:8px;
   overflow-y:auto;
-  max-height:280px;
+  overflow-x:hidden;
+  max-height:200px;
   padding-right:4px;
+  flex:1;
 }
 #gifResults::-webkit-scrollbar{width:6px}
 #gifResults::-webkit-scrollbar-track{background:transparent}
@@ -423,18 +533,25 @@
 .gif-item{
   position:relative;
   aspect-ratio:16/10;
-  border-radius:8px;
+  border-radius:10px;
   overflow:hidden;
   cursor:pointer;
   background:rgba(255,255,255,0.03);
-  transition:transform 150ms ease;
+  transition:all 150ms ease;
+  border:1px solid rgba(255,255,255,0.05);
 }
-.gif-item:hover{transform:scale(1.02)}
+.gif-item:hover{
+  transform:scale(1.03);
+  border-color:rgba(88,166,255,0.3);
+  box-shadow:0 4px 12px rgba(88,166,255,0.15);
+}
 .gif-item img{
   width:100%;
   height:100%;
   object-fit:cover;
+  transition:transform 200ms ease;
 }
+.gif-item:hover img{transform:scale(1.05)}
 .gif-loading{
   display:flex;
   align-items:center;
@@ -442,12 +559,52 @@
   color:var(--muted);
   font-size:12px;
 }
-.gif-item:hover::after{
+.gif-item::after{
   content:'';
   position:absolute;
   inset:0;
-  background:rgba(88,166,255,0.15);
+  background:rgba(88,166,255,0);
   pointer-events:none;
+  transition:background 150ms ease;
+}
+.gif-item:hover::after{
+  background:rgba(88,166,255,0.1);
+}
+
+/* GIF picker tabs */
+.gif-tabs{
+  display:flex;
+  gap:4px;
+  margin-bottom:6px;
+  padding-bottom:6px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  overflow-x:auto;
+  scrollbar-width:none;
+  flex-shrink:0;
+}
+.gif-tabs::-webkit-scrollbar{display:none}
+.gif-tab{
+  background:transparent;
+  border:1px solid transparent;
+  color:var(--muted);
+  padding:4px 8px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:11px;
+  font-weight:500;
+  transition:all 150ms ease;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+.gif-tab:hover{
+  background:rgba(255,255,255,0.05);
+  border-color:rgba(255,255,255,0.1);
+  color:var(--text);
+}
+.gif-tab.active{
+  background:rgba(88,166,255,0.2);
+  border-color:rgba(88,166,255,0.3);
+  color:var(--accent);
 }
 
 /* MORE (three-dots) button next to reply — positioned at the far right (z-axis on top) */
@@ -708,16 +865,33 @@
   <!-- context menu element (right-click / three-dots / long-press) -->
   <div id="contextMenu" class="context-menu" aria-hidden="true"></div>
 
-  <!-- reaction picker popup -->
+  <!-- Enhanced reaction picker popup -->
   <div id="reactionPicker" class="reaction-picker" aria-hidden="true">
-    <span class="emoji-option" data-emoji="👍">👍</span>
-    <span class="emoji-option" data-emoji="❤️">❤️</span>
-    <span class="emoji-option" data-emoji="😂">😂</span>
-    <span class="emoji-option" data-emoji="😮">😮</span>
-    <span class="emoji-option" data-emoji="😢">😢</span>
-    <span class="emoji-option" data-emoji="🔥">🔥</span>
-    <span class="emoji-option" data-emoji="🎉">🎉</span>
-    <span class="emoji-option" data-emoji="🤔">🤔</span>
+    <div class="reaction-picker-header">
+      <span>Quick Reactions</span>
+    </div>
+    <div class="reaction-picker-grid">
+      <span class="emoji-option" data-emoji="👍">👍</span>
+      <span class="emoji-option" data-emoji="❤️">❤️</span>
+      <span class="emoji-option" data-emoji="😂">😂</span>
+      <span class="emoji-option" data-emoji="😮">😮</span>
+      <span class="emoji-option" data-emoji="😢">😢</span>
+      <span class="emoji-option" data-emoji="🔥">🔥</span>
+      <span class="emoji-option" data-emoji="🎉">🎉</span>
+      <span class="emoji-option" data-emoji="🤔">🤔</span>
+      <span class="emoji-option" data-emoji="👏">👏</span>
+      <span class="emoji-option" data-emoji="😍">😍</span>
+      <span class="emoji-option" data-emoji="🤯">🤯</span>
+      <span class="emoji-option" data-emoji="🥳">🥳</span>
+      <span class="emoji-option" data-emoji="😭">😭</span>
+      <span class="emoji-option" data-emoji="😡">😡</span>
+      <span class="emoji-option" data-emoji="🤩">🤩</span>
+      <span class="emoji-option" data-emoji="🙌">🙌</span>
+      <span class="emoji-option" data-emoji="👎">👎</span>
+      <span class="emoji-option" data-emoji="🤣">🤣</span>
+      <span class="emoji-option" data-emoji="😴">😴</span>
+      <span class="emoji-option" data-emoji="🤢">🤢</span>
+    </div>
   </div>
 
 </div>
@@ -2332,63 +2506,255 @@ async function handleCommand(cmdText){
   await addDoc(collection(db,'rooms',room,'messages'), {name:'System', text:`Unknown command: ${cmdText}`, color:'#888', time:serverTimestamp()});
 }
 
-/* emojis picker */
-const emojiList = [
-"😀","😃","😄","😁","😆","😂","🤣","🙂","🙃","😉","😊","😇",
-"😍","🥰","😘","😗","😙","😚","😋","😛","😜","🤪","😝",
-"🤗","🤭","🤫","🤔","🤨","😐","😑","😶","🙄","😏",
-"😣","😥","😮","😯","😲","😪","😫","🥱","😴","😌",
-"😤","😠","😡","🤬","😢","😭","🥺","😳","😱","😨","😰","😓",
-"👍","👎","👌","✌️","🤞","🤟","🤘","🤙","👋","👏","🙌","🙏"
-];
+/* Enhanced Emoji Picker with Categories */
+const emojiCategories = {
+  smileys: {
+    name: '😀',
+    emojis: ["😀","😃","😄","😁","😆","😂","🤣","🙂","🙃","😉","😊","😇","🥰","😍","🤩","😘","😗","😚","😋","😛","😜","🤪","😝","🤑","🤗","🤭","🤫","🤔","🤐","🤨","😐","😑","😶","😏","😒","🙄","😬","🤥","😌","😔","😪","🤤","😴","😷","🤒","🤕","🤢","🤮","🤧","🥵","🥶","🥴","😵","🤯","🤠","🥳","😎","🤓","🧐","😕","😟","🙁","☹️","😮","😯","😲","😳","🥺","😦","😧","😨","😰","😥","😢","😭","😱","😖","😣","😞","😓","😩","😫","🥱","😤","😡","😠","🤬","😈","👿","💀","☠️","💩","🤡","👹","👺","👻","👽","👾","🤖","😺","😸","😹","😻","😼","😽","🙀","😿","😾"]
+  },
+  gestures: {
+    name: '👋',
+    emojis: ["👋","🤚","🖐️","✋","🖖","👌","🤌","🤏","✌️","🤞","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","👍","👎","✊","👊","🤛","🤜","👏","🙌","👐","🤲","🤝","🙏","✍️","💪","🦾","🦵","🦿","🦶","👣","👂","🦻","👃","🫀","🫁","🧠","🦷","🦴","👀","👁️","👅","👄","💋","🩸"]
+  },
+  hearts: {
+    name: '❤️',
+    emojis: ["❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","❣️","💕","💞","💓","💗","💖","💘","💝","💟","☮️","✝️","☪️","🕉","☸️","✡️","🔯","🕎","☯️","☦️","🛐","⛎","♈","♉","♊","♋","♌","♍","♎","♏","♐","♑","♒","♓","🆔","⚛️","🉑","☢️","☣️","📴","📳","🈶","🈚","🈸","🈺","🈷️","✴️","🆚","💮","🉐","㊙️","㊗️","🈴","🈵","🈹","🈲","🅰️","🅱️","🆎","🆑","🅾️","🆘","❌","⭕","🛑","⛔","📛","🚫","💯","💢","♨️","🚷","🚯","🚳","🚱","🔞","📵","🚭","❗","❕","❓","❔","‼️","⁉️","🔅","🔆","〽️","⚠️","🚸","🔱","⚜️","🔰","♻️","✅","🈯","💹","❇️","✳️","❎","🌐","💠","Ⓜ️","🌀","💤","🏧","🚾","♿","🅿️","🈳","🈂️","🛂","🛃","🛄","🛅","🛗","🚰","🚮","🎦","📶","🈁","🔣","ℹ️","🔤","🔡","🔠","🆖","🆗","🆙","🆒","🆕","🆓","0️⃣","1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟","🔢","#️⃣","*️⃣","⏏️","▶️","⏸️","⏯️","⏹️","⏺️","⏭️","⏮️","⏩","⏪","⏫","⏬","◀️","🔼","🔽","➡️","⬅️","⬆️","⬇️","↗️","↘️","↙️","↖️","↕️","↔️","↪️","↩️","⤴️","⤵️","🔀","🔁","🔂","🔄","🔃","🎵","🎶","➕","➖","➗","✖️","💲","💱","™️","©️","®️","👁️‍🗨️","🔚","🔙","🔛","🔝","🔜","〰️","➰","➿","✔️","❌","⭕","🔘","🔴","🟠","🟡","🟢","🔵","🟣","⚫","⚪","🟤","🔺","🔻","🔸","🔹","🔶","🔷","🔳","🔲","▪️","▫️","◾","◽","◼️","◻️","⬛","⬜","🟥","🟧","🟨","🟩","🟦","🟪","🟫"]
+  },
+  animals: {
+    name: '🐱',
+    emojis: ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐽","🐸","🐵","🙈","🙉","🙊","🐒","🐔","🐧","🐦","🐤","🐣","🐥","🦆","🦅","🦉","🦇","🐺","🐗","🐴","🦄","🐝","🐛","🦋","🐌","🐞","🐜","🦟","🦗","🕷️","🕸️","🦂","🐢","🐍","🦎","🦖","🦕","🐙","🦑","🦐","🦞","🦀","🐡","🐠","🐟","🐬","🐳","🐋","🦈","🐊","🐅","🐆","🦓","🦍","🦧","🐘","🦛","🦏","🐪","🐫","🦒","🦘","🐃","🐂","🐄","🐎","🐖","🐏","🐑","🦙","🐐","🦌","🐕","🐩","🦮","🐕‍🦺","🐈","🐈‍⬛","🐓","🦃","🦚","🦜","🦢","🦩","🕊️","🐇","🦝","🦨","🦡","🦦","🦥","🐁","🐀","🐿️","🦔"]
+  },
+  food: {
+    name: '🍎',
+    emojis: ["🍏","🍎","🍐","🍊","🍋","🍌","🍉","🍇","🍓","🍈","🍒","🍑","🍍","🥝","🥥","🥑","🍆","🥔","🥕","🌽","🌶️","🥒","🥬","🥦","🧄","🧅","🍄","🥜","🌰","🍞","🥐","🥖","🥨","🥯","🥞","🧇","🧀","🍖","🍗","🥩","🥓","🍔","🍟","🍕","🌭","🥪","🌮","🌯","🥙","🧆","🥚","🍳","🥘","🍲","🥣","🥗","🍿","🧈","🧂","🥫","🍱","🍘","🍙","🍚","🍛","🍜","🍝","🍠","🍢","🍣","🍤","🍥","🥮","🍡","🥟","🥠","🥡","🦪","🍦","🍧","🍨","🍩","🍪","🎂","🍰","🧁","🥧","🍫","🍬","🍭","🍮","🍯"]
+  },
+  activities: {
+    name: '⚽',
+    emojis: ["⚽","🏀","🏈","⚾","🥎","🎾","🏐","🏉","🥏","🎱","🪀","🏓","🏸","🏒","🏑","🥍","🏏","🥅","⛳","🪁","🏹","🎣","🤿","🥊","🥋","🎽","🛹","🛷","⛸️","🥌","🎿","⛷️","🏂","🪂","🏋️","🤼","🤸","⛹️","🤺","🤾","🏌️","🏇","🧘","🏄","🏊","🤽","🚣","🧗","🚵","🚴","🏆","🥇","🥈","🥉","🏅","🎖️","🏵️","🎗️","🎫","🎟️","🎪","🤹","🎭","🩰","🎨","🎬","🎤","🎧","🎼","🎹","🥁","🎷","🎺","🎸","🪕","🎻","🎲","♟️","🎯","🎳","🎮","🎰","🧩"]
+  },
+  travel: {
+    name: '🚗',
+    emojis: ["🚗","🚕","🚙","🚌","🚎","🏎️","🚓","🚑","🚒","🚐","🚚","🚛","🚜","🦯","🦽","🦼","🛴","🚲","🛵","🏍️","🛺","🚨","🚔","🚍","🚘","🚖","🚡","🚠","🚟","🚃","🚋","🚞","🚝","🚄","🚅","🚈","🚂","🚆","🚇","🚊","🚉","✈️","🛫","🛬","🛩️","💺","🛰️","🚀","🛸","🚁","🛶","⛵","🚤","🛥️","🛳️","⛴️","🚢","⚓","⛽","🚧","🚦","🚥","🚏","🗺️","🗿","🗽","🗼","🏰","🏯","🏟️","🎡","🎢","🎠","⛲","⛱️","🏖️","🏝️","🏜️","🌋","⛰️","🏔️","🗻","🏕️","⛺","🏠","🏡","🏘️","🏚️","🏗️","🏭","🏢","🏬","🏣","🏤","🏥","🏦","🏨","🏪","🏫","🏩","💒","🏛️","⛪","🕌","🕍","🛕","🕋","⛩️","🛤️","🛣️","🗾","🎑","🏞️","🌅","🌄","🌠","🎇","🎆","🌇","🌆","🏙️","🌃","🌌","🌉","🌁"]
+  },
+  objects: {
+    name: '💡',
+    emojis: ["⌚","📱","📲","💻","⌨️","🖥️","🖨️","🖱️","🖲️","🕹️","🗜️","💽","💾","💿","📀","📼","📷","📸","📹","🎥","📽️","🎞️","📞","☎️","📟","📠","📺","📻","🎙️","🎚️","🎛️","🧭","⏱️","⏲️","⏰","🕰️","⌛","⏳","📡","🔋","🔌","💡","🔦","🕯️","🪔","🧯","🛢️","💸","💵","💴","💶","💷","🪙","💰","💳","💎","⚖️","🪜","🧰","🪛","🔧","🔨","⚒️","🛠️","⛏️","🔩","⚙️","🪤","🧱","⛓️","🧲","🔫","💣","🧨","🪓","🔪","🗡️","⚔️","🛡️","🚬","⚰️","🪦","⚱️","🏺","🔮","📿","🧿","💈","⚗️","🔭","🔬","🕳️","🩹","🩺","💊","💉","🩸","🧬","🦠","🧫","🧪","🌡️","🧹","🪠","🧺","🧻","🚽","🚰","🚿","🛁","🛀","🧼","🪥","🪒","🧽","🪣","🧴","🛎️","🔑","🗝️","🚪","🪑","🛋️","🛏️","🛌","🧸","🖼️","🪞","🪟","🛍️","🛒","🎁","🎈","🎏","🎀","🪄","🪅","🎊","🎉","🎎","🏆","🎐","🪩","🎌","🏮","🎑","🧧","✉️","📩","📨","📧","💌","📥","📤","📦","🏷️","📪","📫","📬","📭","📮","📯","📜","📃","📄","📑","🧾","📊","📈","📉","🗒️","🗓️","📆","📅","🗑️","📇","🗃️","🗳️","🗄️","📋","📁","📂","🗂️","🗞️","📰","📓","📔","📒","📕","📗","📘","📙","📚","📖","🔖","🧷","🔗","📎","🖇️","📐","📏","🧮","📌","📍","✂️","🖊️","🖋️","✒️","🖌️","🖍️","📝","✏️","🔍","🔎","🔏","🔐","🔒","🔓"]
+  }
+};
+
+let currentEmojiCategory = 'smileys';
 
 function buildEmojiPicker(){
   emojiPicker.innerHTML = '';
-  const grid = document.createElement('div'); grid.style.display='flex'; grid.style.flexWrap='wrap'; grid.style.gap='6px';
+  
+  // Stop propagation on picker to prevent closing when clicking inside
+  emojiPicker.onclick = (e) => e.stopPropagation();
+  
+  // Create tabs container
+  const tabsContainer = document.createElement('div');
+  tabsContainer.className = 'emoji-tabs';
+  tabsContainer.onclick = (e) => e.stopPropagation(); // Prevent closing when clicking tabs
+  
+  // Create tab buttons for each category
+  Object.keys(emojiCategories).forEach(catKey => {
+    const cat = emojiCategories[catKey];
+    const tabBtn = document.createElement('button');
+    tabBtn.className = 'emoji-tab' + (catKey === currentEmojiCategory ? ' active' : '');
+    tabBtn.textContent = cat.name;
+    tabBtn.onclick = (e) => {
+      e.stopPropagation();
+      currentEmojiCategory = catKey;
+      buildEmojiPicker();
+    };
+    tabsContainer.appendChild(tabBtn);
+  });
+  
+  emojiPicker.appendChild(tabsContainer);
+  
+  // Create grid for current category
+  const grid = document.createElement('div');
+  grid.onclick = (e) => {
+    e.stopPropagation();
+  };
+  
+  const currentEmojis = emojiCategories[currentEmojiCategory].emojis;
+  currentEmojis.forEach(emoji => {
+    const emojiBtn = document.createElement('div');
+    emojiBtn.className = 'emoji-item';
+    emojiBtn.textContent = emoji;
+    emojiBtn.onclick = (e) => {
+      e.stopPropagation();
+      msg.value += emoji;
+      emojiPicker.style.display = 'none';
+      emojiPicker.classList.remove('show');
+      msg.focus();
+    };
+    grid.appendChild(emojiBtn);
+  });
+  
   emojiPicker.appendChild(grid);
-  emojiList.forEach(e=>{ const d=document.createElement('div'); d.className='emoji'; d.textContent=e; d.onclick=()=>{ msg.value += e; emojiPicker.style.display='none'; msg.focus(); }; grid.appendChild(d); });
+  
+  // Add search box
+  const searchBox = document.createElement('input');
+  searchBox.type = 'text';
+  searchBox.placeholder = 'Search emojis...';
+  searchBox.onclick = (e) => e.stopPropagation(); // Prevent closing when clicking search
+  searchBox.oninput = (e) => {
+    e.stopPropagation();
+    const query = e.target.value.toLowerCase();
+    if(query.length === 0) {
+      buildEmojiPicker();
+      return;
+    }
+    
+    // Search across all categories
+    const allEmojis = [];
+    Object.values(emojiCategories).forEach(cat => {
+      allEmojis.push(...cat.emojis);
+    });
+    const filtered = allEmojis.filter((emoji, index, self) => self.indexOf(emoji) === index);
+    
+    grid.innerHTML = '';
+    filtered.forEach(emoji => {
+      const emojiBtn = document.createElement('div');
+      emojiBtn.className = 'emoji-item';
+      emojiBtn.textContent = emoji;
+      emojiBtn.onclick = (e) => {
+        e.stopPropagation();
+        msg.value += emoji;
+        emojiPicker.style.display = 'none';
+        emojiPicker.classList.remove('show');
+        msg.focus();
+      };
+      grid.appendChild(emojiBtn);
+    });
+  };
+  
+  emojiPicker.appendChild(searchBox);
 }
-buildEmojiPicker();
-emojiBtn.onclick = ()=> emojiPicker.style.display = emojiPicker.style.display === 'flex' ? 'none' : 'flex';
 
-/* GIF picker functionality - Using Tenor API */
+buildEmojiPicker();
+
+// Enhanced emoji button toggle with positioning
+emojiBtn.onclick = (e) => {
+  e.stopPropagation();
+  const isOpen = emojiPicker.style.display === 'flex';
+  
+  // Close GIF picker if open
+  gifPicker.classList.remove('show');
+  
+  if(!isOpen) {
+    emojiPicker.style.display = 'flex';
+    emojiPicker.classList.add('show');
+  } else {
+    emojiPicker.style.display = 'none';
+    emojiPicker.classList.remove('show');
+  }
+};
+
+// Close emoji picker when clicking outside
+document.addEventListener('click', (e) => {
+  if(emojiPicker.style.display === 'flex' && !emojiPicker.contains(e.target) && !emojiBtn.contains(e.target)){
+    emojiPicker.style.display = 'none';
+    emojiPicker.classList.remove('show');
+  }
+});
+
+/* Enhanced GIF picker functionality - Using Tenor API */
 const TENOR_API_KEY = 'LIVDSRZULELA'; // Demo key - get your own at https://tenor.com/gifapi
 let gifSearchTimeout;
+let currentGifCategory = 'trending';
 
-async function searchGifs(query){
-  if(!query.trim()){
-    // Show featured GIFs if no query (Tenor doesn't have a direct trending endpoint)
-    const res = await fetch(`https://g.tenor.com/v1/featured?key=${TENOR_API_KEY}&limit=10&contentfilter=medium`);
+const gifCategories = {
+  trending: { name: '🔥 Trending', query: '' },
+  happy: { name: '😊 Happy', query: 'happy' },
+  love: { name: '❤️ Love', query: 'love' },
+  react: { name: '⚡ Reactions', query: 'reaction' }
+};
+
+async function searchGifs(query, limit = 20){
+  if(!query || !query.trim()){
+    // Show featured/trending GIFs if no query
+    const res = await fetch(`https://g.tenor.com/v1/featured?key=${TENOR_API_KEY}&limit=${limit}&contentfilter=medium`);
     const data = await res.json();
     return data.results || [];
   }
   
-  const res = await fetch(`https://g.tenor.com/v1/search?q=${encodeURIComponent(query)}&key=${TENOR_API_KEY}&limit=10&contentfilter=medium`);
+  const res = await fetch(`https://g.tenor.com/v1/search?q=${encodeURIComponent(query)}&key=${TENOR_API_KEY}&limit=${limit}&contentfilter=medium`);
   const data = await res.json();
   return data.results || [];
+}
+
+function createGifTabs(){
+  // Check if tabs already exist
+  if(gifPicker.querySelector('.gif-tabs')) return;
+  
+  const tabsContainer = document.createElement('div');
+  tabsContainer.className = 'gif-tabs';
+  tabsContainer.onclick = (e) => e.stopPropagation();
+  
+  Object.keys(gifCategories).forEach(catKey => {
+    const cat = gifCategories[catKey];
+    const tabBtn = document.createElement('button');
+    tabBtn.className = 'gif-tab' + (catKey === currentGifCategory ? ' active' : '');
+    tabBtn.textContent = cat.name;
+    tabBtn.onclick = (e) => {
+      e.stopPropagation();
+      currentGifCategory = catKey;
+      updateGifTabs();
+      if(catKey === 'trending'){
+        searchGifs('', 20).then(displayGifs);
+      } else {
+        searchGifs(cat.query, 20).then(displayGifs);
+      }
+    };
+    tabsContainer.appendChild(tabBtn);
+  });
+  
+  // Insert tabs before the search input
+  gifPicker.insertBefore(tabsContainer, gifSearch);
+}
+
+function updateGifTabs(){
+  const tabs = gifPicker.querySelectorAll('.gif-tab');
+  const catKeys = Object.keys(gifCategories);
+  tabs.forEach((tab, index) => {
+    if(catKeys[index] === currentGifCategory){
+      tab.classList.add('active');
+    } else {
+      tab.classList.remove('active');
+    }
+  });
 }
 
 function displayGifs(gifs){
   gifResults.innerHTML = '';
   
   if(!gifs || gifs.length === 0){
-    gifResults.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;font-size:13px;">No GIFs found</div>';
+    gifResults.innerHTML = '<div style="color:var(--muted);text-align:center;padding:30px 20px;font-size:14px;"><div style="font-size:32px;margin-bottom:8px;">🔍</div>No GIFs found</div>';
     return;
   }
   
-  gifs.forEach(gif => {
+  gifs.forEach((gif, index) => {
     // Tenor media structure: media[0] contains different formats
     const media = gif.media[0];
     if(!media) return;
     
     const item = document.createElement('div');
     item.className = 'gif-item';
+    item.style.animation = `fadeIn 0.3s ease ${index * 0.05}s both`;
     
     const img = document.createElement('img');
     // Use tinygif for preview (smaller, faster loading)
     img.src = media.tinygif?.url || media.gif?.url;
     img.alt = gif.title || 'GIF';
     img.loading = 'lazy';
+    
+    // Add loading state
+    item.style.background = 'rgba(255,255,255,0.03)';
+    img.onload = () => {
+      item.style.background = 'transparent';
+    };
     
     item.appendChild(img);
     // Use full-size gif for sending
@@ -2403,7 +2769,8 @@ async function sendGifMessage(gifUrl){
   // Close picker
   gifPicker.classList.remove('show');
   gifSearch.value = '';
-  gifResults.innerHTML = '';
+  currentGifCategory = 'trending';
+  updateGifTabs();
   
   // Send as message with GIF
   const colorToSend = (localStorage.getItem('session') && !localStorage.getItem('session').startsWith('Guest')) 
@@ -2422,6 +2789,9 @@ async function sendGifMessage(gifUrl){
   
   replyTo = null;
   replyBox.style.display = 'none';
+  
+  // Auto-scroll to bottom like text messages
+  requestAnimationFrame(() => scrollChatToBottom(true));
 }
 
 // GIF button click
@@ -2433,28 +2803,56 @@ gifBtn.onclick = ()=>{
   
   if(!isOpen){
     gifPicker.classList.add('show');
+    createGifTabs(); // Ensure tabs exist
     gifSearch.focus();
     // Load trending GIFs initially
-    searchGifs('').then(displayGifs);
+    searchGifs('', 20).then(displayGifs);
   } else {
     gifPicker.classList.remove('show');
   }
 };
 
+// Stop propagation on GIF picker elements
+gifPicker.onclick = (e) => e.stopPropagation();
+gifSearch.onclick = (e) => e.stopPropagation();
+gifResults.onclick = (e) => e.stopPropagation();
+
 // GIF search input
 gifSearch.addEventListener('input', (e)=>{
+  e.stopPropagation();
   clearTimeout(gifSearchTimeout);
   gifSearchTimeout = setTimeout(()=>{
-    searchGifs(e.target.value).then(displayGifs);
-  }, 300);
+    const query = e.target.value.trim();
+    if(query){
+      // When searching, clear category selection
+      currentGifCategory = '';
+      updateGifTabs();
+      searchGifs(query, 20).then(displayGifs);
+    } else {
+      currentGifCategory = 'trending';
+      updateGifTabs();
+      searchGifs('', 20).then(displayGifs);
+    }
+  }, 400);
 });
 
 // Close GIF picker when clicking outside
 document.addEventListener('click', (e)=>{
-  if(!gifPicker.contains(e.target) && !gifBtn.contains(e.target)){
+  if(gifPicker.classList.contains('show') && !gifPicker.contains(e.target) && !gifBtn.contains(e.target)){
     gifPicker.classList.remove('show');
+    currentGifCategory = 'trending';
   }
 });
+
+// Add CSS animation for GIF items
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+`;
+document.head.appendChild(style);
 
 /* back button */
 back.onclick = ()=>{
