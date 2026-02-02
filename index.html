@@ -925,14 +925,34 @@ settingsDelete.addEventListener('click', async () => {
   const session = localStorage.getItem('session');
   if(!session){ await showCustomAlert('No logged-in user'); return; }
   if(session.startsWith('Guest')){ await showCustomAlert('Guest account cannot be deleted.'); return; }
-  const confirmed = await showCustomConfirm(`Delete user "${session}" and their stored credentials? This cannot be undone.`, '⚠️');
+  const confirmed = await showCustomConfirm(`Delete your account and all stored credentials? This cannot be undone.`, '⚠️');
   if(!confirmed) return;
   try{
     users = JSON.parse(localStorage.getItem('users')||'{}');
-    delete users[session];
+
+    // Get username before deletion for username mapping cleanup
+    const userRef = doc(db, 'users', session);
+    const userSnap = await getDoc(userRef);
+    if(userSnap.exists()) {
+      const userData = userSnap.data();
+      const username = userData.username;
+
+      // Delete username mapping
+      if(username) {
+        await deleteDoc(doc(db, 'usernames', username.toLowerCase())).catch(()=>{});
+      }
+
+      // Delete user document
+      await deleteDoc(userRef);
+    }
+
+    // Update local users object (keyed by username in old format)
+    for(const [key, val] of Object.entries(users)) {
+      if(val === users[userSnap.data()?.username] || key === userSnap.data()?.username) {
+        delete users[key];
+      }
+    }
     localStorage.setItem('users', JSON.stringify(users));
-    // remove Firestore user doc if you want (optional)
-    await deleteDoc(doc(db,'users',session)).catch(()=>{});
   }catch(e){}
   localStorage.removeItem('session');
   localStorage.removeItem('nick');
@@ -967,57 +987,69 @@ confirmChangeUsername.addEventListener('click', async () => {
   const currentSession = localStorage.getItem('session');
   const newUsername = newUsernameInput.value.trim();
   const currentPassword = currentPasswordForUsernameInput.value;
-  
+
   if(!newUsername){ changeUsernameMsg.textContent = 'Please enter a new username.'; return; }
   if(newUsername === currentSession){ changeUsernameMsg.textContent = 'New username must be different.'; return; }
   if(newUsername.startsWith('Guest')){ changeUsernameMsg.textContent = 'Username cannot start with "Guest".'; return; }
-  
+
   changeUsernameMsg.textContent = 'Checking...';
-  
+
   try {
-    // Verify current password
+    // Verify current password - get user by UID
     const userRef = doc(db, 'users', currentSession);
     const snap = await getDoc(userRef);
     if(!snap.exists()){ changeUsernameMsg.textContent = 'Error: User not found.'; return; }
-    
-    const currentPassHash = await sha256(currentPassword);
-    if(snap.data().passwordHash !== currentPassHash){ 
-      changeUsernameMsg.textContent = 'Wrong current password.'; 
-      return; 
-    }
-    
-    // Check if new username is taken
-    const newUserRef = doc(db, 'users', newUsername);
-    const newSnap = await getDoc(newUserRef);
-    if(newSnap.exists()){ 
-      changeUsernameMsg.textContent = 'Username already taken.'; 
-      return; 
-    }
-    
-    // Create new user doc with same data
+
     const userData = snap.data();
-    await setDoc(newUserRef, {
-      passwordHash: userData.passwordHash,
-      created: userData.created,
-      color: userData.color
+    const currentPassHash = await sha256(currentPassword);
+    if(userData.passwordHash !== currentPassHash){
+      changeUsernameMsg.textContent = 'Wrong current password.';
+      return;
+    }
+
+    // Check if new username is taken
+    const existingUID = await getUIDFromUsername(newUsername);
+    if(existingUID && existingUID !== currentSession){
+      changeUsernameMsg.textContent = 'Username already taken.';
+      return;
+    }
+
+    // Update user document with new username (preserve UID)
+    await updateDoc(userRef, {
+      username: newUsername
     });
-    
-    // Delete old user doc
-    await deleteDoc(userRef);
-    
+
+    // Update username -> UID mapping (delete old, create new)
+    const oldUsernameLower = (userData.username || '').toLowerCase();
+    if(oldUsernameLower) {
+      await deleteDoc(doc(db, 'usernames', oldUsernameLower)).catch(()=>{});
+    }
+    const newUsernameMappingRef = doc(db, 'usernames', newUsername.toLowerCase());
+    await setDoc(newUsernameMappingRef, {
+      uid: currentSession,
+      username: newUsername,
+      created: serverTimestamp()
+    });
+
+    // Clear UID cache for this user
+    clearUIDCache(currentSession);
+
     // Update localStorage
     users = JSON.parse(localStorage.getItem('users')||'{}');
-    delete users[currentSession];
-    users[newUsername] = currentPassword;
-    localStorage.setItem('users', JSON.stringify(users));
-    localStorage.setItem('session', newUsername);
+    const storedPassword = users[userData.username] || users[currentSession] || '';
+    if(storedPassword) {
+      delete users[userData.username];
+      delete users[currentSession];
+      users[newUsername] = storedPassword;
+      localStorage.setItem('users', JSON.stringify(users));
+    }
     localStorage.setItem('nick', newUsername);
-    
+
     changeUsernameMsg.textContent = 'Username changed successfully!';
     setTimeout(() => {
       changeUsernameModal.style.display = 'none';
     }, 1500);
-    
+
   } catch(err) {
     console.error(err);
     changeUsernameMsg.textContent = 'Error: ' + (err.message || String(err));
@@ -1237,31 +1269,31 @@ confirmCreateRoom.addEventListener('click', async () => {
   const r = newRoomName.value.trim();
   const p = newRoomPassword.value;
   const desc = newRoomDescription.value.trim();
-  
-  if(!r){ 
-    createRoomMsg.textContent = 'Please enter a room name.'; 
-    return; 
+
+  if(!r){
+    createRoomMsg.textContent = 'Please enter a room name.';
+    return;
   }
-  
+
   createRoomMsg.textContent = 'Creating room...';
-  
+
   try {
     const ref = doc(db,'rooms',r);
     const snap = await getDoc(ref);
-    // Use session (permanent account ID) instead of nick for admin
-    const currentUser = localStorage.getItem('session') || '';
-    
+    // Use session (UID) as admin identifier
+    const currentUID = localStorage.getItem('session') || '';
+
     if(!snap.exists()) {
-      // Create room with admins array (using session, not nick)
+      // Create room with admins array (using UID)
       await setDoc(ref,{
         password:p,
         description:desc||'',
         created:serverTimestamp(),
-        admins: [currentUser],
+        admins: [currentUID],
         bannedUsers: []
       });
     }
-    
+
     createRoomModal.style.display = 'none';
     joinRoom(r);
   } catch(err) {
@@ -1275,25 +1307,25 @@ async function joinRoom(r){
   const ref = doc(db,'rooms',r);
   const snap = await getDoc(ref);
   if(!snap.exists()) { await showCustomAlert('Room not found', '🔍'); return; }
-  
+
   const roomData = snap.data();
-  
-  // Check if user is banned
-  const currentSession = localStorage.getItem('session') || '';
+
+  // Check if user is banned (by UID)
+  const currentUID = localStorage.getItem('session') || '';
   const bannedUsers = roomData.bannedUsers || [];
-  if(bannedUsers.includes(currentSession)) {
+  if(bannedUsers.includes(currentUID)) {
     await showCustomAlert('You are banned from this room.', '🚫');
     return;
   }
-  
+
   // Only ask for password if room has a password set
   if(roomData.password) {
     const pass = await showCustomPrompt('Enter room password:', '', '🔐');
     if(pass !== roomData.password) { await showCustomAlert('Wrong room password', '❌'); return; }
   }
-  
-  // Check if current user is admin using session (permanent account ID), not nick
-  isAdmin = (roomData.admin === currentSession);
+
+  // Check if current user is admin using UID (permanent account ID)
+  isAdmin = (roomData.admin === currentUID);
 
   // Save nick/color
   nick = localStorage.getItem('nick') || ('Anon'+Math.floor(Math.random()*1000));
@@ -1352,12 +1384,12 @@ document.querySelectorAll('.color-option').forEach(option => {
   option.addEventListener('click', async () => {
     const selectedColor = option.dataset.color;
     const session = localStorage.getItem('session');
-    
+
     // Save to localStorage
     localStorage.setItem('nickColor', selectedColor);
     nickColor = selectedColor;
-    
-    // Update user doc in Firebase if logged in
+
+    // Update user doc in Firebase if logged in (by UID)
     if(session && !session.startsWith('Guest')) {
       try {
         const userRef = doc(db, 'users', session);
@@ -1366,7 +1398,7 @@ document.querySelectorAll('.color-option').forEach(option => {
         console.error('Error saving color:', e);
       }
     }
-    
+
     // Close modal
     nickColorModal.style.display = 'none';
   });
@@ -1395,9 +1427,9 @@ async function enterRoom(r){
       } else {
         roomAdmins = [];
       }
-      // Check if current user is admin (in the roomAdmins array)
-      const currentSession = localStorage.getItem('session') || '';
-      isAdmin = roomAdmins.includes(currentSession);
+      // Check if current user is admin (in the roomAdmins array) using UID
+      const currentUID = localStorage.getItem('session') || '';
+      isAdmin = roomAdmins.includes(currentUID);
       // Show/hide edit description button
       if(editDescriptionBtn) {
         editDescriptionBtn.style.display = isAdmin ? 'inline-block' : 'none';
@@ -1406,14 +1438,14 @@ async function enterRoom(r){
   } catch(e) {
     console.error('Error fetching room admin:', e);
   }
-  
+
   // cleanup previous listeners
   if(messagesUnsub) messagesUnsub();
   if(typingUnsub) typingUnsub();
 
   // clear chat area
   chat.innerHTML = '';
-  
+
   // Reload online users list if drawer is open (for when switching rooms)
   const drawer = document.getElementById('onlineUsersDrawer');
   if(drawer && drawer.style.transform === 'translateX(0px)') {
@@ -1475,7 +1507,7 @@ async function enterRoom(r){
     // render stylish indicator (with controlled animation restarts)
     renderTypingIndicator(usersTyping);
   });
-  
+
   // Auto-scroll to bottom after a short delay to ensure messages are loaded
   setTimeout(() => {
     scrollChatToBottom(true);
@@ -1681,8 +1713,12 @@ function makeMessageElement(id, m){
   el.dataset.msgid = id;
   el.dataset.owner = m.name;
 
+  // Resolve UID to current username if present
+  const displayName = m.name;
+  const messageUID = m.uid || m.session;
+
   const replyHtml = m.reply?`<div class="reply-preview" data-reply-msgid="${escapeAttr(m.reply.msgId || '')}"><b>${escapeHtml(m.reply.name)}</b>: ${escapeHtml(m.reply.text)}</div>`:'';
-  
+
   // Handle GIF messages
   let contentHtml = '';
   if(m.gif){
@@ -1692,21 +1728,21 @@ function makeMessageElement(id, m){
   }
   const safeTextHtml = contentHtml;
   const editedNoteHtml = m.editedNote ? `<span class="edited-note">${escapeHtml(m.editedNote)}</span>` : '';
-  
+
   // Update reply button data-text to handle GIFs
   const replyText = m.gif ? '[GIF]' : (m.text || '');
 
-  // Check if sender is admin by checking if session is in roomAdmins array
-  const isSenderAdmin = roomAdmins.includes(m.session);
+  // Check if sender is admin by checking if UID is in roomAdmins array
+  const isSenderAdmin = messageUID ? roomAdmins.includes(messageUID) : false;
   const adminBadge = isSenderAdmin ? '<span style="background:var(--accent);color:#000;font-size:10px;margin-left:6px;padding:2px 8px;border-radius:4px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;display:inline-flex;align-items:center;gap:3px"><span style="font-size:9px">👑</span>ADMIN</span>' : '';
 
   // Build inner message WITHOUT reply button when mobile.
   // Role badges will be added asynchronously to prevent duplicates
   let msgInner = `
-    <div class="avatar" style="background:${m.color || getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim()}">${escapeHtml((m.name||'?')[0]||'?')}</div>
+    <div class="avatar" style="background:${m.color || getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim()}">${escapeHtml((displayName||'?')[0]||'?')}</div>
     <div class="msg">
       ${replyHtml}
-      <b class="msg-sender" style="color:${m.color || '#999'};cursor:pointer">${escapeHtml(m.name)}</b>${adminBadge}
+      <b class="msg-sender" style="color:${m.color || '#999'};cursor:pointer">${escapeHtml(displayName)}</b>${adminBadge}
       <span class="time">${m.time?.toMillis ? new Date(m.time.toMillis()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : ''}</span>
       <div class="msg-text">${safeTextHtml}${editedNoteHtml}</div>
       <div class="reactions-container" data-msgid="${id}"></div>
@@ -1719,7 +1755,7 @@ function makeMessageElement(id, m){
   if(!isMobile){
     const replyBtn = document.createElement('div');
     replyBtn.className = 'reply-btn';
-    replyBtn.setAttribute('data-name', escapeAttr(m.name));
+    replyBtn.setAttribute('data-name', escapeAttr(displayName));
     replyBtn.setAttribute('data-text', escapeAttr(replyText));
     replyBtn.textContent = 'reply';
     el.querySelector('.msg').appendChild(replyBtn);
@@ -1727,7 +1763,7 @@ function makeMessageElement(id, m){
 
   // Add the three-dot MORE button for own messages (desktop only)
   const localNick = localStorage.getItem('nick') || nick;
-  if(m.name === localNick && !isMobile){
+  if(displayName === localNick && !isMobile){
     const msgInnerEl = el.querySelector('.msg');
     const moreBtn = document.createElement('div');
     moreBtn.className = 'more-btn';
@@ -1748,25 +1784,33 @@ function makeMessageElement(id, m){
   // Fetch and cache user role for this message
   (async () => {
     try {
-      const cached = userCache.get(m.name);
-      // Always fetch to ensure we have the latest role data
-      const us = await getDoc(doc(db,'users',m.name));
-      if(us.exists()) {
-        const ud = us.data();
-        const role = ud.role || null;
-        userCache.set(m.name, { ...(cached || {}), role, color: ud.color || m.color });
-        // Update role badge if role exists (admins can have both admin and role badges)
-        if(role && ROLES[role]) {
-          const senderEl = el.querySelector('.msg-sender');
-          if(senderEl && el.isConnected) {
-            // Remove any existing role badges first
-            const existingRoleBadges = senderEl.parentElement.querySelectorAll('[data-role-badge]');
-            existingRoleBadges.forEach(badge => badge.remove());
-            // Add the role badge after the sender name
-            const roleBadgeEl = document.createElement('span');
-            roleBadgeEl.dataset.roleBadge = 'true';
-            roleBadgeEl.innerHTML = getRoleBadge(role);
-            senderEl.insertAdjacentElement('afterend', roleBadgeEl);
+      // Use UID to look up user data if available
+      const userIdentifier = messageUID || displayName;
+      const cached = userCache.get(userIdentifier);
+      // Look up user by UID if we have it
+      let userDocId = messageUID;
+      if(!userDocId && !displayName.startsWith('Guest')) {
+        userDocId = await getUIDFromUsername(displayName);
+      }
+      if(userDocId) {
+        const us = await getDoc(doc(db,'users',userDocId));
+        if(us.exists()) {
+          const ud = us.data();
+          const role = ud.role || null;
+          userCache.set(userIdentifier, { ...(cached || {}), role, color: ud.color || m.color });
+          // Update role badge if role exists (admins can have both admin and role badges)
+          if(role && ROLES[role]) {
+            const senderEl = el.querySelector('.msg-sender');
+            if(senderEl && el.isConnected) {
+              // Remove any existing role badges first
+              const existingRoleBadges = senderEl.parentElement.querySelectorAll('[data-role-badge]');
+              existingRoleBadges.forEach(badge => badge.remove());
+              // Add the role badge after the sender name
+              const roleBadgeEl = document.createElement('span');
+              roleBadgeEl.dataset.roleBadge = 'true';
+              roleBadgeEl.innerHTML = getRoleBadge(role);
+              senderEl.insertAdjacentElement('afterend', roleBadgeEl);
+            }
           }
         }
       }
@@ -1781,20 +1825,28 @@ function makeMessageElement(id, m){
         ev.stopPropagation();
         let joined = null; let color = m.color;
         try{
-          const cached = userCache.get(m.name);
+          const userIdentifier = messageUID || displayName;
+          const cached = userCache.get(userIdentifier);
           if(cached && cached.color) color = cached.color;
           else {
-            const us = await getDoc(doc(db,'users',m.name));
-            if(us.exists()){
-              const ud = us.data();
-              joined = ud.joined?.toMillis ? new Date(ud.joined.toMillis()) : ud.joined;
-              color = ud.color || color;
-              const role = ud.role || null;
-              userCache.set(m.name, { color, role });
+            // Look up by UID if available
+            let userDocId = messageUID;
+            if(!userDocId && !displayName.startsWith('Guest')) {
+              userDocId = await getUIDFromUsername(displayName);
+            }
+            if(userDocId) {
+              const us = await getDoc(doc(db,'users',userDocId));
+              if(us.exists()){
+                const ud = us.data();
+                joined = ud.joined?.toMillis ? new Date(ud.joined.toMillis()) : ud.joined;
+                color = ud.color || color;
+                const role = ud.role || null;
+                userCache.set(userIdentifier, { color, role });
+              }
             }
           }
         }catch(e){}
-        showProfileCardFor(m.name, color, joined, senderEl);
+        showProfileCardFor(displayName, color, joined, senderEl);
       });
       senderEl.addEventListener('mouseleave', ()=>{
         setTimeout(()=>{ if(document.querySelector(':hover') !== senderEl) { profileCard.classList.remove('show'); profileCard.setAttribute('aria-hidden','true'); } }, 120);
@@ -1804,27 +1856,34 @@ function makeMessageElement(id, m){
         ev.stopPropagation();
         let joined = null; let color = m.color;
         try{
-          const cached = userCache.get(m.name);
+          const userIdentifier = messageUID || displayName;
+          const cached = userCache.get(userIdentifier);
           if(cached && cached.color) color = cached.color;
           else {
-            const us = await getDoc(doc(db,'users',m.name));
-            if(us.exists()){
-              const ud = us.data();
-              joined = ud.joined?.toMillis ? new Date(ud.joined.toMillis()) : ud.joined;
-              color = ud.color || color;
-              const role = ud.role || null;
-              userCache.set(m.name, { color, role });
+            let userDocId = messageUID;
+            if(!userDocId && !displayName.startsWith('Guest')) {
+              userDocId = await getUIDFromUsername(displayName);
+            }
+            if(userDocId) {
+              const us = await getDoc(doc(db,'users',userDocId));
+              if(us.exists()){
+                const ud = us.data();
+                joined = ud.joined?.toMillis ? new Date(ud.joined.toMillis()) : ud.joined;
+                color = ud.color || color;
+                const role = ud.role || null;
+                userCache.set(userIdentifier, { color, role });
+              }
             }
           }
         }catch(e){}
-        showProfileCardFor(m.name, color, joined, senderEl);
+        showProfileCardFor(displayName, color, joined, senderEl);
       });
     }
   }
 
   // hover to show who has seen this message
   el.addEventListener('mouseenter', async (ev)=>{
-    if(m.name === (localStorage.getItem('nick')||nick)) return;
+    if(displayName === (localStorage.getItem('nick')||nick)) return;
     const rect = el.getBoundingClientRect();
     tooltip.style.left = (rect.right + 8) + 'px';
     tooltip.style.top = (rect.top) + 'px';
@@ -1884,7 +1943,7 @@ function updateMessage(id, m){
   const el = chat.querySelector(`[data-msgid="${id}"]`);
   if(!el) { renderMessage(id, m); return; }
   const replyHtml = m.reply?`<div class="reply-preview"><b>${escapeHtml(m.reply.name)}</b>: ${escapeHtml(m.reply.text)}</div>`:'';
-  
+
   // Handle GIF updates
   let contentHtml = '';
   if(m.gif){
@@ -1899,11 +1958,12 @@ function updateMessage(id, m){
   const time = el.querySelector('.time');
   const msgText = el.querySelector('.msg-text');
   if(avatar) avatar.style.background = m.color || getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim();
-  if(sender) { 
-    sender.textContent = m.name; 
-    sender.style.color = m.color || '#999'; 
-    // Update admin badge using session (check if in roomAdmins array)
-    const isSenderAdmin = roomAdmins.includes(m.session);
+  if(sender) {
+    sender.textContent = m.name;
+    sender.style.color = m.color || '#999';
+    // Update admin badge using UID (check if in roomAdmins array)
+    const messageUID = m.uid || m.session;
+    const isSenderAdmin = messageUID ? roomAdmins.includes(messageUID) : false;
     // Remove existing admin and role badges
     let nextEl = sender.nextElementSibling;
     while(nextEl && (nextEl.style.background === 'var(--accent)' || nextEl.dataset.roleBadge)) {
@@ -1919,7 +1979,8 @@ function updateMessage(id, m){
       sender.after(adminBadge);
     }
     // Add role badge if cached (admins can have both admin and role badges)
-    const cached = userCache.get(m.name);
+    const userIdentifier = messageUID || m.name;
+    const cached = userCache.get(userIdentifier);
     if(cached && cached.role && ROLES[cached.role]) {
       const roleBadge = document.createElement('span');
       roleBadge.dataset.roleBadge = 'true';
@@ -1927,33 +1988,40 @@ function updateMessage(id, m){
       sender.after(roleBadge);
     }
   }
-  
+
   // Fetch and cache user role
   (async () => {
     try {
-      const cached = userCache.get(m.name);
-      // Always fetch fresh role data to ensure we have the latest
-      const us = await getDoc(doc(db,'users',m.name));
-      if(us.exists()) {
-        const ud = us.data();
-        const role = ud.role || null;
-        // Update cache with fresh role data
-        userCache.set(m.name, { ...(cached || {}), role });
-        
-        // Update role badge if element still exists
-        if(el.isConnected) {
-          const senderEl = el.querySelector('.msg-sender');
-          if(senderEl) {
-            // Remove existing role badge first (prevents duplicates)
-            const existingRoleBadges = senderEl.parentElement.querySelectorAll('[data-role-badge]');
-            existingRoleBadges.forEach(badge => badge.remove());
-            
-            // Add new role badge if role exists (admins can have both admin and role badges)
-            if(role && ROLES[role]) {
-              const roleBadgeEl = document.createElement('span');
-              roleBadgeEl.dataset.roleBadge = 'true';
-              roleBadgeEl.innerHTML = getRoleBadge(role);
-              senderEl.insertAdjacentElement('afterend', roleBadgeEl);
+      const userIdentifier = messageUID || m.name;
+      const cached = userCache.get(userIdentifier);
+      // Look up by UID if available
+      let userDocId = messageUID;
+      if(!userDocId && !m.name.startsWith('Guest')) {
+        userDocId = await getUIDFromUsername(m.name);
+      }
+      if(userDocId) {
+        const us = await getDoc(doc(db,'users',userDocId));
+        if(us.exists()) {
+          const ud = us.data();
+          const role = ud.role || null;
+          // Update cache with fresh role data
+          userCache.set(userIdentifier, { ...(cached || {}), role });
+
+          // Update role badge if element still exists
+          if(el.isConnected) {
+            const senderEl = el.querySelector('.msg-sender');
+            if(senderEl) {
+              // Remove existing role badge first (prevents duplicates)
+              const existingRoleBadges = senderEl.parentElement.querySelectorAll('[data-role-badge]');
+              existingRoleBadges.forEach(badge => badge.remove());
+
+              // Add new role badge if role exists (admins can have both admin and role badges)
+              if(role && ROLES[role]) {
+                const roleBadgeEl = document.createElement('span');
+                roleBadgeEl.dataset.roleBadge = 'true';
+                roleBadgeEl.innerHTML = getRoleBadge(role);
+                senderEl.insertAdjacentElement('afterend', roleBadgeEl);
+              }
             }
           }
         }
@@ -2096,16 +2164,16 @@ msg.addEventListener('keydown', async (e)=>{
   if(e.key !== 'Enter') return;
   const textRaw = msg.value.trim(); msg.value = ''; if(!textRaw) return;
   if(!room){ await showCustomAlert('You are not in a room', '🚪'); return; }
-  
-  // Check if user is banned before sending
-  const currentSession = localStorage.getItem('session') || '';
+
+  // Check if user is banned before sending (by UID)
+  const currentUID = localStorage.getItem('session') || '';
   try {
     const roomRef = doc(db, 'rooms', room);
     const roomSnap = await getDoc(roomRef);
     if(roomSnap.exists()) {
       const roomData = roomSnap.data();
       const bannedUsers = roomData.bannedUsers || [];
-      if(bannedUsers.includes(currentSession)) {
+      if(bannedUsers.includes(currentUID)) {
         await showCustomAlert('You are banned from this room.', '🚫');
         return;
       }
@@ -2113,7 +2181,7 @@ msg.addEventListener('keydown', async (e)=>{
   } catch(e) {
     console.error('Error checking ban status:', e);
   }
-  
+
   deleteDoc(doc(db,'rooms',room,'typing',localStorage.getItem('nick')||nick)).catch(()=>{});
 
   // Commands handling
@@ -2127,7 +2195,7 @@ msg.addEventListener('keydown', async (e)=>{
 
   await addDoc(collection(db,'rooms',room,'messages'), {
     name: localStorage.getItem('nick') || nick,
-    session: localStorage.getItem('session') || '',
+    uid: localStorage.getItem('session') || '',
     text: textRaw,
     reply: replyTo,
     color: colorToSend,
@@ -2294,20 +2362,28 @@ async function handleCommand(cmdText){
       return;
     }
     const targetUser = parts[1].trim();
-    if(targetUser === (localStorage.getItem('session') || '')) {
+    const currentUID = localStorage.getItem('session') || '';
+
+    // Get target user's UID
+    let targetUID = await getUIDFromUsername(targetUser);
+
+    // Check if target is a guest (guests can't be admins)
+    if(targetUser.startsWith('Guest')) {
+      await showCustomAlert('Cannot give admin rights to guest accounts.', '🚫');
+      return;
+    }
+
+    if(!targetUID) {
+      await showCustomAlert(`User "${targetUser}" not found.`, '🔍');
+      return;
+    }
+
+    if(targetUID === currentUID) {
       await showCustomAlert('You are already an admin.', '👑');
       return;
     }
-    
+
     try {
-      // Check if user exists
-      const userRef = doc(db, 'users', targetUser);
-      const userSnap = await getDoc(userRef);
-      if(!userSnap.exists() && !targetUser.startsWith('Guest')) {
-        await showCustomAlert(`User "${targetUser}" not found.`, '🔍');
-        return;
-      }
-      
       // Update room admins
       const roomRef = doc(db, 'rooms', room);
       const roomSnap = await getDoc(roomRef);
@@ -2315,7 +2391,7 @@ async function handleCommand(cmdText){
         await showCustomAlert('Room not found.', '🔍');
         return;
       }
-      
+
       const roomData = roomSnap.data();
       let newAdmins;
       if(Array.isArray(roomData.admins)) {
@@ -2325,17 +2401,17 @@ async function handleCommand(cmdText){
       } else {
         newAdmins = [];
       }
-      
-      if(!newAdmins.includes(targetUser)) {
-        newAdmins.push(targetUser);
+
+      if(!newAdmins.includes(targetUID)) {
+        newAdmins.push(targetUID);
         await updateDoc(roomRef, { admins: newAdmins });
         roomAdmins = newAdmins;
         await showCustomAlert(`Admin rights given to ${targetUser}`, '👑');
         // Post system message
         await addDoc(collection(db,'rooms',room,'messages'), {
-          name:'System', 
-          text:`${targetUser} has been promoted to admin by ${localStorage.getItem('session') || nick}`, 
-          color:'#888', 
+          name:'System',
+          text:`${targetUser} has been promoted to admin by ${localStorage.getItem('nick') || nick}`,
+          color:'#888',
           time:serverTimestamp()
         });
       } else {
@@ -2365,19 +2441,33 @@ async function handleCommand(cmdText){
       return;
     }
     const targetUser = parts[1].trim();
-    const currentSession = localStorage.getItem('session') || '';
-    
-    if(targetUser === currentSession) {
+    const currentUID = localStorage.getItem('session') || '';
+
+    // Get target user's UID
+    let targetUID = await getUIDFromUsername(targetUser);
+
+    // Check if target is a guest
+    if(targetUser.startsWith('Guest')) {
+      // For guests, use the guest name as identifier
+      targetUID = targetUser;
+    }
+
+    if(!targetUID) {
+      await showCustomAlert(`User "${targetUser}" not found.`, '🔍');
+      return;
+    }
+
+    if(targetUID === currentUID) {
       await showCustomAlert('You cannot ban yourself.', '🚫');
       return;
     }
-    
-    // Check if target is an admin
-    if(roomAdmins.includes(targetUser)) {
+
+    // Check if target is an admin (by UID)
+    if(roomAdmins.includes(targetUID)) {
       await showCustomAlert('Cannot ban a room admin.', '🔒');
       return;
     }
-    
+
     try {
       const roomRef = doc(db, 'rooms', room);
       const roomSnap = await getDoc(roomRef);
@@ -2385,36 +2475,36 @@ async function handleCommand(cmdText){
         await showCustomAlert('Room not found.', '🔍');
         return;
       }
-      
+
       const roomData = roomSnap.data();
       let bannedUsers = roomData.bannedUsers || [];
-      
-      if(bannedUsers.includes(targetUser)) {
+
+      if(bannedUsers.includes(targetUID)) {
         await showCustomAlert(`${targetUser} is already banned.`, 'ℹ️');
         return;
       }
-      
-      bannedUsers.push(targetUser);
+
+      bannedUsers.push(targetUID);
       await updateDoc(roomRef, { bannedUsers });
-      
+
       await showCustomAlert(`${targetUser} has been banned from this room.`, '🔨');
-      
+
       // Post system message
       await addDoc(collection(db,'rooms',room,'messages'), {
-        name:'System', 
-        text:`${targetUser} has been banned from the room by ${currentSession}`, 
-        color:'#888', 
+        name:'System',
+        text:`${targetUser} has been banned from the room by ${localStorage.getItem('nick') || currentUID}`,
+        color:'#888',
         time:serverTimestamp()
       });
-      
+
       // Kick the user if they're currently in the room
       await addDoc(collection(db,'rooms',room,'messages'), {
-        name:'System', 
-        text:`You have been banned from ${room}. Goodbye!`, 
-        color:'#ff4444', 
+        name:'System',
+        text:`You have been banned from ${room}. Goodbye!`,
+        color:'#ff4444',
         time:serverTimestamp()
       });
-      
+
     } catch(e) {
       console.error('/ban error', e);
       await showCustomAlert('Error banning user: ' + (e.message || String(e)), '❌');
@@ -2433,7 +2523,20 @@ async function handleCommand(cmdText){
       return;
     }
     const targetUser = parts[1].trim();
-    
+
+    // Get target user's UID
+    let targetUID = await getUIDFromUsername(targetUser);
+
+    // Check if target is a guest
+    if(targetUser.startsWith('Guest')) {
+      targetUID = targetUser;
+    }
+
+    if(!targetUID) {
+      // If we can't find the user, try the username directly (legacy support)
+      targetUID = targetUser;
+    }
+
     try {
       const roomRef = doc(db, 'rooms', room);
       const roomSnap = await getDoc(roomRef);
@@ -2441,28 +2544,28 @@ async function handleCommand(cmdText){
         await showCustomAlert('Room not found.', '🔍');
         return;
       }
-      
+
       const roomData = roomSnap.data();
       let bannedUsers = roomData.bannedUsers || [];
-      
-      if(!bannedUsers.includes(targetUser)) {
+
+      if(!bannedUsers.includes(targetUID)) {
         await showCustomAlert(`${targetUser} is not banned.`, 'ℹ️');
         return;
       }
-      
-      bannedUsers = bannedUsers.filter(u => u !== targetUser);
+
+      bannedUsers = bannedUsers.filter(u => u !== targetUID);
       await updateDoc(roomRef, { bannedUsers });
-      
+
       await showCustomAlert(`${targetUser} has been unbanned from this room.`, '✅');
-      
+
       // Post system message
       await addDoc(collection(db,'rooms',room,'messages'), {
-        name:'System', 
-        text:`${targetUser} has been unbanned by ${localStorage.getItem('session') || nick}`, 
-        color:'#888', 
+        name:'System',
+        text:`${targetUser} has been unbanned by ${localStorage.getItem('nick') || nick}`,
+        color:'#888',
         time:serverTimestamp()
       });
-      
+
     } catch(e) {
       console.error('/unban error', e);
       await showCustomAlert('Error unbanning user: ' + (e.message || String(e)), '❌');
@@ -2765,16 +2868,16 @@ function displayGifs(gifs){
 
 async function sendGifMessage(gifUrl){
   if(!room || !nick) return;
-  
-  // Check if user is banned before sending
-  const currentSession = localStorage.getItem('session') || '';
+
+  // Check if user is banned before sending (by UID)
+  const currentUID = localStorage.getItem('session') || '';
   try {
     const roomRef = doc(db, 'rooms', room);
     const roomSnap = await getDoc(roomRef);
     if(roomSnap.exists()) {
       const roomData = roomSnap.data();
       const bannedUsers = roomData.bannedUsers || [];
-      if(bannedUsers.includes(currentSession)) {
+      if(bannedUsers.includes(currentUID)) {
         await showCustomAlert('You are banned from this room.', '🚫');
         return;
       }
@@ -2782,31 +2885,31 @@ async function sendGifMessage(gifUrl){
   } catch(e) {
     console.error('Error checking ban status:', e);
   }
-  
+
   // Close picker
   gifPicker.classList.remove('show');
   gifSearch.value = '';
   currentGifCategory = 'trending';
   updateGifTabs();
-  
+
   // Send as message with GIF
-  const colorToSend = (localStorage.getItem('session') && !localStorage.getItem('session').startsWith('Guest')) 
-    ? (localStorage.getItem('nickColor') || '#58a6ff') 
+  const colorToSend = (localStorage.getItem('session') && !localStorage.getItem('session').startsWith('Guest'))
+    ? (localStorage.getItem('nickColor') || '#58a6ff')
     : getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim();
-  
+
   await addDoc(collection(db,'rooms',room,'messages'), {
     name: localStorage.getItem('nick') || nick,
-    session: localStorage.getItem('session') || '',
+    uid: localStorage.getItem('session') || '',
     text: '',
     gif: gifUrl,
     reply: replyTo,
     color: colorToSend,
     time: serverTimestamp()
   }).catch(console.error);
-  
+
   replyTo = null;
   replyBox.style.display = 'none';
-  
+
   // Auto-scroll to bottom like text messages
   requestAnimationFrame(() => scrollChatToBottom(true));
 }
@@ -2986,9 +3089,9 @@ function getUserColor(name){
 async function isNameTaken(name) {
   if(!name) return false;
   try {
-    const userRef = doc(db, 'users', name);
-    const snap = await getDoc(userRef);
-    return snap.exists();
+    // Check using the new username mapping
+    const uid = await getUIDFromUsername(name);
+    return uid !== null;
   } catch(e) {
     console.error('Error checking name:', e);
     return false;
@@ -3002,6 +3105,66 @@ async function sha256(text) {
   return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// Generate unique user ID
+function generateUID() {
+  if(typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return 'uid_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+}
+
+// Get user UID from username
+async function getUIDFromUsername(username) {
+  if(!username) return null;
+  try {
+    const mappingRef = doc(db, 'usernames', username.toLowerCase());
+    const snap = await getDoc(mappingRef);
+    if(snap.exists()) return snap.data().uid;
+    return null;
+  } catch(e) {
+    console.error('Error getting UID from username:', e);
+    return null;
+  }
+}
+
+// Get username from UID
+async function getUsernameFromUID(uid) {
+  if(!uid) return null;
+  try {
+    const userRef = doc(db, 'users', uid);
+    const snap = await getDoc(userRef);
+    if(snap.exists()) return snap.data().username;
+    return null;
+  } catch(e) {
+    console.error('Error getting username from UID:', e);
+    return null;
+  }
+}
+
+// Cache for UID->username resolution
+const uidUsernameCache = new Map();
+
+// Resolve UID to current username (with caching)
+async function resolveUIDToUsername(uid) {
+  if(!uid) return null;
+  if(uid.startsWith('Guest')) return uid;
+
+  if(uidUsernameCache.has(uid)) {
+    return uidUsernameCache.get(uid);
+  }
+
+  const username = await getUsernameFromUID(uid);
+  if(username) {
+    uidUsernameCache.set(uid, username);
+  }
+  return username;
+}
+
+// Clear UID cache for a user (when they change username)
+function clearUIDCache(uid) {
+  uidUsernameCache.delete(uid);
+}
+
 loginBtn.addEventListener('click', async (e) => {
   e.preventDefault();
   const username = (loginUser.value || '').trim();
@@ -3009,7 +3172,14 @@ loginBtn.addEventListener('click', async (e) => {
   if(!username || !password){ loginMsg.textContent = 'Please enter username and password.'; return; }
   loginMsg.textContent = 'Checking...';
   try {
-    const userRef = doc(db, 'users', username);
+    // Look up UID from username
+    const uid = await getUIDFromUsername(username);
+    if(!uid){
+      loginMsg.textContent = 'User not found. Please register first.';
+      return;
+    }
+
+    const userRef = doc(db, 'users', uid);
     const snap = await getDoc(userRef);
     const passHash = await sha256(password);
 
@@ -3021,13 +3191,13 @@ loginBtn.addEventListener('click', async (e) => {
     // LOGIN
     const data = snap.data();
     if(data.passwordHash === passHash){
-      localStorage.setItem('session', username);
-      localStorage.setItem('nick', username);
+      localStorage.setItem('session', uid);
+      localStorage.setItem('nick', data.username || username);
       if (data.color) localStorage.setItem('nickColor', data.color);
-      
+
       // Update lastSeen on login
       updateUserActivity();
-      
+
       loginMsg.textContent = 'Login successful ✅';
       showHome();
     } else {
@@ -3044,43 +3214,60 @@ registerBtn.addEventListener('click', async (e) => {
   const username = (loginUser.value || '').trim();
   const password = loginPass.value || '';
   const confirmPassword = registerPass.value || '';
-  
-  if(!username || !password || !confirmPassword){ 
-    loginMsg.textContent = 'Please fill in all fields.'; 
-    return; 
+
+  if(!username || !password || !confirmPassword){
+    loginMsg.textContent = 'Please fill in all fields.';
+    return;
   }
-  
+
   if(password !== confirmPassword) {
     loginMsg.textContent = 'Passwords do not match.';
     return;
   }
-  
+
   if(password.length < 4) {
     loginMsg.textContent = 'Password must be at least 4 characters.';
     return;
   }
-  
+
+  if(username.startsWith('Guest')) {
+    loginMsg.textContent = 'Username cannot start with "Guest".';
+    return;
+  }
+
   loginMsg.textContent = 'Registering...';
-  
+
   try {
-    const userRef = doc(db, 'users', username);
-    const snap = await getDoc(userRef);
-    
-    if(snap.exists()){
+    // Check if username is already taken (check lowercase for case-insensitive)
+    const existingUID = await getUIDFromUsername(username);
+    if(existingUID){
       loginMsg.textContent = 'Username already taken.';
       return;
     }
-    
+
     const passHash = await sha256(password);
-    
+    const uid = generateUID();
+
+    // Create user document by UID
+    const userRef = doc(db, 'users', uid);
     await setDoc(userRef, {
       passwordHash: passHash,
       created: serverTimestamp(),
       color: nickColor || '#58a6ff',
-      role: ''
+      role: '',
+      username: username,
+      uid: uid
     });
 
-    localStorage.setItem('session', username);
+    // Create username -> UID mapping (case-insensitive lookup)
+    const usernameMappingRef = doc(db, 'usernames', username.toLowerCase());
+    await setDoc(usernameMappingRef, {
+      uid: uid,
+      username: username,
+      created: serverTimestamp()
+    });
+
+    localStorage.setItem('session', uid);
     localStorage.setItem('nick', username);
     localStorage.setItem('nickColor', nickColor || '#58a6ff');
 
@@ -3197,13 +3384,13 @@ function updateUserActivity() {
   const session = localStorage.getItem('session');
   console.log('updateUserActivity called, session:', session);
   if(!session || session.startsWith('Guest')) return;
-  
+
   try {
     const userRef = doc(db, 'users', session);
-    console.log('Updating user activity for:', session);
-    updateDoc(userRef, { 
+    console.log('Updating user activity for UID:', session);
+    updateDoc(userRef, {
       lastSeen: serverTimestamp(),
-      currentRoom: room || '' 
+      currentRoom: room || ''
     }).then(() => {
       console.log('User activity updated successfully');
     }).catch((err) => {
@@ -3236,7 +3423,7 @@ let currentUserRole = null;
 async function loadUserRole() {
   const session = localStorage.getItem('session');
   if(!session) return;
-  
+
   try {
     const userRef = doc(db, 'users', session);
     const userSnap = await getDoc(userRef);
@@ -3253,19 +3440,19 @@ async function loadUserRole() {
 async function saveUserRole(roleKey) {
   const session = localStorage.getItem('session');
   if(!session) return false;
-  
+
   try {
     const userRef = doc(db, 'users', session);
     await updateDoc(userRef, { role: roleKey });
     currentUserRole = roleKey;
-    
+
     // Update user cache immediately
     const cached = userCache.get(session) || {};
     userCache.set(session, { ...cached, role: roleKey });
-    
+
     // Refresh all existing messages from current user to show new role
     refreshUserRoleBadges(session, roleKey);
-    
+
     return true;
   } catch(e) {
     console.error('Error saving user role:', e);
@@ -3430,9 +3617,10 @@ async function loadOnlineUsersList() {
 
     snapshot.forEach(doc => {
       const userData = doc.data();
-      const userId = doc.id;
+      const uid = doc.id;
 
-      if(userId.startsWith('Guest')) return;
+      // Skip guests (they don't have UIDs, they use session with Guest prefix)
+      if(uid.startsWith('Guest')) return;
 
       let isOnline = false;
       if(userData.lastSeen) {
@@ -3441,7 +3629,8 @@ async function loadOnlineUsersList() {
       }
 
       users.push({
-        id: userId,
+        uid: uid,
+        username: userData.username || 'Unknown',
         color: userData.color || '#58a6ff',
         isOnline: isOnline,
         currentRoom: userData.currentRoom || null
@@ -3451,7 +3640,7 @@ async function loadOnlineUsersList() {
     users.sort((a, b) => {
       if(a.isOnline && !b.isOnline) return -1;
       if(!a.isOnline && b.isOnline) return 1;
-      return a.id.localeCompare(b.id);
+      return a.username.localeCompare(b.username);
     });
 
     listEl.innerHTML = '';
@@ -3466,9 +3655,9 @@ async function loadOnlineUsersList() {
       userEl.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;margin-bottom:4px;cursor:pointer;transition:background 150ms';
       const roomInfo = user.currentRoom && user.isOnline ? `<span style="color:var(--accent);font-size:11px;margin-left:4px">#${user.currentRoom}</span>` : '';
       userEl.innerHTML = `
-        <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#000;background:${user.color}">${user.id[0]}</div>
+        <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#000;background:${user.color}">${user.username[0]}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${user.id}${roomInfo}</div>
+          <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${user.username}${roomInfo}</div>
           <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px">
             <span style="width:8px;height:8px;border-radius:50%;background:${user.isOnline ? '#3fb950' : 'var(--muted)'}"></span>
             ${user.isOnline ? 'Online' : 'Offline'}
