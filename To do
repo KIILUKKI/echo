@@ -1,4 +1,4 @@
-- Fix roles stacking (when refereshed they sometimes fix itself) and bugging.
+- Fix roles stacking (when refereshed they sometimes fix itself) and bugging. And somtimes they dont bug.
 - Add name colors.
 - Add admin can make roles function.
 - Fix gifs
@@ -11,6 +11,8 @@
 - You have a option t not have a role.
 - Make all the goole message things/tabs to the cool tab/popup menus like there already is in change psswr windows.
 - Add in the online list what room the user is in.
+
+
 
 
 Stage 2
