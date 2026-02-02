@@ -2,6 +2,14 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // USERS
+    match /users/{userId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if true;
+    }
+
     // ROOMS
     match /rooms/{roomId} {
       allow read: if true;
@@ -43,7 +51,6 @@ service cloud.firestore {
           );
 
         // Delete: because client performs batch deletes (no Auth), allow deletes.
-        // NOTE: This allows deletion by any client. Secure with Auth when possible.
         allow delete: if true;
       }
 
@@ -51,7 +58,6 @@ service cloud.firestore {
       match /messages/{msgId}/seen/{seenId} {
         allow read: if true;
         allow create: if true;
-        // allow deletion of seen records (so /clear can remove them)
         allow delete: if true;
         allow update: if false;
       }
@@ -74,26 +80,6 @@ service cloud.firestore {
         allow read: if true;
         allow create, update, delete: if true;
       }
-    }
-
-    // USERS
-    match /users/{userId} {
-      allow read: if true;
-      allow create: if true;
-      // allow update for lastSeen timestamp, color, password, and role
-      allow update: if 
-        // Allow updating lastSeen timestamp (for online status)
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastSeen'])) ||
-        // Allow updating color
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['color'])) ||
-        // Allow updating passwordHash
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['passwordHash'])) ||
-        // Allow updating role
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role'])) ||
-        // Allow full update if keys are valid user fields
-        (request.resource.data.keys().hasOnly(['passwordHash', 'created', 'color', 'lastSeen', 'role']));
-      // allow delete so users can change their username (old doc is deleted, new one created)
-      allow delete: if true;
     }
   }
 }

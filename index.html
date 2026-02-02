@@ -9,644 +9,243 @@
 
 
 <style>
-  :root{
-    --bg:#0b0f14;
-    --panel:#161b22;
-    --muted:#8b949e;
-    --accent:#7700ff;
-    --card:#21262d;
-    --text:#e6edf3;
-    --lobby-width:260px;
-    --drawer-duration: 200ms; /* smooth, brisk but not too fast */
-    --drawer-ease: cubic-bezier(.16,.84,.24,1);
-    --guest-gray: #9aa0a6;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}
-  #app{width:100%;height:100%;position:relative;overflow:hidden}
+ :root{
+   --bg:#0b0f14;
+   --panel:#161b22;
+   --muted:#8b949e;
+   --accent:#7700ff;
+   --card:#21262d;
+   --text:#e6edf3;
+   --lobby-width:260px;
+   --drawer-duration:200ms;
+   --drawer-ease:cubic-bezier(.16,.84,.24,1);
+   --guest-gray:#9aa0a6;
+ }
+ *,#app,html,body{box-sizing:border-box;margin:0}
+ html,body{height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}
+ #app{width:100%;height:100%;position:relative;overflow:hidden}
 
-/* TOP-RIGHT CONTROLS: container to avoid overlapping */
-#topRightControls{
-  position:fixed;
-  top:12px;
-  right:12px;
-  display:flex;
-  gap:10px;
-  align-items:center;
-  z-index:120; /* high so menus appear below but above main UI */
-  pointer-events:auto;
-}
+ /* Top Controls */
+ #topRightControls{position:fixed;top:12px;right:12px;display:flex;gap:10px;align-items:center;z-index:120;pointer-events:auto}
+ #howBtn,#fullBtn,#settingsBtn{background:transparent;border:0;color:var(--text);font-size:14px;padding:8px 12px;border-radius:10px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;min-height:40px;min-width:40px;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.15)}
+ #howBtn:hover,#fullBtn:hover,#settingsBtn:hover{background:rgba(255,255,255,.02)}
+ #fullBtn{font-size:15px;padding:10px 14px;border-radius:12px;font-weight:600}
 
-/* HOW / FULL / SETTINGS (buttons inside container) */
-#howBtn, #fullBtn, #settingsBtn{
-  background:transparent;
-  border:0;
-  color:var(--text);
-  font-size:14px;
-  padding:8px 12px;
-  border-radius:10px;
-  cursor:pointer;
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  min-height:40px;
-  min-width:40px;
-  justify-content:center;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
-}
-#howBtn:hover, #fullBtn:hover, #settingsBtn:hover{ background:rgba(255,255,255,0.02) }
+ /* Menus */
+ .settings-menu,.how-menu{position:fixed;top:56px;right:12px;background:var(--panel);border:1px solid #0d1117;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.6);z-index:119;display:none}
+ .settings-menu.show,.how-menu.show{display:block}
+ .settings-menu button{display:block;width:100%;padding:8px 12px;background:transparent;border:0;color:var(--text);text-align:left;border-radius:8px;cursor:pointer}
+ .settings-menu button:hover,#settingsNotifications:hover{background:rgba(255,255,255,.03)}
+ .how-menu{width:360px;max-height:60vh;padding:12px;z-index:121;overflow:auto}
+ .how-menu h3{margin:0 0 8px;font-size:15px}
+ .how-menu .section{margin-bottom:10px;font-size:13px;color:var(--muted)}
+ .how-menu .section b{color:var(--text)}
+ .how-menu .close-how{display:block;margin-top:8px;padding:8px;border-radius:8px;background:transparent;border:0;color:var(--text);cursor:pointer;text-align:right}
+ .how-menu .close-how:hover{background:rgba(255,255,255,.02)}
 
-/* Make fullscreen button slightly larger / more prominent */
-#fullBtn{
-  font-size:15px;
-  padding:10px 14px;
-  border-radius:12px;
-  font-weight:600;
-}
+ /* Profile Card */
+ .profile-card{position:fixed;top:56px;right:12px;background:var(--panel);border:1px solid #0d1117;padding:12px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.6);display:none;z-index:118;width:220px}
+ .profile-card.show{display:block}
+ .profile-card .row{display:flex;justify-content:space-between;margin-bottom:6px}
 
-/* SETTINGS MENU & HOW MENU anchored under container (aligned to right) */
-.settings-menu{position:fixed;top:56px;right:12px;background:var(--panel);border:1px solid #0d1117;padding:8px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.6);display:none;z-index:119}
-.settings-menu.show{display:block}
-.settings-menu button{display:block;width:100%;padding:8px 12px;background:transparent;border:0;color:var(--text);text-align:left;border-radius:8px;cursor:pointer}
-.settings-menu button:hover{background:rgba(255,255,255,0.03)}
-#settingsNotifications:hover{background:rgba(255,255,255,0.03)}
+ /* Login */
+ #login{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px;background:var(--bg);z-index:30;padding:20px}
+ #login input{padding:12px;border-radius:10px;border:0;background:var(--card);color:var(--text);width:100%;max-width:360px}
+ #login button{padding:12px 18px;border:0;border-radius:10px;background:var(--accent);color:#000;font-weight:700;cursor:pointer;max-width:360px;width:100%;margin-top:4px}
+ #login #registerBtn{background:transparent;border:1px solid var(--accent);color:var(--accent)}
+ #login .small{background:transparent;border:1px solid #333;padding:8px;border-radius:8px;color:var(--muted);cursor:pointer}
+ #loginMsg{margin-top:10px;font-size:13px;color:var(--muted);min-height:18px}
 
-.how-menu{position:fixed;top:56px;right:12px;width:360px;max-height:60vh;background:var(--panel);border:1px solid #0d1117;padding:12px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.6);display:none;z-index:121;overflow:auto}
-.how-menu.show{display:block}
-.how-menu h3{margin:0 0 8px 0;font-size:15px}
-.how-menu .section{margin-bottom:10px;font-size:13px;color:var(--muted)}
-.how-menu .section b{color:var(--text)}
-.how-menu .close-how{display:block;margin-top:8px;padding:8px;border-radius:8px;background:transparent;border:0;color:var(--text);cursor:pointer;text-align:right}
-.how-menu .close-how:hover{background:rgba(255,255,255,0.02)}
+ /* App Layout */
+ #home,#main{position:absolute;inset:0;display:none}
+ #home{display:flex;flex-direction:row}
 
-/* PROFILE CARD */
-.profile-card{position:fixed;top:56px;right:12px;background:var(--panel);border:1px solid #0d1117;padding:12px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.6);display:none;z-index:118;width:220px}
-.profile-card.show{display:block}
-.profile-card .row{display:flex;justify-content:space-between;margin-bottom:6px}
+ /* Lobby */
+ #homeLeft{width:var(--lobby-width);min-width:120px;background:var(--panel);padding:12px;border-right:1px solid #0d1117;height:100%;overflow:auto;transition:width 200ms ease,transform 220ms cubic-bezier(.2,.9,.3,1);position:relative}
+ #homeLeft.collapsed{width:40px;padding:8px}
+ #lobbyHeader{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+ #lobbyTitle{flex:1;font-weight:700}
+ .room{padding:10px 12px;border-radius:10px;background:var(--card);margin-bottom:8px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .room:hover{background:var(--accent);color:#000}
+ #lobbyControls{display:flex;gap:6px;align-items:center;margin-bottom:8px}
+ .iconbtn{background:transparent;border:0;color:var(--text);padding:6px;border-radius:8px;cursor:pointer}
+ .iconbtn:active{transform:scale(.98)}
+ #lobbySizeBtn{font-weight:700;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,.03)}
 
-/* LOGIN */
-#login{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px;background:var(--bg);z-index:30;padding:20px;}
-#login input{padding:12px;border-radius:10px;border:none;background:var(--card);color:var(--text);width:100%;max-width:360px}
-#login button{padding:12px 18px;border:none;border-radius:10px;background:var(--accent);color:#000;font-weight:700;cursor:pointer;max-width:360px;width:100%}
-#login .small{background:transparent;border:1px solid #333;padding:8px;border-radius:8px;color:var(--muted);cursor:pointer}
-#loginMsg{margin-top:10px;font-size:13px;color:var(--muted);min-height:18px}
+ /* Home Center */
+ #homeCenter{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative;padding:18px;overflow:hidden}
+ #homeCenter::before{content:"";position:absolute;inset:0;z-index:0;background:url(images/lobby_bg.jpg) center/cover no-repeat fixed;pointer-events:none}
+ #homeLogo{position:absolute;top:-50px;left:48%;transform:translateX(-50%);width:80%;max-width:920px;z-index:2;pointer-events:none}
+ #homeCenter>*:not(#homeLogo){position:relative;z-index:1}
 
-/* APP LAYOUT */
-#home,#main{position:absolute;inset:0;display:none}
-#home{display:flex;flex-direction:row}
+ /* Buttons */
+ .createRoom{padding:14px 28px;border-radius:12px;background:var(--accent);color:#000;border:0;font-weight:700;cursor:pointer;z-index:10;box-shadow:0 4px 15px rgba(0,0,0,.3);white-space:nowrap;margin-top:200px}
+ .createRoom:hover{transform:scale(1.05);box-shadow:0 6px 20px rgba(0,0,0,.4)}
+ .nickColorBtn{padding:10px 20px;border-radius:12px;background:transparent;color:var(--text);border:1px solid var(--accent);font-weight:600;cursor:pointer;z-index:10;font-size:14px;white-space:nowrap;margin-top:15px}
+ .nickColorBtn:hover{background:var(--accent);color:#000;transform:scale(1.05)}
 
-/* Lobby (left) */
-#homeLeft{
-  width:var(--lobby-width);
-  min-width:120px;
-  background:var(--panel);
-  padding:12px;
-  border-right:1px solid #0d1117;
-  height:100%;
-  overflow:auto;
-  transition:
-    width 200ms ease,
-    transform 220ms cubic-bezier(.2,.9,.3,1);
-  position:relative;
-}
+ /* Main Chat */
+ #main{display:flex;flex-direction:column}
+ #header{height:56px;background:var(--panel);display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid #0d1117;position:relative;z-index:100}
+ #header .left{display:flex;align-items:center;gap:8px}
+ #roomName{font-weight:700}
+ #chatWrapper{display:flex;flex:1;overflow:hidden;min-height:0;position:relative}
+ #chatSidebar{width:var(--lobby-width);background:var(--panel);border-right:1px solid #0d1117;padding:8px;overflow:auto;transition:width 200ms ease}
+ #chatSidebar.collapsed{width:40px;padding:6px}
+ #chatWrapperMain{flex:1;display:flex;flex-direction:column;min-height:0;position:relative}
+ #chat{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,transparent,rgba(255,255,255,.01));transition:padding-bottom 120ms ease}
+ .message{display:flex;gap:10px;align-items:flex-start;transition:transform 160ms ease}
+ .avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000}
+ .msg{background:var(--panel);padding:10px 96px 10px 14px;border-radius:12px;position:relative;max-width:70%}
+ .msg-text{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;max-width:100%}
+ .time{font-size:11px;color:var(--muted);margin-left:6px}
+ .reply-btn{position:absolute;right:52px;top:8px;font-size:12px;color:var(--muted);cursor:pointer;opacity:0}
+ .msg:hover .reply-btn{opacity:1}
+ .reply-preview{background:rgba(255,255,255,.02);border-left:3px solid var(--accent);padding:6px;font-size:13px;margin-bottom:8px;border-radius:6px;max-width:calc(100% - 96px);cursor:pointer;transition:background 150ms}
+ .reply-preview:hover{background:rgba(255,255,255,.05)}
+ .edited-note{font-size:12px;color:var(--muted);margin-left:8px;display:inline-block}
 
-#homeLeft.collapsed{
-  width:40px;
-  padding:8px;
-}
+ /* Reactions */
+ .reactions-container{display:inline-flex;gap:3px;align-items:center;margin-left:8px;vertical-align:middle}
+ .reaction-btn{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:1px 5px;font-size:11px;cursor:pointer;transition:all 120ms ease;display:inline-flex;align-items:center;gap:2px;user-select:none;line-height:1}
+ .reaction-btn:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12);transform:scale(1.05)}
+ .reaction-btn.active{background:rgba(88,166,255,.12);border-color:rgba(88,166,255,.3)}
+ .reaction-btn .emoji{font-size:12px}
+ .reaction-btn .count{font-size:10px;color:var(--muted);font-weight:500;min-width:10px;text-align:center}
+ .reaction-btn.active .count{color:var(--accent)}
+ .add-reaction-btn{background:transparent;border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:1px 4px;font-size:10px;cursor:pointer;transition:all 120ms ease;color:var(--muted);opacity:.4;display:inline-flex;align-items:center;line-height:1;font-weight:500}
+ .add-reaction-btn:hover{opacity:1;background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.18);color:var(--text);transform:scale(1.1)}
 
-#lobbyHeader{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  margin-bottom:10px;
-}
+ /* Reaction Picker */
+ .reaction-picker{display:none;position:fixed;background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:0;z-index:1000;box-shadow:0 10px 30px rgba(0,0,0,.5);flex-direction:column;max-width:280px;overflow:hidden}
+ .reaction-picker.show{display:flex}
+ .reaction-picker-header{padding:10px 12px 8px;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02)}
+ .reaction-picker-header span{font-size:12px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+ .reaction-picker-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:10px;max-height:200px;overflow-y:auto}
+ .reaction-picker .emoji-option{cursor:pointer;font-size:22px;padding:6px;border-radius:8px;transition:all 150ms ease;display:flex;align-items:center;justify-content:center;height:36px;width:36px}
+ .reaction-picker .emoji-option:hover{background:rgba(88,166,255,.15);transform:scale(1.15)}
 
-#lobbyTitle{
-  flex:1;
-  font-weight:700;
-}
+ /* GIF */
+ .gif-container{margin-top:6px;border-radius:10px;overflow:hidden;max-width:300px;background:rgba(255,255,255,.03);cursor:pointer;transition:transform 150ms ease}
+ .gif-container:hover{transform:scale(1.01)}
+ .gif-container img{width:100%;height:auto;display:block;border-radius:10px}
 
-.room{
-  padding:10px 12px;
-  border-radius:10px;
-  background:var(--card);
-  margin-bottom:8px;
-  cursor:pointer;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
+ /* Typing Indicator */
+ #typingIndicator{position:relative;padding:8px 12px;margin:0 12px 8px;border-radius:12px;background:linear-gradient(90deg,rgba(255,255,255,.015),rgba(255,255,255,.01));border:1px solid rgba(255,255,255,.02);color:var(--muted);font-size:13px;align-items:center;gap:10px;z-index:90;transition:opacity 180ms ease,transform 180ms ease;display:flex}
+ .typing-avatars{display:flex;gap:6px;align-items:center}
+ .typing-avatars .typ-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;border:2px solid rgba(255,255,255,.04);font-size:12px;background:var(--guest-gray);box-shadow:0 6px 18px rgba(0,0,0,.35)}
+ .typing-text{display:flex;flex-direction:row;align-items:center;gap:8px;color:var(--muted);font-size:13px}
+ .typing-dots{display:inline-flex;gap:6px;align-items:flex-end;height:14px}
+ .typing-dots span{width:6px;height:6px;border-radius:50%;display:inline-block;background:var(--muted);opacity:.45;transform:translateY(0);animation:typing-bounce 1s infinite}
+ .typing-dots span:nth-child(1){animation-delay:0s}
+ .typing-dots span:nth-child(2){animation-delay:.12s}
+ .typing-dots span:nth-child(3){animation-delay:.24s}
+ @keyframes typing-bounce{0%,100%{transform:translateY(0);opacity:.45}40%{transform:translateY(-6px);opacity:1}80%{transform:translateY(0);opacity:.45}}
+ @media(max-width:480px){.typing-avatars .typ-av{width:24px;height:24px;font-size:11px}#typingIndicator{margin:0 10px 8px;padding:8px;border-radius:10px}#replyBox{bottom:72px;width:calc(100% - 24px)}}
 
-.room:hover{
-  background:var(--accent);
-  color:#000;
-}
+ /* Reply Box */
+ #replyBox{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:86px;width:calc(100% - 36px);max-width:920px;background:var(--card);padding:8px 14px;font-size:13px;color:var(--text);border-radius:10px;z-index:999;box-shadow:0 8px 26px rgba(0,0,0,.45)}
+ #inputBar{padding:12px;background:var(--panel);border-top:1px solid #0d1117;display:flex;gap:8px;align-items:center;position:relative;z-index:80}
+ #msg{flex:1;padding:12px;border-radius:10px;border:0;background:var(--card);color:var(--text)}
 
+ /* Emoji Picker */
+ #emojiPicker{display:none;flex-direction:column;gap:8px;padding:10px;background:var(--card);border-radius:12px;position:absolute;bottom:72px;left:12px;width:280px;max-height:340px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.08);z-index:100}
+ #emojiPicker.show{display:flex}
+ #emojiPicker .emoji-tabs{display:flex;gap:4px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.08);overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;flex-shrink:0}
+ #emojiPicker .emoji-tabs::-webkit-scrollbar{display:none}
+ #emojiPicker .emoji-tab{background:transparent;border:1px solid transparent;color:var(--muted);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:16px;min-width:32px;height:32px;transition:all 150ms ease;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+ #emojiPicker .emoji-tab:hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:var(--text)}
+ #emojiPicker .emoji-tab.active{background:rgba(88,166,255,.2);border-color:rgba(88,166,255,.3);color:var(--accent)}
+ #emojiPicker>div:nth-child(2){display:grid;grid-template-columns:repeat(7,1fr);gap:3px;max-height:200px;overflow-y:auto;overflow-x:hidden;padding-right:4px}
+ #emojiPicker .emoji-item{cursor:pointer;font-size:20px;padding:4px;border-radius:6px;text-align:center;transition:all 120ms ease;display:flex;align-items:center;justify-content:center;height:32px;width:32px}
+ #emojiPicker .emoji-item:hover{background:rgba(88,166,255,.15);transform:scale(1.1)}
+ #emojiPicker input[type="text"]{width:100%;padding:6px 10px;margin-top:6px;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:var(--text);font-size:13px;box-sizing:border-box;outline:none;transition:all 150ms ease;flex-shrink:0}
+ #emojiPicker input[type="text"]:focus{border-color:rgba(88,166,255,.4);background:rgba(255,255,255,.05)}
+ #emojiBtn{background:linear-gradient(180deg,rgba(88,166,255,.1),rgba(88,166,255,.03));border:1px solid rgba(88,166,255,.1);padding:6px;border-radius:10px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.45);color:var(--accent)}
+ #emojiBtn:active{transform:scale(.98)}
+ .emoji-icon{font-size:18px;line-height:1;transform:translateY(1px)}
 
-/* lobby controls */
-#lobbyControls{display:flex;gap:6px;align-items:center;margin-bottom:8px}
-.iconbtn{background:transparent;border:0;color:var(--text);padding:6px;border-radius:8px;cursor:pointer}
-.iconbtn:active{transform:scale(0.98)}
-#lobbySizeBtn{font-weight:700;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.03)}
+ /* GIF Picker */
+ #gifBtn{background:linear-gradient(180deg,rgba(88,166,255,.1),rgba(88,166,255,.03));border:1px solid rgba(88,166,255,.25);color:var(--accent);padding:8px 12px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:700;transition:all 200ms ease;display:flex;align-items:center;gap:4px}
+ #gifBtn:hover{background:linear-gradient(180deg,rgba(88,166,255,.18),rgba(88,166,255,.06));border-color:rgba(88,166,255,.4);box-shadow:0 6px 18px rgba(0,0,0,.45);color:var(--accent)}
+ #gifBtn:active{transform:scale(.98)}
+ #gifPicker{display:none;flex-direction:column;gap:8px;padding:10px;background:var(--card);border-radius:12px;position:absolute;bottom:72px;left:12px;width:320px;max-height:360px;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.08);overflow:hidden}
+ #gifPicker.show{display:flex}
+ #gifSearch{width:100%;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:var(--text);font-size:14px;box-sizing:border-box;outline:none;transition:all 150ms ease;flex-shrink:0}
+ #gifSearch:focus{border-color:rgba(88,166,255,.4);background:rgba(255,255,255,.05)}
+ #gifResults{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;overflow-y:auto;overflow-x:hidden;max-height:200px;padding-right:4px;flex:1}
+ #gifResults::-webkit-scrollbar{width:6px}
+ #gifResults::-webkit-scrollbar-track{background:transparent}
+ #gifResults::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px}
+ .gif-item{position:relative;width:100%;height:80px;border-radius:10px;overflow:hidden;cursor:pointer;background:rgba(255,255,255,.03);transition:all 150ms ease;border:1px solid rgba(255,255,255,.05)}
+ .gif-item:hover{transform:scale(1.03);border-color:rgba(88,166,255,.3);box-shadow:0 4px 12px rgba(88,166,255,.15)}
+ .gif-item img{width:100%;height:100%;object-fit:cover;transition:transform 200ms ease;display:block}
+ .gif-item:hover img{transform:scale(1.05)}
+ .gif-loading{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px}
+ .gif-item::after{content:"";position:absolute;inset:0;background:rgba(88,166,255,0);pointer-events:none;transition:background 150ms ease}
+ .gif-item:hover::after{background:rgba(88,166,255,.1)}
+ .gif-tabs{display:flex;gap:4px;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.08);overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+ .gif-tabs::-webkit-scrollbar{display:none}
+ .gif-tab{background:transparent;border:1px solid transparent;color:var(--muted);padding:4px 8px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:500;transition:all 150ms ease;white-space:nowrap;flex-shrink:0}
+ .gif-tab:hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:var(--text)}
+ .gif-tab.active{background:rgba(88,166,255,.2);border-color:rgba(88,166,255,.3);color:var(--accent)}
 
-/* ================== Home Center ================== */
-#homeCenter {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  padding: 18px;
-  overflow: hidden;
-}
+ /* More Button */
+ .more-btn{position:absolute;right:12px;top:8px;font-size:16px;color:var(--muted);cursor:pointer;opacity:0;padding:4px;border-radius:6px;z-index:12;transform:none}
+ .msg:hover .more-btn{opacity:1}
 
-/* TAUSTA (vain Lobby) */
-#homeCenter::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
+ /* Mobile */
+ .mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:40;display:none;transition:background var(--drawer-duration) var(--drawer-ease)}
+ .mobile-overlay.show{display:block;background:rgba(0,0,0,.45)}
+ .mobile-lobby-drawer{position:fixed;left:0;top:0;height:100%;width:80%;max-width:340px;background:var(--panel);z-index:50;padding:12px;transform:translateX(-110%);transition:transform var(--drawer-duration) var(--drawer-ease),opacity calc(var(--drawer-duration)*.9) var(--drawer-ease);opacity:0;will-change:transform}
+ .mobile-lobby-drawer.show{transform:translateX(0);opacity:1}
+ #openLobbyBtn{position:fixed;left:12px;bottom:12px;background:var(--accent);border:none;padding:12px;border-radius:999px;z-index:60;font-weight:800;color:#000;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.5)}
+ #scrollBottomBtn{position:fixed;left:50%;transform:translateX(-50%);bottom:86px;background:var(--accent);border:none;padding:10px;border-radius:999px;z-index:99;font-weight:800;color:#000;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.4);display:none}
+ .tooltip{position:fixed;padding:6px 8px;background:var(--panel);border:1px solid #0d1117;border-radius:8px;font-size:13px;color:var(--muted);z-index:120;display:none}
+ .context-menu{position:fixed;background:var(--panel);border:1px solid #0d1117;padding:6px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.6);display:none;z-index:130}
+ .context-menu button{display:block;padding:8px 10px;border:0;background:transparent;color:var(--text);text-align:left;width:160px;border-radius:6px;cursor:pointer}
+ .context-menu button:hover{background:rgba(255,255,255,.03)}
+ #chat::-webkit-scrollbar,#homeLeft::-webkit-scrollbar,#chatSidebar::-webkit-scrollbar{height:8px;width:8px}
+ #chat::-webkit-scrollbar-thumb,#homeLeft::-webkit-scrollbar-thumb,#chatSidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.06);border-radius:999px}
+ #chat,#homeLeft,#chatSidebar{scrollbar-color:rgba(255,255,255,.06) transparent;scrollbar-width:thin}
+ #onlineUsersDrawer.show{transform:translateX(0)}
+ .online-user{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;margin-bottom:4px;cursor:pointer;transition:background 150ms}
+ .online-user:hover{background:rgba(255,255,255,.03)}
+ .online-user-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#000}
+ .online-user-info{flex:1;min-width:0}
+ .online-user-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .online-user-status{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px}
+ .online-indicator{width:8px;height:8px;border-radius:50%;background:#3fb950}
+ .offline-indicator{width:8px;height:8px;border-radius:50%;background:var(--muted)}
 
-  background-image: url('images/lobby_bg.jpg');
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-attachment: fixed; /* lukitsee taustan */
+ /* Modal Styles */
+ .modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--panel);padding:20px;border-radius:12px;z-index:200;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+ .modal input,.modal textarea{width:100%;margin-bottom:10px;padding:10px;border-radius:8px;border:0;background:var(--card);color:var(--text);font-family:inherit;box-sizing:border-box}
+ .modal textarea{min-height:100px;resize:vertical}
+ .modal h3{margin-top:0;margin-bottom:15px}
+ .modal-btns{display:flex;gap:10px;justify-content:flex-end}
+ .modal-btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-weight:600}
+ .modal-btn-cancel{background:transparent;color:var(--muted)}
+ .modal-btn-confirm{background:var(--accent);color:#000}
+ .modal-msg{margin-top:10px;font-size:13px;color:var(--muted)}
 
-  pointer-events: none;
-}
+ /* Color Grid */
+ .color-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:15px 0}
+ .color-option{width:40px;height:40px;border-radius:50%;cursor:pointer;border:2px solid transparent}
+ .color-option:hover{border-color:var(--accent);transform:scale(1.1)}
 
-/* LOGO (lukittu samaan kohtaan) */
-#homeLogo {
-  position: absolute;
-  top: -50px;
-  left: 48%;
-  transform: translateX(-50%);
-  width: 80%;
-  max-width: 920px;
-  z-index: 2;
-  pointer-events: none;
-}
+ /* Profile Card */
+ .profile-row{display:flex;justify-content:space-between;margin-bottom:6px}
+ .profile-row>div:first-child{color:var(--muted)}
 
+ /* Sidebar */
+ .sidebar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:700}
+ .online-users-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-weight:700;font-size:14px}
 
-/* LOBBYN MUU SISÄLTÖ (nimi, napit jne.) */
-#homeCenter > *:not(#homeLogo) {
-  position: relative;
-  z-index: 1;
-}
-
-
-/* ==== ALLA OLEVAT JÄÄ ENNALLEEN ==== */
-
-.createRoom {
-  padding: 14px 28px;
-  border-radius: 12px;
-  background: var(--accent);
-  color: #000;
-  border: none;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-
-
-/* MAIN chat */
-#main{display:flex;flex-direction:column}
-#header{height:56px;background:var(--panel);display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid #0d1117;position:relative;z-index:100}
-#header .left{display:flex;align-items:center;gap:8px}
-#roomName{font-weight:700}
-#chatWrapper{display:flex;flex:1;overflow:hidden;min-height:0;position:relative}
-#chatSidebar{width:var(--lobby-width);background:var(--panel);border-right:1px solid #0d1117;padding:8px;overflow:auto;transition:width 200ms ease;box-sizing:border-box;}
-#chatSidebar.collapsed{width:40px;padding:6px}
-#chatWrapperMain{flex:1;display:flex;flex-direction:column;min-height:0;position:relative}
-#chat{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,transparent, rgba(255,255,255,0.01));transition:padding-bottom 120ms ease}
-.message{display:flex;gap:10px;align-items:flex-start;transition:transform 160ms ease}
-.avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000}
-/* Reserve horizontal space on the right for action buttons (reply & more) so they don't overlap message text */
-.msg{background:var(--panel);padding:10px 96px 10px 14px;border-radius:12px;position:relative;max-width:70%}
-.msg-text{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;max-width:100%;}
-.time{font-size:11px;color:var(--muted);margin-left:6px}
-.reply-btn{position:absolute;right:52px;top:8px;font-size:12px;color:var(--muted);cursor:pointer;opacity:0}
-.msg:hover .reply-btn{opacity:1}
-.reply-preview{background:rgba(255,255,255,0.02);border-left:3px solid var(--accent);padding:6px;font-size:13px;margin-bottom:8px;border-radius:6px;max-width:calc(100% - 96px);}
-
-/* edited note */
-.edited-note{font-size:12px;color:var(--muted);margin-left:8px;display:inline-block}
-
-/* reactions - compact inline style */
-.reactions-container{display:inline-flex;gap:3px;align-items:center;margin-left:8px;vertical-align:middle}
-.reaction-btn{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:1px 5px;font-size:11px;cursor:pointer;transition:all 120ms ease;display:inline-flex;align-items:center;gap:2px;user-select:none;line-height:1}
-.reaction-btn:hover{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.12);transform:scale(1.05)}
-.reaction-btn.active{background:rgba(88,166,255,0.12);border-color:rgba(88,166,255,0.3)}
-.reaction-btn .emoji{font-size:12px}
-.reaction-btn .count{font-size:10px;color:var(--muted);font-weight:500;min-width:10px;text-align:center}
-.reaction-btn.active .count{color:var(--accent)}
-.add-reaction-btn{background:transparent;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:1px 4px;font-size:10px;cursor:pointer;transition:all 120ms ease;color:var(--muted);opacity:0.4;display:inline-flex;align-items:center;line-height:1;font-weight:500}
-.add-reaction-btn:hover{opacity:1;background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.18);color:var(--text);transform:scale(1.1)}
-
-/* Enhanced reaction picker */
-.reaction-picker{display:none;position:fixed;background:var(--card);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:0;z-index:1000;box-shadow:0 10px 30px rgba(0,0,0,0.5);flex-direction:column;max-width:280px;overflow:hidden}
-.reaction-picker.show{display:flex}
-.reaction-picker-header{padding:10px 12px 8px;border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02)}
-.reaction-picker-header span{font-size:12px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:0.5px}
-.reaction-picker-grid{display:grid;grid-template-columns:repeat(5, 1fr);gap:4px;padding:10px;max-height:200px;overflow-y:auto}
-.reaction-picker .emoji-option{cursor:pointer;font-size:22px;padding:6px;border-radius:8px;transition:all 150ms ease;display:flex;align-items:center;justify-content:center;height:36px;width:36px}
-.reaction-picker .emoji-option:hover{background:rgba(88,166,255,0.15);transform:scale(1.15)}
-
-/* GIF display in messages */
-.gif-container{margin-top:6px;border-radius:10px;overflow:hidden;max-width:300px;background:rgba(255,255,255,0.03);cursor:pointer;transition:transform 150ms ease}
-.gif-container:hover{transform:scale(1.01)}
-.gif-container img{width:100%;height:auto;display:block;border-radius:10px}
-
-/* typing indicator: new stylish component */
-#typingIndicator{
-  display:none;
-  position:relative;
-  padding:8px 12px;
-  margin:0 12px 8px 12px;
-  border-radius:12px;
-  background: linear-gradient(90deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));
-  border: 1px solid rgba(255,255,255,0.02);
-  color:var(--muted);
-  font-size:13px;
-  align-items:center;
-  gap:10px;
-  z-index:90;
-  transition:opacity 180ms ease, transform 180ms ease;
-  display:flex;
-  align-items:center;
-}
-
-/* avatars stack inside typing indicator */
-.typing-avatars{display:flex;gap:6px;align-items:center}
-.typing-avatars .typ-av{
-  width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;border:2px solid rgba(255,255,255,0.04);font-size:12px;background:var(--guest-gray);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
-}
-
-/* text & animated dots */
-.typing-text{display:flex;flex-direction:row;align-items:center;gap:8px;color:var(--muted);font-size:13px}
-.typing-dots{display:inline-flex;gap:6px;align-items:flex-end;height:14px}
-.typing-dots span{
-  width:6px;height:6px;border-radius:50%;display:inline-block;background:var(--muted);opacity:0.45;
-  transform: translateY(0);
-  animation: typing-bounce 1s infinite;
-}
-.typing-dots span:nth-child(1){animation-delay:0s}
-.typing-dots span:nth-child(2){animation-delay:0.12s}
-.typing-dots span:nth-child(3){animation-delay:0.24s}
-
-@keyframes typing-bounce{
-  0% { transform: translateY(0); opacity:0.45; }
-  40% { transform: translateY(-6px); opacity:1; }
-  80% { transform: translateY(0); opacity:0.45; }
-  100% { transform: translateY(0); opacity:0.45; }
-}
-
-/* smaller on tiny screens */
-@media (max-width:480px){
-  .typing-avatars .typ-av{ width:24px;height:24px;font-size:11px }
-  #typingIndicator{ margin:0 10px 8px 10px; padding:8px; border-radius:10px }
-  #replyBox { bottom:72px; width:calc(100% - 24px) }
-}
-
-/* reply box: fixed so it never becomes part of message flow */
-#replyBox{
-  display:none;
-  position:fixed;
-  left:50%;
-  transform:translateX(-50%);
-  bottom:86px;
-  width:calc(100% - 36px);
-  max-width:920px;
-  background:var(--card);
-  padding:8px 14px;
-  font-size:13px;
-  color:var(--text);
-  border-radius:10px;
-  z-index:999;
-  box-shadow:0 8px 26px rgba(0,0,0,0.45);
-  box-sizing:border-box;
-}
-
-/* input bar */
-#inputBar{padding:12px;background:var(--panel);border-top:1px solid #0d1117;display:flex;gap:8px;align-items:center;position:relative;z-index:80}
-#msg{flex:1;padding:12px;border-radius:10px;border:none;background:var(--card);color:var(--text)}
-
-/* Enhanced Emoji Picker */
-#emojiPicker{
-  display:none;
-  flex-direction:column;
-  gap:8px;
-  padding:10px;
-  background:var(--card);
-  border-radius:12px;
-  position:absolute;
-  bottom:72px;
-  left:12px;
-  width:280px;
-  max-height:340px;
-  overflow:hidden;
-  box-shadow:0 8px 32px rgba(0,0,0,0.5);
-  border:1px solid rgba(255,255,255,0.08);
-  z-index:100;
-}
-#emojiPicker.show{display:flex}
-#emojiPicker .emoji-tabs{
-  display:flex;
-  gap:4px;
-  margin-bottom:8px;
-  padding-bottom:8px;
-  border-bottom:1px solid rgba(255,255,255,0.08);
-  overflow-x:auto;
-  scrollbar-width:none;
-  -ms-overflow-style:none;
-  flex-shrink:0;
-}
-#emojiPicker .emoji-tabs::-webkit-scrollbar{display:none}
-#emojiPicker .emoji-tab{
-  background:transparent;
-  border:1px solid transparent;
-  color:var(--muted);
-  padding:4px 8px;
-  border-radius:6px;
-  cursor:pointer;
-  font-size:16px;
-  min-width:32px;
-  height:32px;
-  transition:all 150ms ease;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  flex-shrink:0;
-}
-#emojiPicker .emoji-tab:hover{
-  background:rgba(255,255,255,0.05);
-  border-color:rgba(255,255,255,0.1);
-  color:var(--text);
-}
-#emojiPicker .emoji-tab.active{
-  background:rgba(88,166,255,0.2);
-  border-color:rgba(88,166,255,0.3);
-  color:var(--accent);
-}
-#emojiPicker > div:nth-child(2){
-  display:grid;
-  grid-template-columns:repeat(7, 1fr);
-  gap:3px;
-  max-height:200px;
-  overflow-y:auto;
-  overflow-x:hidden;
-  padding-right:4px;
-}
-#emojiPicker .emoji-item{
-  cursor:pointer;
-  font-size:20px;
-  padding:4px;
-  border-radius:6px;
-  text-align:center;
-  transition:all 120ms ease;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  height:32px;
-  width:32px;
-}
-#emojiPicker .emoji-item:hover{
-  background:rgba(88,166,255,0.15);
-  transform:scale(1.1);
-}
-#emojiPicker input[type="text"]{
-  width:100%;
-  padding:6px 10px;
-  margin-top:6px;
-  border-radius:6px;
-  border:1px solid rgba(255,255,255,0.1);
-  background:rgba(255,255,255,0.03);
-  color:var(--text);
-  font-size:13px;
-  box-sizing:border-box;
-  outline:none;
-  transition:all 150ms ease;
-  flex-shrink:0;
-}
-#emojiPicker input[type="text"]:focus{
-  border-color:rgba(88,166,255,0.4);
-  background:rgba(255,255,255,0.05);
-}
-
-/* nicer emoji button */
-#emojiBtn{
-  background: linear-gradient(180deg, rgba(88,166,255,0.10), rgba(88,166,255,0.03));
-  border: 1px solid rgba(88,166,255,0.10);
-  padding: 6px;
-  border-radius: 10px;
-  width:44px;
-  height:44px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:18px;
-  cursor:pointer;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
-  color: var(--accent);
-}
-#emojiBtn:active{transform:scale(0.98)}
-.emoji-icon{font-size:18px;line-height:1;transform:translateY(1px);}
-
-/* Enhanced GIF picker styles */
-#gifBtn{
-  background: linear-gradient(180deg, rgba(88,166,255,0.10), rgba(88,166,255,0.03));
-  border: 1px solid rgba(88,166,255,0.25);
-  color: var(--accent);
-  padding: 8px 12px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 700;
-  transition: all 200ms ease;
-  display:flex;
-  align-items:center;
-  gap:4px;
-}
-#gifBtn:hover{
-  background: linear-gradient(180deg, rgba(88,166,255,0.18), rgba(88,166,255,0.06));
-  border-color: rgba(88,166,255,0.4);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
-  color: var(--accent);
-}
-#gifBtn:active{transform:scale(0.98)}
-
-#gifPicker{
-  display:none;
-  flex-direction:column;
-  gap:8px;
-  padding:10px;
-  background:var(--card);
-  border-radius:12px;
-  position:absolute;
-  bottom:72px;
-  left:12px;
-  width:320px;
-  max-height:360px;
-  z-index:100;
-  box-shadow:0 8px 32px rgba(0,0,0,0.5);
-  border:1px solid rgba(255,255,255,0.08);
-  overflow:hidden;
-}
-#gifPicker.show{display:flex}
-
-#gifSearch{
-  width:100%;
-  padding:8px 12px;
-  border-radius:8px;
-  border:1px solid rgba(255,255,255,0.1);
-  background:rgba(255,255,255,0.03);
-  color:var(--text);
-  font-size:14px;
-  box-sizing:border-box;
-  outline:none;
-  transition:all 150ms ease;
-  flex-shrink:0;
-}
-#gifSearch:focus{
-  border-color:rgba(88,166,255,0.4);
-  background:rgba(255,255,255,0.05);
-}
-
-#gifResults{
-  display:grid;
-  grid-template-columns:repeat(2, 1fr);
-  gap:8px;
-  overflow-y:auto;
-  overflow-x:hidden;
-  max-height:200px;
-  padding-right:4px;
-  flex:1;
-}
-#gifResults::-webkit-scrollbar{width:6px}
-#gifResults::-webkit-scrollbar-track{background:transparent}
-#gifResults::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
-
-.gif-item{
-  position:relative;
-  aspect-ratio:16/10;
-  border-radius:10px;
-  overflow:hidden;
-  cursor:pointer;
-  background:rgba(255,255,255,0.03);
-  transition:all 150ms ease;
-  border:1px solid rgba(255,255,255,0.05);
-}
-.gif-item:hover{
-  transform:scale(1.03);
-  border-color:rgba(88,166,255,0.3);
-  box-shadow:0 4px 12px rgba(88,166,255,0.15);
-}
-.gif-item img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  transition:transform 200ms ease;
-}
-.gif-item:hover img{transform:scale(1.05)}
-.gif-loading{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:var(--muted);
-  font-size:12px;
-}
-.gif-item::after{
-  content:'';
-  position:absolute;
-  inset:0;
-  background:rgba(88,166,255,0);
-  pointer-events:none;
-  transition:background 150ms ease;
-}
-.gif-item:hover::after{
-  background:rgba(88,166,255,0.1);
-}
-
-/* GIF picker tabs */
-.gif-tabs{
-  display:flex;
-  gap:4px;
-  margin-bottom:6px;
-  padding-bottom:6px;
-  border-bottom:1px solid rgba(255,255,255,0.08);
-  overflow-x:auto;
-  scrollbar-width:none;
-  flex-shrink:0;
-}
-.gif-tabs::-webkit-scrollbar{display:none}
-.gif-tab{
-  background:transparent;
-  border:1px solid transparent;
-  color:var(--muted);
-  padding:4px 8px;
-  border-radius:6px;
-  cursor:pointer;
-  font-size:11px;
-  font-weight:500;
-  transition:all 150ms ease;
-  white-space:nowrap;
-  flex-shrink:0;
-}
-.gif-tab:hover{
-  background:rgba(255,255,255,0.05);
-  border-color:rgba(255,255,255,0.1);
-  color:var(--text);
-}
-.gif-tab.active{
-  background:rgba(88,166,255,0.2);
-  border-color:rgba(88,166,255,0.3);
-  color:var(--accent);
-}
-
-/* MORE (three-dots) button next to reply — positioned at the far right (z-axis on top) */
-.more-btn{position:absolute;right:12px;top:8px;font-size:16px;color:var(--muted);cursor:pointer;opacity:0;padding:4px;border-radius:6px;z-index:12;transform:none}
-.msg:hover .more-btn{opacity:1}
-
-/* mobile specifics (kept visually hidden to avoid UI differences) */
-.mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:40;display:none;transition:background var(--drawer-duration) var(--drawer-ease)}
-.mobile-overlay.show{display:block;background:rgba(0,0,0,0.45)}
-.mobile-lobby-drawer{position:fixed;left:0;top:0;height:100%;width:80%;max-width:340px;background:var(--panel);z-index:50;padding:12px;transform:translateX(-110%);transition:transform var(--drawer-duration) var(--drawer-ease),opacity calc(var(--drawer-duration) * 0.9) var(--drawer-ease);opacity:0;will-change:transform}
-.mobile-lobby-drawer.show{transform:translateX(0);opacity:1}
-#openLobbyBtn{position:fixed;left:12px;bottom:12px;background:var(--accent);border:none;padding:12px;border-radius:999px;z-index:60;font-weight:800;color:#000;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,0.5)}
-
-/* Floating scroll to bottom button (now centered) */
-#scrollBottomBtn{position:fixed;left:50%;transform:translateX(-50%);bottom:86px;background:var(--accent);border:none;padding:10px;border-radius:999px;z-index:99;font-weight:800;color:#000;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,0.4);display:none}
-
-/* simple tooltip for seen receipts */
-.tooltip{position:fixed;padding:6px 8px;background:var(--panel);border:1px solid #0d1117;border-radius:8px;font-size:13px;color:var(--muted);z-index:120;display:none}
-
-/* context menu (right-click) */
-.context-menu{position:fixed;background:var(--panel);border:1px solid #0d1117;padding:6px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.6);display:none;z-index:130}
-.context-menu button{display:block;padding:8px 10px;border:0;background:transparent;color:var(--text);text-align:left;width:160px;border-radius:6px;cursor:pointer}
-.context-menu button:hover{background:rgba(255,255,255,0.03)}
-
-/* custom thin scrollbars for desktop */
-#chat::-webkit-scrollbar, #homeLeft::-webkit-scrollbar, #chatSidebar::-webkit-scrollbar{height:8px;width:8px}
-#chat::-webkit-scrollbar-thumb, #homeLeft::-webkit-scrollbar-thumb, #chatSidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:999px}
-#chat, #homeLeft, #chatSidebar{scrollbar-color: rgba(255,255,255,0.06) transparent;scrollbar-width:thin}
-
-/* Online Users Drawer */
-#onlineUsersDrawer.show{transform:translateX(0)}
-.online-user{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;margin-bottom:4px;cursor:pointer;transition:background 150ms}
-.online-user:hover{background:rgba(255,255,255,0.03)}
-.online-user-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#000}
-.online-user-info{flex:1;min-width:0}
-.online-user-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.online-user-status{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px}
-.online-indicator{width:8px;height:8px;border-radius:50%;background:#3fb950}
-.offline-indicator{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+ /* Mobile Drawer */
+ .drawer-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:700}
 
 </style>
-
 </head>
 <body>
 <div id="app">
@@ -673,61 +272,111 @@
   </div>
 
   <!-- Change Username Modal -->
-  <div id="changeUsernameModal" class="modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--panel);padding:20px;border-radius:12px;z-index:200;min-width:300px;box-shadow:0 10px 40px rgba(0,0,0,0.6)">
-    <h3 style="margin-top:0">Change Username</h3>
-    <input id="newUsername" placeholder="New username" style="width:100%;margin-bottom:10px;padding:10px;border-radius:8px;border:none;background:var(--card);color:var(--text)">
-    <input id="currentPasswordForUsername" type="password" placeholder="Current password" style="width:100%;margin-bottom:15px;padding:10px;border-radius:8px;border:none;background:var(--card);color:var(--text)">
-    <div style="display:flex;gap:10px;justify-content:flex-end">
-      <button id="cancelChangeUsername" style="padding:8px 16px;border-radius:8px;border:none;background:transparent;color:var(--muted);cursor:pointer">Cancel</button>
-      <button id="confirmChangeUsername" style="padding:8px 16px;border-radius:8px;border:none;background:var(--accent);color:#000;font-weight:600;cursor:pointer">Change</button>
+  <div id="changeUsernameModal" class="modal" style="display:none;min-width:300px">
+    <h3>Change Username</h3>
+    <input id="newUsername" placeholder="New username">
+    <input id="currentPasswordForUsername" type="password" placeholder="Current password" style="margin-bottom:15px">
+    <div class="modal-btns">
+      <button id="cancelChangeUsername" class="modal-btn modal-btn-cancel">Cancel</button>
+      <button id="confirmChangeUsername" class="modal-btn modal-btn-confirm">Change</button>
     </div>
-    <div id="changeUsernameMsg" style="margin-top:10px;font-size:13px;color:var(--muted)"></div>
+    <div id="changeUsernameMsg" class="modal-msg"></div>
   </div>
 
   <!-- Change Password Modal -->
-  <div id="changePasswordModal" class="modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--panel);padding:20px;border-radius:12px;z-index:200;min-width:300px;box-shadow:0 10px 40px rgba(0,0,0,0.6)">
-    <h3 style="margin-top:0">Change Password</h3>
-    <input id="currentPassword" type="password" placeholder="Current password" style="width:100%;margin-bottom:10px;padding:10px;border-radius:8px;border:none;background:var(--card);color:var(--text)">
-    <input id="newPassword" type="password" placeholder="New password" style="width:100%;margin-bottom:10px;padding:10px;border-radius:8px;border:none;background:var(--card);color:var(--text)">
-    <input id="confirmNewPassword" type="password" placeholder="Confirm new password" style="width:100%;margin-bottom:15px;padding:10px;border-radius:8px;border:none;background:var(--card);color:var(--text)">
-    <div style="display:flex;gap:10px;justify-content:flex-end">
-      <button id="cancelChangePassword" style="padding:8px 16px;border-radius:8px;border:none;background:transparent;color:var(--muted);cursor:pointer">Cancel</button>
-      <button id="confirmChangePassword" style="padding:8px 16px;border-radius:8px;border:none;background:var(--accent);color:#000;font-weight:600;cursor:pointer">Change</button>
+  <div id="changePasswordModal" class="modal" style="display:none;min-width:300px">
+    <h3>Change Password</h3>
+    <input id="currentPassword" type="password" placeholder="Current password">
+    <input id="newPassword" type="password" placeholder="New password">
+    <input id="confirmNewPassword" type="password" placeholder="Confirm new password" style="margin-bottom:15px">
+    <div class="modal-btns">
+      <button id="cancelChangePassword" class="modal-btn modal-btn-cancel">Cancel</button>
+      <button id="confirmChangePassword" class="modal-btn modal-btn-confirm">Change</button>
     </div>
-    <div id="changePasswordMsg" style="margin-top:10px;font-size:13px;color:var(--muted)"></div>
+    <div id="changePasswordMsg" class="modal-msg"></div>
   </div>
 
   <!-- Edit Room Description Modal (Admin only) -->
-  <div id="editDescriptionModal" class="modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--panel);padding:20px;border-radius:12px;z-index:200;min-width:400px;max-width:500px;box-shadow:0 10px 40px rgba(0,0,0,0.6)">
-    <h3 style="margin-top:0">Edit Room Description</h3>
-    <textarea id="roomDescriptionInput" placeholder="Enter room description..." style="width:100%;min-height:100px;margin-bottom:15px;padding:10px;border-radius:8px;border:none;background:var(--card);color:var(--text);resize:vertical;font-family:inherit"></textarea>
-    <div style="display:flex;gap:10px;justify-content:flex-end">
-      <button id="cancelEditDescription" style="padding:8px 16px;border-radius:8px;border:none;background:transparent;color:var(--muted);cursor:pointer">Cancel</button>
-      <button id="confirmEditDescription" style="padding:8px 16px;border-radius:8px;border:none;background:var(--accent);color:#000;font-weight:600;cursor:pointer">Save</button>
+  <div id="editDescriptionModal" class="modal" style="display:none;min-width:400px;max-width:500px">
+    <h3>Edit Room Description</h3>
+    <textarea id="roomDescriptionInput" placeholder="Enter room description..." style="min-height:100px;margin-bottom:15px"></textarea>
+    <div class="modal-btns">
+      <button id="cancelEditDescription" class="modal-btn modal-btn-cancel">Cancel</button>
+      <button id="confirmEditDescription" class="modal-btn modal-btn-confirm">Save</button>
     </div>
-    <div id="editDescriptionMsg" style="margin-top:10px;font-size:13px;color:var(--muted)"></div>
+    <div id="editDescriptionMsg" class="modal-msg"></div>
   </div>
 
   <!-- Room Description Tooltip -->
-  <div id="roomDescriptionTooltip" class="room-tooltip" style="position:fixed;display:none;background:var(--panel);border:1px solid #0d1117;padding:12px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.6);z-index:125;max-width:300px;font-size:13px;color:var(--text)">
+  <div id="roomDescriptionTooltip" class="room-tooltip tooltip" style="display:none;max-width:300px;font-size:13px">
     <div id="roomDescriptionText" style="color:var(--muted)"></div>
   </div>
 
   <!-- Create Room Modal -->
-  <div id="createRoomModal" class="modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--panel);padding:20px;border-radius:12px;z-index:200;min-width:350px;max-width:450px;box-shadow:0 10px 40px rgba(0,0,0,0.6)">
-    <h3 style="margin-top:0">Create Room</h3>
-    <input id="newRoomName" placeholder="Room name" style="width:100%;margin-bottom:10px;padding:10px;border-radius:8px;border:none;background:var(--card);color:var(--text)">
-    <input id="newRoomPassword" type="password" placeholder="Password (optional)" style="width:100%;margin-bottom:10px;padding:10px;border-radius:8px;border:none;background:var(--card);color:var(--text)">
-    <textarea id="newRoomDescription" placeholder="Description (optional)" style="width:100%;min-height:80px;margin-bottom:15px;padding:10px;border-radius:8px;border:none;background:var(--card);color:var(--text);resize:vertical;font-family:inherit"></textarea>
-    <div style="display:flex;gap:10px;justify-content:flex-end">
-      <button id="cancelCreateRoom" style="padding:8px 16px;border-radius:8px;border:none;background:transparent;color:var(--muted);cursor:pointer">Cancel</button>
-      <button id="confirmCreateRoom" style="padding:8px 16px;border-radius:8px;border:none;background:var(--accent);color:#000;font-weight:600;cursor:pointer">Create</button>
+  <div id="createRoomModal" class="modal" style="display:none;min-width:350px;max-width:450px">
+    <h3>Create Room</h3>
+    <input id="newRoomName" placeholder="Room name">
+    <input id="newRoomPassword" type="password" placeholder="Password (optional)">
+    <textarea id="newRoomDescription" placeholder="Description (optional)" style="min-height:80px;margin-bottom:15px"></textarea>
+    <div class="modal-btns">
+      <button id="cancelCreateRoom" class="modal-btn modal-btn-cancel">Cancel</button>
+      <button id="confirmCreateRoom" class="modal-btn modal-btn-confirm">Create</button>
     </div>
-    <div id="createRoomMsg" style="margin-top:10px;font-size:13px;color:var(--muted)"></div>
+    <div id="createRoomMsg" class="modal-msg"></div>
+  </div>
+
+  <!-- Custom Alert Modal (replaces native alert) -->
+  <div id="customAlertModal" class="modal" style="display:none;min-width:320px;max-width:400px">
+    <div id="customAlertIcon" style="font-size:32px;margin-bottom:12px;text-align:center">ℹ️</div>
+    <div id="customAlertMessage" style="font-size:14px;text-align:center;margin-bottom:20px;line-height:1.5"></div>
+    <div style="display:flex;justify-content:center">
+      <button id="customAlertOk" class="modal-btn modal-btn-confirm" style="padding:10px 32px">OK</button>
+    </div>
+  </div>
+
+  <!-- Custom Confirm Modal (replaces native confirm) -->
+  <div id="customConfirmModal" class="modal" style="display:none;min-width:320px;max-width:400px">
+    <div id="customConfirmIcon" style="font-size:32px;margin-bottom:12px;text-align:center">❓</div>
+    <div id="customConfirmMessage" style="font-size:14px;text-align:center;margin-bottom:20px;line-height:1.5"></div>
+    <div class="modal-btns" style="justify-content:center">
+      <button id="customConfirmCancel" class="modal-btn modal-btn-cancel">Cancel</button>
+      <button id="customConfirmOk" class="modal-btn modal-btn-confirm">Confirm</button>
+    </div>
+  </div>
+
+  <!-- Custom Prompt Modal (replaces native prompt) -->
+  <div id="customPromptModal" class="modal" style="display:none;min-width:320px;max-width:400px">
+    <div id="customPromptIcon" style="font-size:32px;margin-bottom:12px;text-align:center">💬</div>
+    <div id="customPromptMessage" style="font-size:14px;text-align:center;margin-bottom:15px;line-height:1.5"></div>
+    <input id="customPromptInput" type="text" style="padding:12px;font-size:14px;margin-bottom:15px">
+    <div class="modal-btns" style="justify-content:center">
+      <button id="customPromptCancel" class="modal-btn modal-btn-cancel">Cancel</button>
+      <button id="customPromptOk" class="modal-btn modal-btn-confirm">OK</button>
+    </div>
+  </div>
+
+  <!-- Nick Color Picker Modal -->
+  <div id="nickColorModal" class="modal" style="display:none;min-width:280px;max-width:350px">
+    <h3>🎨 Choose Your Color</h3>
+    <div id="colorGrid" class="color-grid">
+      <div class="color-option" data-color="#58a6ff" style="background:#58a6ff"></div>
+      <div class="color-option" data-color="#ff6b6b" style="background:#ff6b6b"></div>
+      <div class="color-option" data-color="#51cf66" style="background:#51cf66"></div>
+      <div class="color-option" data-color="#ffd43b" style="background:#ffd43b"></div>
+      <div class="color-option" data-color="#cc5de8" style="background:#cc5de8"></div>
+      <div class="color-option" data-color="#ff922b" style="background:#ff922b"></div>
+      <div class="color-option" data-color="#20c997" style="background:#20c997"></div>
+      <div class="color-option" data-color="#ff8787" style="background:#ff8787"></div>
+      <div class="color-option" data-color="#74c0fc" style="background:#74c0fc"></div>
+      <div class="color-option" data-color="#845ef7" style="background:#845ef7"></div>
+    </div>
+    <div class="modal-btns">
+      <button id="cancelNickColor" class="modal-btn modal-btn-cancel">Cancel</button>
+    </div>
   </div>
 
   <!-- Roles Modal -->
-  <div id="rolesModal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--panel);padding:20px;border-radius:12px;z-index:200;min-width:300px;max-width:400px;max-height:80vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.6)">
+  <div id="rolesModal" class="modal" style="display:none;min-width:300px;max-width:400px;max-height:80vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
       <h3 style="margin:0">🎭 Choose Your Role</h3>
       <button id="closeRoles" class="iconbtn" style="font-size:20px;background:transparent;border:none;color:var(--text);cursor:pointer">✕</button>
@@ -754,14 +403,16 @@
         <div id="profileJoined" style="font-size:13px;color:var(--muted)"></div>
       </div>
     </div>
-    <div class="row"><div>Color</div><div id="profileColor"></div></div>
+    <div class="profile-row"><div>Color</div><div id="profileColor"></div></div>
   </div>
 
   <!-- LOGIN -->
   <div id="login" aria-hidden="false">
     <input id="loginUser" placeholder="Username" autocomplete="username">
     <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password">
-    <button id="loginBtn">Login / Register</button>
+    <button id="loginBtn">Login</button>
+    <button id="registerBtn">Register</button>
+    <input id="registerPass" type="password" placeholder="Confirm Password" autocomplete="new-password" style="display:none">
     <button id="demoBtn" class="small">Continue as Guest</button>
     <div id="loginMsg"></div>
   </div>
@@ -785,6 +436,7 @@
       <img id="homeLogo" src="images/echo_space.png" alt="">
 
       <button id="createRoom" class="createRoom">Create / Join Room</button>
+      <button id="nickColorBtn" class="nickColorBtn" title="Change Name Color">🎨 Color</button>
     </main>
 
   </div>
@@ -802,8 +454,8 @@
 
     <div id="chatWrapper">
       <aside id="chatSidebar" aria-label="Chat sidebar">
-        <div id="chatRoomsHeader" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div style="font-weight:700">Rooms</div>
+        <div class="sidebar-header">
+          <div>Rooms</div>
           <button id="sidebarToggle" class="iconbtn" title="Collapse">◀</button>
         </div>
         <div id="roomListSidebar"></div>
@@ -835,9 +487,9 @@
   <button id="toggleOnlineUsers" class="iconbtn" title="Online Users" style="position:fixed;top:120px;right:16px;z-index:96;display:none;font-size:16px;padding:8px 12px;background:var(--panel);border:1px solid var(--border);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.3)">👥</button>
 
   <!-- Online Users Drawer (positioned relative to viewport) -->
-  <aside id="onlineUsersDrawer" style="position:fixed;right:0;top:56px;height:calc(100% - 56px);width:240px;background:var(--panel);border-left:1px solid #0d1117;padding:12px;transform:translateX(100%);transition:transform 300ms ease;z-index:95;overflow-y:auto;box-shadow:-4px 0 20px rgba(0,0,0,0.4);pointer-events:auto">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div style="font-weight:700;font-size:14px">Online Users</div>
+  <aside id="onlineUsersDrawer" style="position:fixed;right:0;top:56px;height:calc(100% - 56px);width:240px;background:var(--panel);border-left:1px solid #0d1117;padding:12px;transform:translateX(100%);transition:transform 300ms ease;z-index:95;overflow-y:auto;box-shadow:-4px 0 20px rgba(0,0,0,.4);pointer-events:auto">
+    <div class="online-users-header">
+      <div>Online Users</div>
       <button id="closeOnlineUsers" class="iconbtn" style="font-size:18px">✕</button>
     </div>
     <div id="onlineUsersList"></div>
@@ -846,8 +498,8 @@
   <!-- Mobile overlay and drawer (kept in DOM but mobile logic removed) -->
   <div id="mobileOverlay" class="mobile-overlay" aria-hidden="true"></div>
   <div id="mobileDrawer" class="mobile-lobby-drawer" aria-hidden="true">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div style="font-weight:700">Rooms</div>
+    <div class="drawer-header">
+      <div>Rooms</div>
       <button id="closeDrawer" class="iconbtn">✕</button>
     </div>
     <div id="roomListMobile"></div>
@@ -966,6 +618,12 @@ const rolesModal = document.getElementById('rolesModal');
 const rolesList = document.getElementById('rolesList');
 const closeRoles = document.getElementById('closeRoles');
 const viewAllRoles = document.getElementById('viewAllRoles');
+
+// Nick color picker DOM references
+const nickColorModal = document.getElementById('nickColorModal');
+const nickColorBtn = document.getElementById('nickColorBtn');
+const colorGrid = document.getElementById('colorGrid');
+const cancelNickColor = document.getElementById('cancelNickColor');
 
 const lobby = document.getElementById('homeLeft');
 const lobbyToggle = document.getElementById('lobbyToggle');
@@ -1163,6 +821,72 @@ async function toggleFullScreen(){
 }
 fullBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleFullScreen(); });
 
+/* ====== Custom Modal System (replaces native alert/confirm/prompt) ====== */
+const customAlertModal = document.getElementById('customAlertModal');
+const customConfirmModal = document.getElementById('customConfirmModal');
+const customPromptModal = document.getElementById('customPromptModal');
+
+function showCustomAlert(message, icon = 'ℹ️') {
+  return new Promise((resolve) => {
+    document.getElementById('customAlertMessage').textContent = message;
+    document.getElementById('customAlertIcon').textContent = icon;
+    customAlertModal.style.display = 'block';
+    document.getElementById('customAlertOk').onclick = () => {
+      customAlertModal.style.display = 'none';
+      resolve();
+    };
+  });
+}
+
+function showCustomConfirm(message, icon = '❓') {
+  return new Promise((resolve) => {
+    document.getElementById('customConfirmMessage').textContent = message;
+    document.getElementById('customConfirmIcon').textContent = icon;
+    customConfirmModal.style.display = 'block';
+    const okBtn = document.getElementById('customConfirmOk');
+    const cancelBtn = document.getElementById('customConfirmCancel');
+    const handler = (result) => {
+      customConfirmModal.style.display = 'none';
+      okBtn.onclick = null;
+      cancelBtn.onclick = null;
+      resolve(result);
+    };
+    okBtn.onclick = () => handler(true);
+    cancelBtn.onclick = () => handler(false);
+  });
+}
+
+function showCustomPrompt(message, defaultValue = '', icon = '💬') {
+  return new Promise((resolve) => {
+    document.getElementById('customPromptMessage').textContent = message;
+    document.getElementById('customPromptIcon').textContent = icon;
+    const input = document.getElementById('customPromptInput');
+    input.value = defaultValue;
+    customPromptModal.style.display = 'block';
+    input.focus();
+    const okBtn = document.getElementById('customPromptOk');
+    const cancelBtn = document.getElementById('customPromptCancel');
+    const handler = (result) => {
+      customPromptModal.style.display = 'none';
+      okBtn.onclick = null;
+      cancelBtn.onclick = null;
+      resolve(result);
+    };
+    okBtn.onclick = () => handler(input.value);
+    cancelBtn.onclick = () => handler(null);
+    input.onkeydown = (e) => { if(e.key === 'Enter') handler(input.value); };
+  });
+}
+
+// Close modals on Escape
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape') {
+    if(customAlertModal.style.display === 'block') customAlertModal.style.display = 'none';
+    if(customConfirmModal.style.display === 'block') customConfirmModal.style.display = 'none';
+    if(customPromptModal.style.display === 'block') customPromptModal.style.display = 'none';
+  }
+});
+
 /* SETTINGS menu (gear) */
 settingsBtn.addEventListener('click', (e) => {
   e.stopPropagation();
@@ -1199,9 +923,10 @@ settingsLogout.addEventListener('click', () => {
 settingsDelete.addEventListener('click', async () => {
   settingsMenu.classList.remove('show');
   const session = localStorage.getItem('session');
-  if(!session){ alert('No logged-in user'); return; }
-  if(session.startsWith('Guest')){ alert('Guest account cannot be deleted.'); return; }
-  if(!confirm(`Delete user "${session}" and their stored credentials? This cannot be undone.`)) return;
+  if(!session){ await showCustomAlert('No logged-in user'); return; }
+  if(session.startsWith('Guest')){ await showCustomAlert('Guest account cannot be deleted.'); return; }
+  const confirmed = await showCustomConfirm(`Delete user "${session}" and their stored credentials? This cannot be undone.`, '⚠️');
+  if(!confirmed) return;
   try{
     users = JSON.parse(localStorage.getItem('users')||'{}');
     delete users[session];
@@ -1223,11 +948,11 @@ const newUsernameInput = document.getElementById('newUsername');
 const currentPasswordForUsernameInput = document.getElementById('currentPasswordForUsername');
 const changeUsernameMsg = document.getElementById('changeUsernameMsg');
 
-settingsChangeUsername.addEventListener('click', () => {
+settingsChangeUsername.addEventListener('click', async () => {
   settingsMenu.classList.remove('show');
   const session = localStorage.getItem('session');
-  if(!session){ alert('No logged-in user'); return; }
-  if(session.startsWith('Guest')){ alert('Guest accounts cannot change username.'); return; }
+  if(!session){ await showCustomAlert('No logged-in user'); return; }
+  if(session.startsWith('Guest')){ await showCustomAlert('Guest accounts cannot change username.'); return; }
   changeUsernameModal.style.display = 'block';
   newUsernameInput.value = '';
   currentPasswordForUsernameInput.value = '';
@@ -1309,11 +1034,11 @@ const newPasswordInput = document.getElementById('newPassword');
 const confirmNewPasswordInput = document.getElementById('confirmNewPassword');
 const changePasswordMsg = document.getElementById('changePasswordMsg');
 
-settingsChangePassword.addEventListener('click', () => {
+settingsChangePassword.addEventListener('click', async () => {
   settingsMenu.classList.remove('show');
   const session = localStorage.getItem('session');
-  if(!session){ alert('No logged-in user'); return; }
-  if(session.startsWith('Guest')){ alert('Guest accounts cannot change password.'); return; }
+  if(!session){ await showCustomAlert('No logged-in user'); return; }
+  if(session.startsWith('Guest')){ await showCustomAlert('Guest accounts cannot change password.'); return; }
   changePasswordModal.style.display = 'block';
   currentPasswordInput.value = '';
   newPasswordInput.value = '';
@@ -1373,7 +1098,7 @@ confirmChangePassword.addEventListener('click', async () => {
 /* Edit Room Description (Admin only) */
 editDescriptionBtn.addEventListener('click', async () => {
   if(!isAdmin) {
-    alert('Only the room admin can edit the description.');
+    await showCustomAlert('Only the room admin can edit the description.', '🔒');
     return;
   }
   
@@ -1529,10 +1254,11 @@ confirmCreateRoom.addEventListener('click', async () => {
     if(!snap.exists()) {
       // Create room with admins array (using session, not nick)
       await setDoc(ref,{
-        password:p||'', 
+        password:p,
         description:desc||'',
         created:serverTimestamp(),
-        admins: [currentUser]
+        admins: [currentUser],
+        bannedUsers: []
       });
     }
     
@@ -1548,17 +1274,25 @@ confirmCreateRoom.addEventListener('click', async () => {
 async function joinRoom(r){
   const ref = doc(db,'rooms',r);
   const snap = await getDoc(ref);
-  if(!snap.exists()) return alert("Room not found");
+  if(!snap.exists()) { await showCustomAlert('Room not found', '🔍'); return; }
   
   const roomData = snap.data();
+  
+  // Check if user is banned
+  const currentSession = localStorage.getItem('session') || '';
+  const bannedUsers = roomData.bannedUsers || [];
+  if(bannedUsers.includes(currentSession)) {
+    await showCustomAlert('You are banned from this room.', '🚫');
+    return;
+  }
+  
   // Only ask for password if room has a password set
   if(roomData.password) {
-    const pass = prompt('Password');
-    if(pass !== roomData.password) return alert('Wrong room password');
+    const pass = await showCustomPrompt('Enter room password:', '', '🔐');
+    if(pass !== roomData.password) { await showCustomAlert('Wrong room password', '❌'); return; }
   }
   
   // Check if current user is admin using session (permanent account ID), not nick
-  const currentSession = localStorage.getItem('session') || '';
   isAdmin = (roomData.admin === currentSession);
 
   // Save nick/color
@@ -1589,12 +1323,64 @@ async function joinRoom(r){
   }
 }
 
+/* Nick Color Picker handlers */
+if(nickColorBtn) {
+  nickColorBtn.onclick = () => {
+    nickColorModal.style.display = 'block';
+    // Highlight current color
+    const currentColor = localStorage.getItem('nickColor') || '#58a6ff';
+    document.querySelectorAll('.color-option').forEach(opt => {
+      if(opt.dataset.color === currentColor) {
+        opt.style.borderColor = '#fff';
+        opt.style.boxShadow = '0 0 10px ' + opt.dataset.color;
+      } else {
+        opt.style.borderColor = 'transparent';
+        opt.style.boxShadow = 'none';
+      }
+    });
+  };
+}
+
+if(cancelNickColor) {
+  cancelNickColor.addEventListener('click', () => {
+    nickColorModal.style.display = 'none';
+  });
+}
+
+// Color option click handlers
+document.querySelectorAll('.color-option').forEach(option => {
+  option.addEventListener('click', async () => {
+    const selectedColor = option.dataset.color;
+    const session = localStorage.getItem('session');
+    
+    // Save to localStorage
+    localStorage.setItem('nickColor', selectedColor);
+    nickColor = selectedColor;
+    
+    // Update user doc in Firebase if logged in
+    if(session && !session.startsWith('Guest')) {
+      try {
+        const userRef = doc(db, 'users', session);
+        await updateDoc(userRef, { color: selectedColor });
+      } catch(e) {
+        console.error('Error saving color:', e);
+      }
+    }
+    
+    // Close modal
+    nickColorModal.style.display = 'none';
+  });
+});
+
 /* enterRoom performs the actual subscription and view switch */
 async function enterRoom(r){
   showMain();
   room = r;
   roomName.textContent = '# ' + r;
-  
+
+  // Update user activity with new room
+  updateUserActivity();
+
   // Fetch room data to get admin and check if current user is admin
   try {
     const roomRef = doc(db, 'rooms', r);
@@ -1689,6 +1475,11 @@ async function enterRoom(r){
     // render stylish indicator (with controlled animation restarts)
     renderTypingIndicator(usersTyping);
   });
+  
+  // Auto-scroll to bottom after a short delay to ensure messages are loaded
+  setTimeout(() => {
+    scrollChatToBottom(true);
+  }, 500);
 }
 
 /* --- Animation restart control vars:
@@ -1831,8 +1622,30 @@ let currentReactionMsgId = null;
 function showReactionPicker(msgId, triggerEl){
   currentReactionMsgId = msgId;
   const rect = triggerEl.getBoundingClientRect();
-  reactionPicker.style.left = (rect.left) + 'px';
-  reactionPicker.style.top = (rect.bottom + 8) + 'px';
+  
+  // Get picker dimensions
+  const pickerWidth = 280;
+  const pickerHeight = 200;
+  
+  // Calculate position
+  let left = rect.left;
+  let top = rect.bottom + 8;
+  
+  // Adjust if picker would go off-screen horizontally
+  if(left + pickerWidth > window.innerWidth) {
+    left = window.innerWidth - pickerWidth - 20;
+  }
+  if(left < 10) {
+    left = 10;
+  }
+  
+  // Adjust if picker would go off-screen vertically
+  if(top + pickerHeight > window.innerHeight) {
+    top = rect.top - pickerHeight - 8;
+  }
+  
+  reactionPicker.style.left = left + 'px';
+  reactionPicker.style.top = top + 'px';
   reactionPicker.classList.add('show');
   reactionPicker.setAttribute('aria-hidden', 'false');
 }
@@ -1868,7 +1681,7 @@ function makeMessageElement(id, m){
   el.dataset.msgid = id;
   el.dataset.owner = m.name;
 
-  const replyHtml = m.reply?`<div class="reply-preview"><b>${escapeHtml(m.reply.name)}</b>: ${escapeHtml(m.reply.text)}</div>`:'';
+  const replyHtml = m.reply?`<div class="reply-preview" data-reply-msgid="${escapeAttr(m.reply.msgId || '')}"><b>${escapeHtml(m.reply.name)}</b>: ${escapeHtml(m.reply.text)}</div>`:'';
   
   // Handle GIF messages
   let contentHtml = '';
@@ -1886,18 +1699,14 @@ function makeMessageElement(id, m){
   // Check if sender is admin by checking if session is in roomAdmins array
   const isSenderAdmin = roomAdmins.includes(m.session);
   const adminBadge = isSenderAdmin ? '<span style="background:var(--accent);color:#000;font-size:10px;margin-left:6px;padding:2px 8px;border-radius:4px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;display:inline-flex;align-items:center;gap:3px"><span style="font-size:9px">👑</span>ADMIN</span>' : '';
-  
-  // Get cached role for this user - everyone can have 1 role (admins get admin + 1 role = 2 badges max)
-  const cachedUser = userCache.get(m.name);
-  const roleBadge = (cachedUser && cachedUser.role) ? getRoleBadge(cachedUser.role) : '';
 
   // Build inner message WITHOUT reply button when mobile.
-  // Admins: admin badge + 1 role badge (2 max), Regular users: 1 role badge only
+  // Role badges will be added asynchronously to prevent duplicates
   let msgInner = `
     <div class="avatar" style="background:${m.color || getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim()}">${escapeHtml((m.name||'?')[0]||'?')}</div>
     <div class="msg">
       ${replyHtml}
-      <b class="msg-sender" style="color:${m.color || '#999'};cursor:pointer">${escapeHtml(m.name)}</b>${adminBadge}${roleBadge}
+      <b class="msg-sender" style="color:${m.color || '#999'};cursor:pointer">${escapeHtml(m.name)}</b>${adminBadge}
       <span class="time">${m.time?.toMillis ? new Date(m.time.toMillis()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : ''}</span>
       <div class="msg-text">${safeTextHtml}${editedNoteHtml}</div>
       <div class="reactions-container" data-msgid="${id}"></div>
@@ -1940,24 +1749,24 @@ function makeMessageElement(id, m){
   (async () => {
     try {
       const cached = userCache.get(m.name);
-      if(!cached || !cached.hasOwnProperty('role')) {
-        const us = await getDoc(doc(db,'users',m.name));
-        if(us.exists()) {
-          const ud = us.data();
-          const role = ud.role || null;
-          userCache.set(m.name, { ...(cached || {}), role });
-          // Update role badge if role exists
-          if(role && ROLES[role]) {
-            const senderEl = el.querySelector('.msg-sender');
-            if(senderEl) {
-              const existingRoleBadge = senderEl.parentElement.querySelector('[data-role-badge]');
-              if(!existingRoleBadge) {
-                const roleBadgeEl = document.createElement('span');
-                roleBadgeEl.dataset.roleBadge = 'true';
-                roleBadgeEl.innerHTML = getRoleBadge(role);
-                senderEl.insertAdjacentElement('afterend', roleBadgeEl);
-              }
-            }
+      // Always fetch to ensure we have the latest role data
+      const us = await getDoc(doc(db,'users',m.name));
+      if(us.exists()) {
+        const ud = us.data();
+        const role = ud.role || null;
+        userCache.set(m.name, { ...(cached || {}), role, color: ud.color || m.color });
+        // Update role badge if role exists (admins can have both admin and role badges)
+        if(role && ROLES[role]) {
+          const senderEl = el.querySelector('.msg-sender');
+          if(senderEl && el.isConnected) {
+            // Remove any existing role badges first
+            const existingRoleBadges = senderEl.parentElement.querySelectorAll('[data-role-badge]');
+            existingRoleBadges.forEach(badge => badge.remove());
+            // Add the role badge after the sender name
+            const roleBadgeEl = document.createElement('span');
+            roleBadgeEl.dataset.roleBadge = 'true';
+            roleBadgeEl.innerHTML = getRoleBadge(role);
+            senderEl.insertAdjacentElement('afterend', roleBadgeEl);
           }
         }
       }
@@ -2036,11 +1845,30 @@ function makeMessageElement(id, m){
 
   // reply button click handler (desktop only)
   el.querySelectorAll('.reply-btn').forEach(b => b.addEventListener('click', (e)=>{
-    replyTo = { name: b.dataset.name, text: b.dataset.text };
+    replyTo = { name: b.dataset.name, text: b.dataset.text, msgId: id };
     replyBox.style.display = 'block';
     replyBox.innerHTML = `Replying to <b>${escapeHtml(replyTo.name)}</b> <button id="cancelReply" style="margin-left:8px">x</button>`;
     const btn = document.getElementById('cancelReply'); if(btn) btn.onclick = cancelReply;
   }));
+
+  // reply preview click handler - scroll to original message
+  el.querySelectorAll('.reply-preview').forEach(rp => {
+    rp.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const replyMsgId = rp.dataset.replyMsgid;
+      if(replyMsgId) {
+        const originalMsg = chat.querySelector(`[data-msgid="${replyMsgId}"]`);
+        if(originalMsg) {
+          originalMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Add highlight effect
+          originalMsg.style.background = 'rgba(88,166,255,0.1)';
+          setTimeout(() => {
+            originalMsg.style.background = '';
+          }, 1500);
+        }
+      }
+    });
+  });
 
   return el;
 }
@@ -2090,7 +1918,7 @@ function updateMessage(id, m){
       adminBadge.innerHTML = '<span style="font-size:9px">👑</span>ADMIN';
       sender.after(adminBadge);
     }
-    // Add role badge if cached (everyone can have 1 role, admins get admin + role = 2 badges max)
+    // Add role badge if cached (admins can have both admin and role badges)
     const cached = userCache.get(m.name);
     if(cached && cached.role && ROLES[cached.role]) {
       const roleBadge = document.createElement('span');
@@ -2120,9 +1948,8 @@ function updateMessage(id, m){
             const existingRoleBadges = senderEl.parentElement.querySelectorAll('[data-role-badge]');
             existingRoleBadges.forEach(badge => badge.remove());
             
-            // Add new role badge if role exists and user is not admin (admins already have admin badge added above)
-            const isSenderAdmin = roomAdmins.includes(m.session);
-            if(role && ROLES[role] && !isSenderAdmin) {
+            // Add new role badge if role exists (admins can have both admin and role badges)
+            if(role && ROLES[role]) {
               const roleBadgeEl = document.createElement('span');
               roleBadgeEl.dataset.roleBadge = 'true';
               roleBadgeEl.innerHTML = getRoleBadge(role);
@@ -2176,7 +2003,7 @@ function showEditDeleteMenu(x,y,msgId, currentText){
   editBtn.textContent = 'Edit';
   editBtn.onclick = async (ev)=>{
     ev.stopPropagation();
-    const newText = prompt('Edit message', currentText);
+    const newText = await showCustomPrompt('Edit message:', currentText, '✏️');
     if(newText == null) { hideContextMenu(); return; }
     try{ await updateDoc(doc(db,'rooms',room,'messages',msgId), { text: newText, editedNote: 'Edited' }).catch(console.error); }catch(e){}
     hideContextMenu();
@@ -2203,7 +2030,8 @@ function showEditDeleteMenu(x,y,msgId, currentText){
   delBtn.textContent = 'Delete';
   delBtn.onclick = async (ev)=>{
     ev.stopPropagation();
-    if(confirm('Delete this message?')){
+    const confirmed = await showCustomConfirm('Delete this message?', '🗑️');
+    if(confirmed){
       try{ await deleteDoc(doc(db,'rooms',room,'messages',msgId)).catch(console.error); }catch(e){}
     }
     hideContextMenu();
@@ -2256,7 +2084,7 @@ msg.addEventListener('blur', ()=> { if(room && (localStorage.getItem('nick')||ni
 chat.addEventListener('click', (e)=>{
   const b = e.target.closest('.reply-btn');
   if(!b) return;
-  replyTo = { name: b.dataset.name, text: b.dataset.text };
+  replyTo = { name: b.dataset.name, text: b.dataset.text, msgId: chat.querySelector(`[data-msgid="${b.closest('.message').dataset.msgid}"]`)?.dataset.msgid || '' };
   replyBox.style.display = 'block';
   replyBox.innerHTML = `Replying to <b>${escapeHtml(replyTo.name)}</b> <button id="cancelReply" style="margin-left:8px">x</button>`;
   document.getElementById('cancelReply').onclick = cancelReply;
@@ -2267,7 +2095,25 @@ function cancelReply(){ replyTo = null; replyBox.style.display = 'none'; }
 msg.addEventListener('keydown', async (e)=>{
   if(e.key !== 'Enter') return;
   const textRaw = msg.value.trim(); msg.value = ''; if(!textRaw) return;
-  if(!room){ alert('You are not in a room'); return; }
+  if(!room){ await showCustomAlert('You are not in a room', '🚪'); return; }
+  
+  // Check if user is banned before sending
+  const currentSession = localStorage.getItem('session') || '';
+  try {
+    const roomRef = doc(db, 'rooms', room);
+    const roomSnap = await getDoc(roomRef);
+    if(roomSnap.exists()) {
+      const roomData = roomSnap.data();
+      const bannedUsers = roomData.bannedUsers || [];
+      if(bannedUsers.includes(currentSession)) {
+        await showCustomAlert('You are banned from this room.', '🚫');
+        return;
+      }
+    }
+  } catch(e) {
+    console.error('Error checking ban status:', e);
+  }
+  
   deleteDoc(doc(db,'rooms',room,'typing',localStorage.getItem('nick')||nick)).catch(()=>{});
 
   // Commands handling
@@ -2331,19 +2177,23 @@ async function handleCommand(cmdText){
       "/clear — Delete all messages (Admin only).",
       "/delete (or /delet) — Delete the room (Admin only).",
       "/giveadmin <username> — Give admin rights to a user (Admin only).",
+      "/ban <username> — Ban a user from the room (Admin only).",
+      "/unban <username> — Unban a user from the room (Admin only).",
+      "/banned — List banned users (Admin only).",
       "/roles — Open the role selector to choose a role badge.",
       "",
       "Room Admin:",
       "- The user who creates a room becomes the Admin",
       "- Admin can delete the room and clear all messages",
       "- Admin can give admin rights to other users",
+      "- Admin can ban users from the room",
       "- Admin has 👑 ADMIN badge next to their name",
       "",
       "Roles:",
       "- Use /roles to choose a role badge for your profile",
       "- Roles are displayed next to your name in chat"
     ].join("\n\n");
-    alert(helpText);
+    await showCustomAlert(helpText, '📖');
     return;
   }
 
@@ -2376,10 +2226,11 @@ async function handleCommand(cmdText){
   // Only admin can clear messages
   if(c === '/clear'){
     if(!isAdmin) {
-      alert('Only the room admin can clear messages.');
+      await showCustomAlert('Only the room admin can clear messages.', '🔒');
       return;
     }
-    if(!confirm('Delete all messages in this room?')) return;
+    const confirmed = await showCustomConfirm('Delete all messages in this room?', '🗑️');
+    if(!confirmed) return;
     try{
       const msgs = await getDocs(collection(db,'rooms',room,'messages'));
       const refsToDelete = [];
@@ -2397,10 +2248,11 @@ async function handleCommand(cmdText){
   // Only admin can delete room
   if(c === '/delete' || c === '/delet'){
     if(!isAdmin) {
-      alert('Only the room admin can delete the room.');
+      await showCustomAlert('Only the room admin can delete the room.', '🔒');
       return;
     }
-    if(!confirm('Delete the room and all messages?')) return;
+    const confirmed = await showCustomConfirm('Delete the room and all messages?', '⚠️');
+    if(!confirmed) return;
     try{
       // delete typing docs
       const typingDocs = await getDocs(collection(db,'rooms',room,'typing'));
@@ -2434,16 +2286,16 @@ async function handleCommand(cmdText){
   // /giveadmin <username>: Give admin rights to a user
   if(c === '/giveadmin'){
     if(!isAdmin) {
-      alert('Only room admins can give admin rights.');
+      await showCustomAlert('Only room admins can give admin rights.', '🔒');
       return;
     }
     if(!parts[1]) {
-      alert('Usage: /giveadmin <username>');
+      await showCustomAlert('Usage: /giveadmin <username>', 'ℹ️');
       return;
     }
     const targetUser = parts[1].trim();
     if(targetUser === (localStorage.getItem('session') || '')) {
-      alert('You are already an admin.');
+      await showCustomAlert('You are already an admin.', '👑');
       return;
     }
     
@@ -2452,7 +2304,7 @@ async function handleCommand(cmdText){
       const userRef = doc(db, 'users', targetUser);
       const userSnap = await getDoc(userRef);
       if(!userSnap.exists() && !targetUser.startsWith('Guest')) {
-        alert(`User "${targetUser}" not found.`);
+        await showCustomAlert(`User "${targetUser}" not found.`, '🔍');
         return;
       }
       
@@ -2460,7 +2312,7 @@ async function handleCommand(cmdText){
       const roomRef = doc(db, 'rooms', room);
       const roomSnap = await getDoc(roomRef);
       if(!roomSnap.exists()) {
-        alert('Room not found.');
+        await showCustomAlert('Room not found.', '🔍');
         return;
       }
       
@@ -2478,7 +2330,7 @@ async function handleCommand(cmdText){
         newAdmins.push(targetUser);
         await updateDoc(roomRef, { admins: newAdmins });
         roomAdmins = newAdmins;
-        alert(`✅ Admin rights given to ${targetUser}`);
+        await showCustomAlert(`Admin rights given to ${targetUser}`, '👑');
         // Post system message
         await addDoc(collection(db,'rooms',room,'messages'), {
           name:'System', 
@@ -2487,11 +2339,11 @@ async function handleCommand(cmdText){
           time:serverTimestamp()
         });
       } else {
-        alert(`${targetUser} is already an admin.`);
+        await showCustomAlert(`${targetUser} is already an admin.`, 'ℹ️');
       }
     } catch(e) {
       console.error('/giveadmin error', e);
-      alert('Error giving admin rights: ' + (e.message || String(e)));
+      await showCustomAlert('Error giving admin rights: ' + (e.message || String(e)), '❌');
     }
     return;
   }
@@ -2499,6 +2351,154 @@ async function handleCommand(cmdText){
   // /roles: Open role selector modal
   if(c === '/roles'){
     openRolesModal();
+    return;
+  }
+
+  // /ban <username>: Ban a user from the room
+  if(c === '/ban'){
+    if(!isAdmin) {
+      await showCustomAlert('Only room admins can ban users.', '🔒');
+      return;
+    }
+    if(!parts[1]) {
+      await showCustomAlert('Usage: /ban <username>', 'ℹ️');
+      return;
+    }
+    const targetUser = parts[1].trim();
+    const currentSession = localStorage.getItem('session') || '';
+    
+    if(targetUser === currentSession) {
+      await showCustomAlert('You cannot ban yourself.', '🚫');
+      return;
+    }
+    
+    // Check if target is an admin
+    if(roomAdmins.includes(targetUser)) {
+      await showCustomAlert('Cannot ban a room admin.', '🔒');
+      return;
+    }
+    
+    try {
+      const roomRef = doc(db, 'rooms', room);
+      const roomSnap = await getDoc(roomRef);
+      if(!roomSnap.exists()) {
+        await showCustomAlert('Room not found.', '🔍');
+        return;
+      }
+      
+      const roomData = roomSnap.data();
+      let bannedUsers = roomData.bannedUsers || [];
+      
+      if(bannedUsers.includes(targetUser)) {
+        await showCustomAlert(`${targetUser} is already banned.`, 'ℹ️');
+        return;
+      }
+      
+      bannedUsers.push(targetUser);
+      await updateDoc(roomRef, { bannedUsers });
+      
+      await showCustomAlert(`${targetUser} has been banned from this room.`, '🔨');
+      
+      // Post system message
+      await addDoc(collection(db,'rooms',room,'messages'), {
+        name:'System', 
+        text:`${targetUser} has been banned from the room by ${currentSession}`, 
+        color:'#888', 
+        time:serverTimestamp()
+      });
+      
+      // Kick the user if they're currently in the room
+      await addDoc(collection(db,'rooms',room,'messages'), {
+        name:'System', 
+        text:`You have been banned from ${room}. Goodbye!`, 
+        color:'#ff4444', 
+        time:serverTimestamp()
+      });
+      
+    } catch(e) {
+      console.error('/ban error', e);
+      await showCustomAlert('Error banning user: ' + (e.message || String(e)), '❌');
+    }
+    return;
+  }
+
+  // /unban <username>: Unban a user from the room
+  if(c === '/unban'){
+    if(!isAdmin) {
+      await showCustomAlert('Only room admins can unban users.', '🔒');
+      return;
+    }
+    if(!parts[1]) {
+      await showCustomAlert('Usage: /unban <username>', 'ℹ️');
+      return;
+    }
+    const targetUser = parts[1].trim();
+    
+    try {
+      const roomRef = doc(db, 'rooms', room);
+      const roomSnap = await getDoc(roomRef);
+      if(!roomSnap.exists()) {
+        await showCustomAlert('Room not found.', '🔍');
+        return;
+      }
+      
+      const roomData = roomSnap.data();
+      let bannedUsers = roomData.bannedUsers || [];
+      
+      if(!bannedUsers.includes(targetUser)) {
+        await showCustomAlert(`${targetUser} is not banned.`, 'ℹ️');
+        return;
+      }
+      
+      bannedUsers = bannedUsers.filter(u => u !== targetUser);
+      await updateDoc(roomRef, { bannedUsers });
+      
+      await showCustomAlert(`${targetUser} has been unbanned from this room.`, '✅');
+      
+      // Post system message
+      await addDoc(collection(db,'rooms',room,'messages'), {
+        name:'System', 
+        text:`${targetUser} has been unbanned by ${localStorage.getItem('session') || nick}`, 
+        color:'#888', 
+        time:serverTimestamp()
+      });
+      
+    } catch(e) {
+      console.error('/unban error', e);
+      await showCustomAlert('Error unbanning user: ' + (e.message || String(e)), '❌');
+    }
+    return;
+  }
+
+  // /banned: List banned users (Admin only)
+  if(c === '/banned'){
+    if(!isAdmin) {
+      await showCustomAlert('Only room admins can view banned users.', '🔒');
+      return;
+    }
+    
+    try {
+      const roomRef = doc(db, 'rooms', room);
+      const roomSnap = await getDoc(roomRef);
+      if(!roomSnap.exists()) {
+        await showCustomAlert('Room not found.', '🔍');
+        return;
+      }
+      
+      const roomData = roomSnap.data();
+      const bannedUsers = roomData.bannedUsers || [];
+      
+      if(bannedUsers.length === 0) {
+        await showCustomAlert('No banned users in this room.', '✅');
+        return;
+      }
+      
+      await showCustomAlert('Banned users:\n\n' + bannedUsers.join('\n'), '🚫');
+      
+    } catch(e) {
+      console.error('/banned error', e);
+      await showCustomAlert('Error fetching banned users: ' + (e.message || String(e)), '❌');
+    }
     return;
   }
 
@@ -2766,6 +2766,23 @@ function displayGifs(gifs){
 async function sendGifMessage(gifUrl){
   if(!room || !nick) return;
   
+  // Check if user is banned before sending
+  const currentSession = localStorage.getItem('session') || '';
+  try {
+    const roomRef = doc(db, 'rooms', room);
+    const roomSnap = await getDoc(roomRef);
+    if(roomSnap.exists()) {
+      const roomData = roomSnap.data();
+      const bannedUsers = roomData.bannedUsers || [];
+      if(bannedUsers.includes(currentSession)) {
+        await showCustomAlert('You are banned from this room.', '🚫');
+        return;
+      }
+    }
+  } catch(e) {
+    console.error('Error checking ban status:', e);
+  }
+  
   // Close picker
   gifPicker.classList.remove('show');
   gifSearch.value = '';
@@ -2862,6 +2879,8 @@ back.onclick = ()=>{
   closeOnlineUsersDrawer();
   showHome();
   room = '';
+  // Clear room tracking for user
+  updateUserActivity();
   chat.innerHTML = '';
   typingIndicator.textContent = '';
 };
@@ -2995,19 +3014,7 @@ loginBtn.addEventListener('click', async (e) => {
     const passHash = await sha256(password);
 
     if(!snap.exists()){
-      // REGISTER
-      await setDoc(userRef, {
-        passwordHash: passHash,
-        created: serverTimestamp(),
-        color: '#58a6ff'
-      });
-
-      localStorage.setItem('session', username);
-      localStorage.setItem('nick', username);
-      localStorage.setItem('nickColor', '#58a6ff');
-
-      loginMsg.textContent = 'registered and logged in';
-      showHome();
+      loginMsg.textContent = 'User not found. Please register first.';
       return;
     }
 
@@ -3017,6 +3024,10 @@ loginBtn.addEventListener('click', async (e) => {
       localStorage.setItem('session', username);
       localStorage.setItem('nick', username);
       if (data.color) localStorage.setItem('nickColor', data.color);
+      
+      // Update lastSeen on login
+      updateUserActivity();
+      
       loginMsg.textContent = 'Login successful ✅';
       showHome();
     } else {
@@ -3028,7 +3039,86 @@ loginBtn.addEventListener('click', async (e) => {
   }
 });
 
+registerBtn.addEventListener('click', async (e) => {
+  e.preventDefault();
+  const username = (loginUser.value || '').trim();
+  const password = loginPass.value || '';
+  const confirmPassword = registerPass.value || '';
+  
+  if(!username || !password || !confirmPassword){ 
+    loginMsg.textContent = 'Please fill in all fields.'; 
+    return; 
+  }
+  
+  if(password !== confirmPassword) {
+    loginMsg.textContent = 'Passwords do not match.';
+    return;
+  }
+  
+  if(password.length < 4) {
+    loginMsg.textContent = 'Password must be at least 4 characters.';
+    return;
+  }
+  
+  loginMsg.textContent = 'Registering...';
+  
+  try {
+    const userRef = doc(db, 'users', username);
+    const snap = await getDoc(userRef);
+    
+    if(snap.exists()){
+      loginMsg.textContent = 'Username already taken.';
+      return;
+    }
+    
+    const passHash = await sha256(password);
+    
+    await setDoc(userRef, {
+      passwordHash: passHash,
+      created: serverTimestamp(),
+      color: nickColor || '#58a6ff',
+      role: ''
+    });
+
+    localStorage.setItem('session', username);
+    localStorage.setItem('nick', username);
+    localStorage.setItem('nickColor', nickColor || '#58a6ff');
+
+    // Update lastSeen on registration
+    updateUserActivity();
+
+    loginMsg.textContent = 'Registered and logged in! ✅';
+    showHome();
+  } catch (err) {
+    console.error(err);
+    loginMsg.textContent = 'Error: ' + (err.message || String(err));
+  }
+});
+
+// Toggle between login and register modes
+registerPass.style.display = 'none';
+loginBtn.textContent = 'Login';
+registerBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  if(registerPass.style.display === 'none') {
+    // Switch to register mode
+    registerPass.style.display = 'block';
+    loginBtn.style.display = 'none';
+    registerBtn.textContent = 'Back to Login';
+    loginMsg.textContent = 'Enter username and password to register';
+    registerPass.value = '';
+  } else {
+    // Switch back to login mode
+    registerPass.style.display = 'none';
+    loginBtn.style.display = 'block';
+    registerBtn.textContent = 'Register';
+    loginMsg.textContent = '';
+    registerPass.value = '';
+  }
+});
+
 loginPass.addEventListener('keydown', e => { if (e.key === 'Enter') loginBtn.click(); });
+registerPass.addEventListener('keydown', e => { if (e.key === 'Enter') registerBtn.click(); });
 
 // Demo/guest button with duplicate name check
 demoBtn.addEventListener('click', async (e) => {
@@ -3043,7 +3133,7 @@ demoBtn.addEventListener('click', async (e) => {
   }
   
   if(attempts >= 10) {
-    alert('Unable to generate unique guest name. Please try again.');
+    await showCustomAlert('Unable to generate unique guest name. Please try again.', '😕');
     return;
   }
   
@@ -3066,12 +3156,14 @@ function toggleOnlineUsersDrawer() {
   const drawer = document.getElementById('onlineUsersDrawer');
   if(!drawer) return;
   
-  const isCurrentlyOpen = drawer.style.transform === 'translateX(0px)';
+  const isCurrentlyOpen = drawer.classList.contains('show');
   
   if(isCurrentlyOpen) {
+    drawer.classList.remove('show');
     drawer.style.transform = 'translateX(100%)';
     drawer.setAttribute('aria-hidden', 'true');
   } else {
+    drawer.classList.add('show');
     drawer.style.transform = 'translateX(0px)';
     drawer.setAttribute('aria-hidden', 'false');
     loadOnlineUsersList();
@@ -3082,6 +3174,7 @@ function toggleOnlineUsersDrawer() {
 function closeOnlineUsersDrawer() {
   const drawer = document.getElementById('onlineUsersDrawer');
   if(drawer) {
+    drawer.classList.remove('show');
     drawer.style.transform = 'translateX(100%)';
     drawer.setAttribute('aria-hidden', 'true');
   }
@@ -3099,15 +3192,26 @@ if(closeOnlineUsersBtn) {
   closeOnlineUsersBtn.onclick = closeOnlineUsersDrawer;
 }
 
-// Track user activity
+// Track user activity and current room
 function updateUserActivity() {
   const session = localStorage.getItem('session');
+  console.log('updateUserActivity called, session:', session);
   if(!session || session.startsWith('Guest')) return;
   
   try {
     const userRef = doc(db, 'users', session);
-    setDoc(userRef, { lastSeen: serverTimestamp() }, { merge: true }).catch(() => {});
-  } catch(e) {}
+    console.log('Updating user activity for:', session);
+    updateDoc(userRef, { 
+      lastSeen: serverTimestamp(),
+      currentRoom: room || '' 
+    }).then(() => {
+      console.log('User activity updated successfully');
+    }).catch((err) => {
+      console.error('Error updating user activity:', err);
+    });
+  } catch(e) {
+    console.error('Exception in updateUserActivity:', e);
+  }
 }
 
 setInterval(updateUserActivity, 60000);
@@ -3189,9 +3293,8 @@ function refreshUserRoleBadges(userSession, newRole) {
     const existingRoleBadges = msgContainer.querySelectorAll('[data-role-badge]');
     existingRoleBadges.forEach(badge => badge.remove());
     
-    // Add new role badge if user has a role and is not admin
-    // (admins already have admin badge which is handled separately)
-    if(!isCurrentUserAdmin && newRole && ROLES[newRole]) {
+    // Add new role badge if user has a role (admins can have both badges)
+    if(newRole && ROLES[newRole]) {
       const roleBadge = document.createElement('span');
       roleBadge.dataset.roleBadge = 'true';
       roleBadge.innerHTML = getRoleBadge(newRole);
@@ -3212,6 +3315,42 @@ function openRolesModal() {
   if(!rolesList) return;
   
   rolesList.innerHTML = '';
+  
+  // Add "No role" option first
+  const noRoleEl = document.createElement('div');
+  noRoleEl.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px;border-radius:8px;cursor:pointer;transition:background 150ms;margin-bottom:8px;border:1px solid transparent';
+  noRoleEl.innerHTML = `
+    <div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(255,255,255,0.05)">🚫</div>
+    <div style="flex:1">
+      <div style="font-weight:600;color:var(--muted)">No Role</div>
+      <div style="font-size:12px;color:var(--muted)">Remove your role</div>
+    </div>
+    ${!currentUserRole ? '<span style="color:#3fb950;font-size:14px">✓</span>' : ''}
+  `;
+  
+  noRoleEl.addEventListener('mouseenter', () => {
+    noRoleEl.style.background = 'rgba(255,255,255,0.03)';
+    noRoleEl.style.borderColor = 'rgba(255,255,255,0.1)';
+  });
+  noRoleEl.addEventListener('mouseleave', () => {
+    noRoleEl.style.background = 'transparent';
+    noRoleEl.style.borderColor = 'transparent';
+  });
+  
+  noRoleEl.addEventListener('click', async () => {
+    const success = await saveUserRole(null);
+    if(success) {
+      openRolesModal();
+      await addDoc(collection(db,'rooms',room,'messages'), {
+        name:'System', 
+        text:`${localStorage.getItem('nick') || nick} removed their role`, 
+        color:'#888', 
+        time:serverTimestamp()
+      });
+    }
+  });
+  
+  rolesList.appendChild(noRoleEl);
   
   Object.entries(ROLES).forEach(([key, role]) => {
     const roleEl = document.createElement('div');
@@ -3266,9 +3405,9 @@ if(closeRoles) {
 }
 
 if(viewAllRoles) {
-  viewAllRoles.addEventListener('click', () => {
+  viewAllRoles.addEventListener('click', async () => {
     const allRolesText = Object.values(ROLES).map(r => `${r.icon} ${r.name}`).join(' • ');
-    alert('Available Roles:\n\n' + allRolesText);
+    await showCustomAlert('Available Roles:\n\n' + allRolesText, '🎭');
   });
 }
 
@@ -3279,55 +3418,57 @@ loadUserRole();
 async function loadOnlineUsersList() {
   const listEl = document.getElementById('onlineUsersList');
   if(!listEl) return;
-  
+
   listEl.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">Loading...</div>';
-  
+
   try {
     const usersCol = collection(db, 'users');
     const snapshot = await getDocs(usersCol);
-    
+
     const now = Date.now();
     const users = [];
-    
+
     snapshot.forEach(doc => {
       const userData = doc.data();
       const userId = doc.id;
-      
+
       if(userId.startsWith('Guest')) return;
-      
+
       let isOnline = false;
       if(userData.lastSeen) {
         const lastSeenTime = userData.lastSeen.toMillis ? userData.lastSeen.toMillis() : userData.lastSeen;
         isOnline = (now - lastSeenTime) < ONLINE_THRESHOLD;
       }
-      
+
       users.push({
         id: userId,
         color: userData.color || '#58a6ff',
-        isOnline: isOnline
+        isOnline: isOnline,
+        currentRoom: userData.currentRoom || null
       });
     });
-    
+
     users.sort((a, b) => {
       if(a.isOnline && !b.isOnline) return -1;
       if(!a.isOnline && b.isOnline) return 1;
       return a.id.localeCompare(b.id);
     });
-    
+
     listEl.innerHTML = '';
-    
+
     if(users.length === 0) {
       listEl.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">No registered users found</div>';
       return;
     }
-    
+
     users.forEach(user => {
       const userEl = document.createElement('div');
       userEl.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;margin-bottom:4px;cursor:pointer;transition:background 150ms';
+      const roomInfo = user.currentRoom && user.isOnline ? `<span style="color:var(--accent);font-size:11px;margin-left:4px">#${user.currentRoom}</span>` : '';
       userEl.innerHTML = `
         <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#000;background:${user.color}">${user.id[0]}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${user.id}</div>
+          <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${user.id}${roomInfo}</div>
           <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px">
             <span style="width:8px;height:8px;border-radius:50%;background:${user.isOnline ? '#3fb950' : 'var(--muted)'}"></span>
             ${user.isOnline ? 'Online' : 'Offline'}
@@ -3338,7 +3479,7 @@ async function loadOnlineUsersList() {
       userEl.onmouseleave = () => userEl.style.background = 'transparent';
       listEl.appendChild(userEl);
     });
-    
+
   } catch(err) {
     console.error('Error loading online users:', err);
     listEl.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">Error loading users</div>';
@@ -3352,7 +3493,7 @@ function setupUsersListener() {
     const usersCol = collection(db, 'users');
     usersUnsub = onSnapshot(usersCol, () => {
       const drawer = document.getElementById('onlineUsersDrawer');
-      if(drawer && drawer.style.transform === 'translateX(0px)') {
+      if(drawer && drawer.classList.contains('show')) {
         loadOnlineUsersList();
       }
     });
@@ -3360,6 +3501,14 @@ function setupUsersListener() {
     console.error('users listener error', e);
   }
 }
+
+// Refresh online users list every 30 seconds when drawer is open
+setInterval(() => {
+  const drawer = document.getElementById('onlineUsersDrawer');
+  if(drawer && drawer.classList.contains('show')) {
+    loadOnlineUsersList();
+  }
+}, 30000);
 
 setupUsersListener();
 
