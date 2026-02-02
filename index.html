@@ -48,13 +48,20 @@
  .profile-card.show{display:block}
  .profile-card .row{display:flex;justify-content:space-between;margin-bottom:6px}
 
- /* Login */
- #login{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px;background:var(--bg);z-index:30;padding:20px}
- #login input{padding:12px;border-radius:10px;border:0;background:var(--card);color:var(--text);width:100%;max-width:360px}
- #login button{padding:12px 18px;border:0;border-radius:10px;background:var(--accent);color:#000;font-weight:700;cursor:pointer;max-width:360px;width:100%;margin-top:4px}
- #login #registerBtn{background:transparent;border:1px solid var(--accent);color:var(--accent)}
- #login .small{background:transparent;border:1px solid #333;padding:8px;border-radius:8px;color:var(--muted);cursor:pointer}
- #loginMsg{margin-top:10px;font-size:13px;color:var(--muted);min-height:18px}
+  /* Login */
+  #login{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px;background:var(--bg);z-index:30;padding:20px}
+  #login input{padding:12px;border-radius:10px;border:0;background:var(--card);color:var(--text);width:100%;max-width:360px}
+  #login button{padding:12px 18px;border:0;border-radius:10px;background:var(--accent);color:#000;font-weight:700;cursor:pointer;max-width:360px;width:100%;margin-top:4px}
+  #login .small{background:transparent;border:1px solid #333;padding:8px;border-radius:8px;color:var(--muted);cursor:pointer}
+  #loginMsg{margin-top:10px;font-size:13px;color:var(--muted);min-height:18px}
+
+  /* Auth Tabs */
+  .auth-tabs{display:flex;gap:8px;margin-bottom:16px;width:100%;max-width:360px}
+  .auth-tab{flex:1;padding:12px;border:0;border-radius:10px;background:transparent;color:var(--muted);font-weight:600;cursor:pointer;transition:all 200ms}
+  .auth-tab:hover{background:rgba(255,255,255,.03)}
+  .auth-tab.active{background:var(--card);color:var(--text)}
+  .auth-panel{width:100%;max-width:360px;display:none;flex-direction:column;gap:10px}
+  .auth-panel.active{display:flex}
 
  /* App Layout */
  #home,#main{position:absolute;inset:0;display:none}
@@ -408,11 +415,26 @@
 
   <!-- LOGIN -->
   <div id="login" aria-hidden="false">
-    <input id="loginUser" placeholder="Username" autocomplete="username">
-    <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password">
-    <button id="loginBtn">Login</button>
-    <button id="registerBtn">Register</button>
-    <input id="registerPass" type="password" placeholder="Confirm Password" autocomplete="new-password" style="display:none">
+    <div class="auth-tabs">
+      <button id="loginTab" class="auth-tab active">Sign In</button>
+      <button id="registerTab" class="auth-tab">Create Account</button>
+    </div>
+
+    <!-- Login Panel -->
+    <div id="loginPanel" class="auth-panel active">
+      <input id="loginUser" placeholder="Username" autocomplete="username">
+      <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password">
+      <button id="loginBtn">Sign In</button>
+    </div>
+
+    <!-- Register Panel -->
+    <div id="registerPanel" class="auth-panel">
+      <input id="regUser" placeholder="Username" autocomplete="username">
+      <input id="regPass" type="password" placeholder="Password" autocomplete="new-password">
+      <input id="regPassConfirm" type="password" placeholder="Confirm Password" autocomplete="new-password">
+      <button id="registerBtn">Create Account</button>
+    </div>
+
     <button id="demoBtn" class="small">Continue as Guest</button>
     <div id="loginMsg"></div>
   </div>
@@ -3209,11 +3231,41 @@ loginBtn.addEventListener('click', async (e) => {
   }
 });
 
+// Tab switching
+const loginTab = document.getElementById('loginTab');
+const registerTab = document.getElementById('registerTab');
+const loginPanel = document.getElementById('loginPanel');
+const registerPanel = document.getElementById('registerPanel');
+const regUser = document.getElementById('regUser');
+const regPass = document.getElementById('regPass');
+const regPassConfirm = document.getElementById('regPassConfirm');
+
+loginTab.addEventListener('click', () => {
+  loginTab.classList.add('active');
+  registerTab.classList.remove('active');
+  loginPanel.classList.add('active');
+  registerPanel.classList.remove('active');
+  loginMsg.textContent = '';
+  loginUser.value = '';
+  loginPass.value = '';
+});
+
+registerTab.addEventListener('click', () => {
+  registerTab.classList.add('active');
+  loginTab.classList.remove('active');
+  registerPanel.classList.add('active');
+  loginPanel.classList.remove('active');
+  loginMsg.textContent = 'Choose a username and password to create an account';
+  regUser.value = '';
+  regPass.value = '';
+  regPassConfirm.value = '';
+});
+
 registerBtn.addEventListener('click', async (e) => {
   e.preventDefault();
-  const username = (loginUser.value || '').trim();
-  const password = loginPass.value || '';
-  const confirmPassword = registerPass.value || '';
+  const username = (regUser.value || '').trim();
+  const password = regPass.value || '';
+  const confirmPassword = regPassConfirm.value || '';
 
   if(!username || !password || !confirmPassword){
     loginMsg.textContent = 'Please fill in all fields.';
@@ -3282,30 +3334,9 @@ registerBtn.addEventListener('click', async (e) => {
   }
 });
 
-// Toggle between login and register modes
-registerPass.style.display = 'none';
-loginBtn.textContent = 'Login';
-registerBtn.addEventListener('click', (e) => {
-  e.preventDefault();
-  if(registerPass.style.display === 'none') {
-    // Switch to register mode
-    registerPass.style.display = 'block';
-    loginBtn.style.display = 'none';
-    registerBtn.textContent = 'Back to Login';
-    loginMsg.textContent = 'Enter username and password to register';
-    registerPass.value = '';
-  } else {
-    // Switch back to login mode
-    registerPass.style.display = 'none';
-    loginBtn.style.display = 'block';
-    registerBtn.textContent = 'Register';
-    loginMsg.textContent = '';
-    registerPass.value = '';
-  }
-});
-
 loginPass.addEventListener('keydown', e => { if (e.key === 'Enter') loginBtn.click(); });
-registerPass.addEventListener('keydown', e => { if (e.key === 'Enter') registerBtn.click(); });
+regPass.addEventListener('keydown', e => { if (e.key === 'Enter') registerBtn.click(); });
+regPassConfirm.addEventListener('keydown', e => { if (e.key === 'Enter') registerBtn.click(); });
 
 // Demo/guest button with duplicate name check
 demoBtn.addEventListener('click', async (e) => {
