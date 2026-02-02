@@ -1,4 +1,4 @@
-- Fix roles stacking and bugging.
+- Fix roles stacking (when refereshed they sometimes fix itself) and bugging.
 - Add name colors.
 - Add admin can make roles function.
 - Fix gifs
@@ -9,6 +9,7 @@
 - Thres a random white dot on every message.
 - The button should be always in the same position, like the logo.
 - You have a option t not have a role.
+- Make all the goole message things/tabs to the cool tab/popup menus like there already is in change psswr windows.
 
 
 Stage 2
