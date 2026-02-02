@@ -1,5 +1,12 @@
-- Fix roles stacking.
-- Add name coloers.
+- Fix roles stacking and bugging.
+- Add name colors.
 - Add admin can make roles function.
 - Fix gifs
 - Add admin ban and kick
+- When joining room it goes automatically to the last message.
+- Clicking a reply goes to the replyed message.
+- Reactions should open so, thath you can fully se them.
+- Thres a random white dot on every message.
+- The button should be always in the same position, like the logo.
+- You have a option t not have a role.
+- 
