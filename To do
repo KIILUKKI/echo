@@ -1,17 +1,4 @@
-- Fix roles stacking (when refereshed they sometimes fix itself) and bugging. And somtimes they dont bug.
-- Add name colors.
-- Add admin can make roles function.
-- Fix gifs
-- Add admin ban and kick
-- When joining room it goes automatically to the last message.
-- Clicking a reply goes to the replyed message.
-- Reactions should open so, thath you can fully se them.
-- Thres a random white dot on every message.
-- The button should be always in the same position, like the logo.
-- You have a option t not have a role.
-- Make all the goole message things/tabs to the cool tab/popup menus like there already is in change psswr windows.
-- Add in the online list what room the user is in.
-- Different buttons for login and registeration. In registeration you have to confirm password.
+Bugs:
 
 
 
@@ -20,3 +7,5 @@ Stage 2
 
 - You can have a customisable profile description etc.
 - Add DM's.
+- Add admin can make roles function.
+- Add in the online list what room the user is in.
