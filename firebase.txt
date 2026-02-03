@@ -85,7 +85,13 @@
        match /typing/{userName} {
          allow read: if true;
          allow create, update, delete: if true;
-       }
-     }
-   }
+      // SUPER ADMIN - only owner knows the password (stored in client code)
+      match /superadmin/{docId} {
+        allow read: if true;
+        allow write: if true;
+      }
+
+    }
+  }
+}
  }

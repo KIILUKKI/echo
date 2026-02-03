@@ -25,11 +25,12 @@
  html,body{height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}
  #app{width:100%;height:100%;position:relative;overflow:hidden}
 
- /* Top Controls */
- #topRightControls{position:fixed;top:12px;right:12px;display:flex;gap:10px;align-items:center;z-index:120;pointer-events:auto}
- #howBtn,#fullBtn,#settingsBtn{background:transparent;border:0;color:var(--text);font-size:14px;padding:8px 12px;border-radius:10px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;min-height:40px;min-width:40px;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.15)}
- #howBtn:hover,#fullBtn:hover,#settingsBtn:hover{background:rgba(255,255,255,.02)}
- #fullBtn{font-size:15px;padding:10px 14px;border-radius:12px;font-weight:600}
+  /* Top Controls */
+  #topRightControls{position:fixed;top:12px;right:12px;display:flex;gap:10px;align-items:center;z-index:120;pointer-events:auto}
+  #howBtn,#fullBtn,#settingsBtn,#profileBtn{background:transparent;border:0;color:var(--text);font-size:14px;padding:8px 12px;border-radius:10px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;min-height:40px;min-width:40px;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.15)}
+  #howBtn:hover,#fullBtn:hover,#settingsBtn:hover,#profileBtn:hover{background:rgba(255,255,255,.02)}
+  #fullBtn{font-size:15px;padding:10px 14px;border-radius:12px;font-weight:600}
+  #profileBtn{font-weight:500}
 
  /* Menus */
  .settings-menu,.how-menu{position:fixed;top:56px;right:12px;background:var(--panel);border:1px solid #0d1117;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.6);z-index:119;display:none}
@@ -259,6 +260,8 @@
 
   <!-- TOP-RIGHT CONTROLS CONTAINER -->
   <div id="topRightControls" aria-hidden="false">
+    <!-- Profile button -->
+    <button id="profileBtn" title="Profile">Profile</button>
     <!-- HOW TO button -->
     <button id="howBtn" title="How To">How To</button>
     <!-- FULLSCREEN button -->
@@ -269,13 +272,14 @@
 
   <div id="settingsMenu" class="settings-menu" aria-hidden="true">
     <button id="settingsChangeUsername">Change Username</button>
-<button id="settingsChangePassword">Change Password</button>
-  <label id="settingsNotifications" style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;border-radius:8px;transition:background 150ms;margin:0;font-size:14px;">
-    <input type="checkbox" id="notificationsToggle" style="cursor:pointer">
-    <span>Enable Notifications</span>
-  </label>
-  <button id="settingsLogout">Logout</button>
+    <button id="settingsChangePassword">Change Password</button>
+    <label id="settingsNotifications" style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;border-radius:8px;transition:background 150ms;margin:0;font-size:14px;">
+      <input type="checkbox" id="notificationsToggle" style="cursor:pointer">
+      <span>Enable Notifications</span>
+    </label>
+    <button id="settingsLogout">Logout</button>
     <button id="settingsDelete">Delete user</button>
+    <button id="settingsSuperAdmin" style="color:#ff6b6b;border-top:1px solid rgba(255,255,255,0.1);margin-top:4px;padding-top:10px">⚠️ Super Admin</button>
   </div>
 
   <!-- Change Username Modal -->
@@ -314,6 +318,25 @@
     <div id="editDescriptionMsg" class="modal-msg"></div>
   </div>
 
+  <!-- Profile Modal -->
+  <div id="profileModal" class="modal" style="display:none;min-width:400px;max-width:450px">
+    <h3>Your Profile</h3>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:15px">
+      <div id="profileModalAvatar" style="width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:20px;background:var(--guest-gray)"></div>
+      <div>
+        <div id="profileModalName" style="font-weight:700;font-size:18px"></div>
+        <div id="profileModalRole" style="font-size:13px;color:var(--muted)"></div>
+      </div>
+    </div>
+    <label style="display:block;margin-bottom:6px;font-size:14px;color:var(--muted)">Profile Description</label>
+    <textarea id="profileDescriptionInput" placeholder="Tell others about yourself..." style="min-height:100px;margin-bottom:15px"></textarea>
+    <div class="modal-btns">
+      <button id="cancelProfile" class="modal-btn modal-btn-cancel">Cancel</button>
+      <button id="saveProfile" class="modal-btn modal-btn-confirm">Save</button>
+    </div>
+    <div id="profileMsg" class="modal-msg"></div>
+  </div>
+
   <!-- Room Description Tooltip -->
   <div id="roomDescriptionTooltip" class="room-tooltip tooltip" style="display:none;max-width:300px;font-size:13px">
     <div id="roomDescriptionText" style="color:var(--muted)"></div>
@@ -342,7 +365,7 @@
   </div>
 
   <!-- Custom Confirm Modal (replaces native confirm) -->
-  <div id="customConfirmModal" class="modal" style="display:none;min-width:320px;max-width:400px">
+  <div id="customConfirmModal" class="modal" style="display:none;min-width:320px;max-width:400px;z-index:250">
     <div id="customConfirmIcon" style="font-size:32px;margin-bottom:12px;text-align:center">❓</div>
     <div id="customConfirmMessage" style="font-size:14px;text-align:center;margin-bottom:20px;line-height:1.5"></div>
     <div class="modal-btns" style="justify-content:center">
@@ -382,6 +405,70 @@
     </div>
   </div>
 
+  <!-- Super Admin Modal -->
+  <div id="superAdminModal" class="modal" style="display:none;min-width:500px;max-width:600px;width:550px;height:550px;z-index:200">
+    <h3 style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:20px">⚠️</span> Super Admin
+      <span id="superAdminBadge" style="font-size:11px;background:#ff6b6b;color:#000;padding:2px 8px;border-radius:4px;font-weight:700">ADMIN</span>
+    </h3>
+    <div id="superAdminAuth" style="display:flex;flex-direction:column;gap:10px">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:5px">Enter your Super Admin password to access admin controls.</p>
+      <input id="superAdminPassword" type="password" placeholder="Super Admin Password" style="padding:12px;font-size:14px">
+      <div class="modal-btns">
+        <button id="cancelSuperAdmin" class="modal-btn modal-btn-cancel">Cancel</button>
+        <button id="authSuperAdmin" class="modal-btn modal-btn-confirm">Authenticate</button>
+      </div>
+      <div id="superAdminMsg" class="modal-msg"></div>
+    </div>
+    <div id="superAdminPanel" style="display:none;flex-direction:column;flex:1;min-height:0">
+      <!-- Stats Bar -->
+      <div id="superAdminStats" style="display:flex;gap:15px;margin-bottom:15px;padding:12px;background:var(--card);border-radius:8px">
+        <div style="flex:1;text-align:center">
+          <div id="statRooms" style="font-size:22px;font-weight:700;color:var(--accent)">-</div>
+          <div style="font-size:11px;color:var(--muted)">Rooms</div>
+        </div>
+        <div style="flex:1;text-align:center">
+          <div id="statUsers" style="font-size:22px;font-weight:700;color:#51cf66">-</div>
+          <div style="font-size:11px;color:var(--muted)">Users</div>
+        </div>
+        <div style="flex:1;text-align:center">
+          <div id="statOnline" style="font-size:22px;font-weight:700;color:#ffd43b">-</div>
+          <div style="font-size:11px;color:var(--muted)">Online</div>
+        </div>
+      </div>
+      <!-- Search -->
+      <input id="superAdminSearch" type="text" placeholder="Search rooms or users..." style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:var(--card);color:var(--text);margin-bottom:12px;box-sizing:border-box">
+      <!-- Tabs -->
+      <div style="display:flex;gap:8px;margin-bottom:15px">
+        <button id="superAdminRoomsTab" class="modal-btn" style="flex:1;padding:10px;border-radius:8px;border:0;background:var(--card);color:var(--text);font-weight:600;cursor:pointer">🏠 Rooms</button>
+        <button id="superAdminUsersTab" class="modal-btn" style="flex:1;padding:10px;border-radius:8px;border:0;background:transparent;color:var(--muted);font-weight:600;cursor:pointer">👥 Users</button>
+      </div>
+      <!-- Lists -->
+      <div id="superAdminRoomsList" style="flex:1;overflow-y:auto;min-height:0"></div>
+      <div id="superAdminUsersList" style="display:none;flex:1;overflow-y:auto;min-height:0"></div>
+      <!-- Actions -->
+      <div style="display:flex;gap:10px;margin-top:15px;padding-top:15px;border-top:1px solid rgba(255,255,255,0.1)">
+        <button id="superAdminDeleteAllRooms" style="flex:1;padding:10px;border-radius:8px;border:0;background:rgba(255,107,107,0.2);color:#ff6b6b;font-weight:600;cursor:pointer;font-size:13px">💥 Delete All Rooms</button>
+        <button id="closeSuperAdmin" class="modal-btn modal-btn-cancel" style="padding:10px 20px">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Set Super Admin Password Modal -->
+  <div id="setSuperAdminModal" class="modal" style="display:none;min-width:400px;z-index:200">
+    <h3 style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:20px">🔐</span> Set Super Admin Password
+    </h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:15px;line-height:1.5">Create a password to access Super Admin features. This gives you full control to delete any room or user.<br><br><strong style="color:#ffd43b">⚠️ Save this password somewhere safe - there is no recovery!</strong></p>
+    <input id="newSuperAdminPassword" type="password" placeholder="New Super Admin Password" style="padding:12px;font-size:14px;margin-bottom:10px">
+    <input id="confirmSuperAdminPassword" type="password" placeholder="Confirm Password" style="padding:12px;font-size:14px;margin-bottom:15px">
+    <div class="modal-btns">
+      <button id="cancelSetSuperAdmin" class="modal-btn modal-btn-cancel" style="padding:10px 20px">Skip</button>
+      <button id="confirmSetSuperAdmin" class="modal-btn modal-btn-confirm" style="padding:10px 24px">Set Password</button>
+    </div>
+    <div id="setSuperAdminMsg" class="modal-msg"></div>
+  </div>
+
   <!-- Roles Modal -->
   <div id="rolesModal" class="modal" style="display:none;min-width:300px;max-width:400px;max-height:80vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
@@ -411,6 +498,7 @@
       </div>
     </div>
     <div class="profile-row"><div>Color</div><div id="profileColor"></div></div>
+    <div id="profileCardDescription" style="display:none;margin-top:10px;font-size:13px;color:var(--muted);border-top:1px solid rgba(255,255,255,0.06);padding-top:8px;white-space:pre-wrap;word-break:break-word"></div>
   </div>
 
   <!-- LOGIN -->
@@ -594,6 +682,28 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// Super Admin functions
+async function checkSuperAdminSetup() {
+  try {
+    const docRef = doc(db, 'superadmin', 'config');
+    const docSnap = await getDoc(docRef);
+    return docSnap.exists();
+  } catch(e) {
+    return false;
+  }
+}
+
+async function verifySuperAdminPassword(password) {
+  try {
+    const docRef = doc(db, 'superadmin', 'config');
+    const docSnap = await getDoc(docRef);
+    if(!docSnap.exists()) return false;
+    return docSnap.data().password === password;
+  } catch(e) {
+    return false;
+  }
+}
+
 /* DOM refs */
 const howBtn = document.getElementById('howBtn');
 const howMenu = document.getElementById('howMenu');
@@ -711,6 +821,17 @@ const profileName = document.getElementById('profileName');
 const profileJoined = document.getElementById('profileJoined');
 const profileColor = document.getElementById('profileColor');
 
+// Profile modal DOM references
+const profileBtn = document.getElementById('profileBtn');
+const profileModal = document.getElementById('profileModal');
+const profileModalAvatar = document.getElementById('profileModalAvatar');
+const profileModalName = document.getElementById('profileModalName');
+const profileModalRole = document.getElementById('profileModalRole');
+const profileDescriptionInput = document.getElementById('profileDescriptionInput');
+const cancelProfile = document.getElementById('cancelProfile');
+const saveProfile = document.getElementById('saveProfile');
+const profileMsg = document.getElementById('profileMsg');
+
 const scrollBottomBtn = document.getElementById('scrollBottomBtn');
 const tooltip = document.getElementById('tooltip');
 const contextMenu = document.getElementById('contextMenu');
@@ -768,6 +889,7 @@ function showHome(){
   if(howBtn) howBtn.style.display = '';
   if(fullBtn) fullBtn.style.display = '';
   if(settingsBtn) settingsBtn.style.display = '';
+  if(profileBtn) profileBtn.style.display = '';
   // hide online users button and close drawer
   if(toggleOnlineUsers) toggleOnlineUsers.style.display = 'none';
   if(onlineUsersDrawer) {
@@ -795,6 +917,7 @@ function showLogin(){
   if(howBtn) howBtn.style.display = 'none';
   if(fullBtn) fullBtn.style.display = 'none';
   if(settingsBtn) settingsBtn.style.display = 'none';
+  if(profileBtn) profileBtn.style.display = 'none';
   // hide online users button and close drawer
   if(toggleOnlineUsers) toggleOnlineUsers.style.display = 'none';
   if(onlineUsersDrawer) {
@@ -812,6 +935,7 @@ function showMain(){
   if(howBtn) howBtn.style.display = '';
   if(fullBtn) fullBtn.style.display = '';
   if(settingsBtn) settingsBtn.style.display = '';
+  if(profileBtn) profileBtn.style.display = '';
   // show online users button in chat
   if(toggleOnlineUsers) toggleOnlineUsers.style.display = 'block';
   updateOpenLobbyBtnVisibility();
@@ -842,6 +966,65 @@ async function toggleFullScreen(){
   }catch(e){}
 }
 fullBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleFullScreen(); });
+
+/* Profile button - open profile modal */
+profileBtn.addEventListener('click', async (e) => {
+  e.stopPropagation();
+  profileMsg.textContent = '';
+  profileDescriptionInput.value = localStorage.getItem('profileDescription') || '';
+  profileModalAvatar.textContent = nick.charAt(0).toUpperCase();
+  profileModalAvatar.style.background = nickColor;
+  profileModalName.textContent = nick;
+  const userRole = localStorage.getItem('userRole') || '';
+  profileModalRole.textContent = userRole ? `Role: ${userRole}` : 'No role selected';
+  profileModal.style.display = 'block';
+});
+
+/* Profile modal handlers */
+cancelProfile.addEventListener('click', () => {
+  profileModal.style.display = 'none';
+});
+
+saveProfile.addEventListener('click', async () => {
+  const description = profileDescriptionInput.value.trim();
+  localStorage.setItem('profileDescription', description);
+  localStorage.setItem(`profileDesc_${nick}`, description);
+
+  // Save to Firestore for registered users (not guests)
+  const currentUid = localStorage.getItem('session') || '';
+  if (currentUid && !currentUid.startsWith('Guest')) {
+    try {
+      const userRef = doc(db, 'users', currentUid);
+      await updateDoc(userRef, { description: description });
+    } catch (e) {
+      console.error('Failed to save profile description to Firestore:', e);
+    }
+  }
+
+  profileMsg.textContent = 'Profile saved!';
+  profileMsg.style.color = '#3fb950';
+  setTimeout(() => {
+    profileModal.style.display = 'none';
+    profileMsg.textContent = '';
+  }, 800);
+});
+
+/* Close profile modal on outside click */
+profileModal.addEventListener('click', (e) => {
+  if (e.target === profileModal) {
+    profileModal.style.display = 'none';
+  }
+});
+
+// Keep profile card visible when hovering over it
+profileCard.addEventListener('mouseenter', () => {
+  profileCard.classList.add('show');
+  profileCard.setAttribute('aria-hidden', 'false');
+});
+profileCard.addEventListener('mouseleave', () => {
+  profileCard.classList.remove('show');
+  profileCard.setAttribute('aria-hidden', 'true');
+});
 
 /* ====== Custom Modal System (replaces native alert/confirm/prompt) ====== */
 const customAlertModal = document.getElementById('customAlertModal');
@@ -935,8 +1118,14 @@ document.addEventListener('click', () => {
 });
 
 /* Logout via settings */
-settingsLogout.addEventListener('click', () => {
+settingsLogout.addEventListener('click', async () => {
   settingsMenu.classList.remove('show');
+  const session = localStorage.getItem('session');
+  if(session && !session.startsWith('Guest')) {
+    try {
+      await updateDoc(doc(db, 'users', session), { isOnline: false, lastSeen: serverTimestamp() });
+    } catch(e) {}
+  }
   localStorage.removeItem('session');
   showLogin();
 });
@@ -1197,12 +1386,35 @@ confirmEditDescription.addEventListener('click', async () => {
 });
 
 /* profile card show when hovering (desktop) or clicking (mobile) a name */
-function showProfileCardFor(name, color, joined, anchorEl){
+async function showProfileCardFor(name, color, joined, anchorEl){
   profileAvatar.textContent = name?.[0] || '?';
   profileAvatar.style.background = color || getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim();
   profileName.textContent = name;
   profileColor.textContent = color || '';
   profileJoined.textContent = joined ? `Joined: ${new Date(joined).toLocaleDateString()}` : '';
+
+  // Try to fetch user's description from Firestore
+  let description = '';
+  try {
+    // Users collection uses UID as document ID, query by username field
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, where('username', '==', name), limit(1));
+    const snapshot = await getDocs(q);
+    if (!snapshot.empty) {
+      description = snapshot.docs[0].data().description || '';
+    }
+  } catch (e) {
+    // Fallback to localStorage
+    description = localStorage.getItem(`profileDesc_${name}`) || '';
+  }
+
+  // Get the description element and update it
+  const descEl = document.getElementById('profileCardDescription');
+  if (descEl) {
+    descEl.textContent = description;
+    descEl.style.display = description ? 'block' : 'none';
+  }
+
   if(anchorEl){
     const r = anchorEl.getBoundingClientRect();
     profileCard.style.top = (r.bottom + 8) + 'px';
@@ -1509,7 +1721,7 @@ async function enterRoom(r){
       }
     });
     // use RAF to make autoscroll robust (fixes missed scrolls)
-    requestAnimationFrame(() => scrollChatToBottom());
+    requestAnimationFrame(() => { scrollChatToBottom(); updateScrollBottomBtnVisibility(); });
   });
 
   // typing snapshot (robust handling of timestamp field)
@@ -1533,6 +1745,7 @@ async function enterRoom(r){
   // Auto-scroll to bottom after a short delay to ensure messages are loaded
   setTimeout(() => {
     scrollChatToBottom(true);
+    updateScrollBottomBtnVisibility();
   }, 500);
 }
 
@@ -1650,9 +1863,10 @@ function renderReactions(msgId, el, reactions){
 }
 
 async function toggleReaction(msgId, emoji){
+  const now = Date.now();
   const localNick = localStorage.getItem('nick') || nick;
   const reactionRef = doc(db, 'rooms', room, 'messages', msgId, 'reactions', localNick);
-  
+
   try {
     const existing = await getDoc(reactionRef);
     if(existing.exists() && existing.data().emoji === emoji){
@@ -1871,7 +2085,7 @@ function makeMessageElement(id, m){
         showProfileCardFor(displayName, color, joined, senderEl);
       });
       senderEl.addEventListener('mouseleave', ()=>{
-        setTimeout(()=>{ if(document.querySelector(':hover') !== senderEl) { profileCard.classList.remove('show'); profileCard.setAttribute('aria-hidden','true'); } }, 120);
+        setTimeout(()=>{ if(!senderEl.matches(':hover') && !profileCard.matches(':hover')) { profileCard.classList.remove('show'); profileCard.setAttribute('aria-hidden','true'); } }, 200);
       });
     } else {
       senderEl.addEventListener('click', async (ev)=>{
@@ -2180,6 +2394,15 @@ chat.addEventListener('click', (e)=>{
   document.getElementById('cancelReply').onclick = cancelReply;
 });
 function cancelReply(){ replyTo = null; replyBox.style.display = 'none'; }
+
+chat.addEventListener('scroll', updateScrollBottomBtnVisibility);
+
+function updateScrollBottomBtnVisibility(){
+  const isAtBottom = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 160;
+  scrollBottomBtn.style.display = isAtBottom ? 'none' : 'block';
+}
+
+scrollBottomBtn.addEventListener('click', () => scrollChatToBottom(true));
 
 /* send messages */
 msg.addEventListener('keydown', async (e)=>{
@@ -2933,7 +3156,7 @@ async function sendGifMessage(gifUrl){
   replyBox.style.display = 'none';
 
   // Auto-scroll to bottom like text messages
-  requestAnimationFrame(() => scrollChatToBottom(true));
+  requestAnimationFrame(() => { scrollChatToBottom(true); updateScrollBottomBtnVisibility(); });
 }
 
 // GIF button click
@@ -3695,8 +3918,26 @@ async function loadOnlineUsersList() {
           </div>
         </div>
       `;
-      userEl.onmouseenter = () => userEl.style.background = 'rgba(255,255,255,0.03)';
-      userEl.onmouseleave = () => userEl.style.background = 'transparent';
+      userEl.onclick = () => {
+        // Hide any existing profile card first
+        profileCard.classList.remove('show');
+        profileCard.setAttribute('aria-hidden', 'true');
+        // Show profile card on click
+        const joined = null;
+        showProfileCardFor(user.username, user.color, joined, userEl);
+      };
+      userEl.onmouseenter = () => {
+        userEl.style.background = 'rgba(255,255,255,0.03)';
+      };
+      userEl.onmouseleave = () => {
+        userEl.style.background = 'transparent';
+        setTimeout(() => {
+          if(!userEl.matches(':hover') && !profileCard.matches(':hover')) {
+            profileCard.classList.remove('show');
+            profileCard.setAttribute('aria-hidden', 'true');
+          }
+        }, 200);
+      };
       listEl.appendChild(userEl);
     });
 
@@ -3759,8 +4000,317 @@ document.addEventListener('keydown', (e) => {
     if(createRoomModal.style.display === 'block') { createRoomModal.style.display = 'none'; }
     if(onlineUsersDrawer.classList.contains('show')) { onlineUsersDrawer.classList.remove('show'); onlineUsersDrawer.setAttribute('aria-hidden','true'); }
     if(rolesModal && rolesModal.style.display === 'block') { rolesModal.style.display = 'none'; }
+    if(superAdminModal && superAdminModal.style.display === 'block') { superAdminModal.style.display = 'none'; }
+    if(setSuperAdminModal && setSuperAdminModal.style.display === 'block') { setSuperAdminModal.style.display = 'none'; }
   }
 });
+
+let isSuperAdmin = false;
+let allRoomsData = [];
+let allUsersData = [];
+
+// Super Admin functionality
+const superAdminModal = document.getElementById('superAdminModal');
+const setSuperAdminModal = document.getElementById('setSuperAdminModal');
+const settingsSuperAdmin = document.getElementById('settingsSuperAdmin');
+
+async function loadStats() {
+  try {
+    const roomsSnap = await getDocs(collection(db, 'rooms'));
+    const usersSnap = await getDocs(collection(db, 'users'));
+    const now = Date.now();
+    let onlineCount = 0;
+    usersSnap.forEach(doc => {
+      const data = doc.data();
+      if(data.lastSeen) {
+        const lastSeen = data.lastSeen.toMillis ? data.lastSeen.toMillis() : data.lastSeen;
+        if(now - lastSeen < ONLINE_THRESHOLD) onlineCount++;
+      }
+    });
+    document.getElementById('statRooms').textContent = roomsSnap.size;
+    document.getElementById('statUsers').textContent = usersSnap.size;
+    document.getElementById('statOnline').textContent = onlineCount;
+    return { rooms: roomsSnap.size, users: usersSnap.size, online: onlineCount };
+  } catch(e) {
+    console.error('Error loading stats:', e);
+    return { rooms: 0, users: 0, online: 0 };
+  }
+}
+
+async function loadRoomsForSuperAdmin(container, filter = '') {
+  container.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:30px">Loading...</div>';
+  try {
+    const snapshot = await getDocs(collection(db, 'rooms'));
+    allRoomsData = [];
+    snapshot.forEach(doc => {
+      allRoomsData.push({ id: doc.id, ...doc.data() });
+    });
+    renderRooms(container, filter);
+  } catch(err) {
+    container.innerHTML = '<div style="color:#ff6b6b;font-size:13px;text-align:center;padding:30px">Error loading rooms</div>';
+  }
+}
+
+function renderRooms(container, filter = '') {
+  const filtered = allRoomsData.filter(r => r.id.toLowerCase().includes(filter.toLowerCase()));
+  container.innerHTML = '';
+  if(filtered.length === 0) {
+    container.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:30px">' + (filter ? 'No rooms match your search' : 'No rooms found') + '</div>';
+    return;
+  }
+  filtered.forEach(room => {
+    const roomEl = document.createElement('div');
+    roomEl.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px;border-radius:8px;margin-bottom:8px;background:var(--card);transition:background 150ms';
+    roomEl.innerHTML = `
+      <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#845ef7);display:flex;align-items:center;justify-content:center;font-size:18px">#</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:14px">${room.id}</div>
+        <div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${room.description || 'No description'}</div>
+        ${room.password ? '<span style="font-size:10px;color:#ffd43b;margin-top:2px;display:block">🔒 Password protected</span>' : ''}
+      </div>
+      <button class="delete-room-btn" style="padding:8px 14px;border-radius:8px;border:0;background:rgba(255,107,107,0.15);color:#ff6b6b;font-weight:600;cursor:pointer;font-size:12px;transition:all 150ms">Delete</button>
+    `;
+    roomEl.onmouseenter = () => roomEl.style.background = 'rgba(255,255,255,0.05)';
+    roomEl.onmouseleave = () => roomEl.style.background = 'var(--card)';
+    roomEl.querySelector('.delete-room-btn').onclick = async (e) => {
+      e.stopPropagation();
+      if(await showCustomConfirm(`Delete room "${room.id}"? This cannot be undone.`, '💥')) {
+        await deleteDoc(doc(db, 'rooms', room.id));
+        allRoomsData = allRoomsData.filter(r => r.id !== room.id);
+        renderRooms(container, filter);
+        loadStats();
+      }
+    };
+    container.appendChild(roomEl);
+  });
+}
+
+async function loadUsersForSuperAdmin(container, filter = '') {
+  container.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:30px">Loading...</div>';
+  try {
+    const snapshot = await getDocs(collection(db, 'users'));
+    allUsersData = [];
+    const now = Date.now();
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const isOnline = data.lastSeen ? (now - (data.lastSeen.toMillis ? data.lastSeen.toMillis() : data.lastSeen) < ONLINE_THRESHOLD) : false;
+      allUsersData.push({ id: doc.id, ...data, isOnline });
+    });
+    renderUsers(container, filter);
+  } catch(err) {
+    container.innerHTML = '<div style="color:#ff6b6b;font-size:13px;text-align:center;padding:30px">Error loading users</div>';
+  }
+}
+
+function renderUsers(container, filter = '') {
+  const filtered = allUsersData.filter(u => 
+    (u.username || '').toLowerCase().includes(filter.toLowerCase()) || 
+    u.id.toLowerCase().includes(filter.toLowerCase())
+  );
+  container.innerHTML = '';
+  if(filtered.length === 0) {
+    container.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:30px">' + (filter ? 'No users match your search' : 'No users found') + '</div>';
+    return;
+  }
+  filtered.forEach(user => {
+    const userEl = document.createElement('div');
+    userEl.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px;border-radius:8px;margin-bottom:8px;background:var(--card);transition:background 150ms';
+    userEl.innerHTML = `
+      <div style="position:relative">
+        <div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:15px;background:${user.color || '#58a6ff'}">${(user.username || '?')[0]}</div>
+        <div style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;border-radius:50%;background:${user.isOnline ? '#3fb950' : 'var(--muted)'};border:2px solid var(--panel)"></div>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px">
+          ${user.username || 'Unknown'}
+          ${user.isOnline ? '<span style="font-size:10px;background:#3fb950;color:#000;padding:1px 6px;border-radius:4px;font-weight:600">Online</span>' : ''}
+        </div>
+        <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${user.id}</div>
+      </div>
+      <button class="delete-user-btn" style="padding:8px 14px;border-radius:8px;border:0;background:rgba(255,107,107,0.15);color:#ff6b6b;font-weight:600;cursor:pointer;font-size:12px;transition:all 150ms">Delete</button>
+    `;
+    userEl.onmouseenter = () => userEl.style.background = 'rgba(255,255,255,0.05)';
+    userEl.onmouseleave = () => userEl.style.background = 'var(--card)';
+    userEl.querySelector('.delete-user-btn').onclick = async (e) => {
+      e.stopPropagation();
+      if(await showCustomConfirm(`Delete user "${user.username}"? This will permanently remove the account.`, '⚠️')) {
+        await deleteDoc(doc(db, 'users', user.id));
+        allUsersData = allUsersData.filter(u => u.id !== user.id);
+        renderUsers(container, filter);
+        loadStats();
+      }
+    };
+    container.appendChild(userEl);
+  });
+}
+
+if(settingsSuperAdmin) {
+  settingsSuperAdmin.addEventListener('click', async () => {
+    settingsMenu.classList.remove('show');
+    const hasSetup = await checkSuperAdminSetup();
+    if(!hasSetup) {
+      setSuperAdminModal.style.display = 'block';
+    } else {
+      superAdminModal.style.display = 'block';
+      document.getElementById('superAdminAuth').style.display = 'flex';
+      document.getElementById('superAdminPanel').style.display = 'none';
+      document.getElementById('superAdminPassword').value = '';
+      document.getElementById('superAdminMsg').textContent = '';
+    }
+  });
+}
+
+if(document.getElementById('cancelSetSuperAdmin')) {
+  document.getElementById('cancelSetSuperAdmin').addEventListener('click', () => {
+    setSuperAdminModal.style.display = 'none';
+  });
+}
+
+if(document.getElementById('confirmSetSuperAdmin')) {
+  document.getElementById('confirmSetSuperAdmin').addEventListener('click', async () => {
+    const pass = document.getElementById('newSuperAdminPassword').value;
+    const confirm = document.getElementById('confirmSuperAdminPassword').value;
+    const msg = document.getElementById('setSuperAdminMsg');
+    if(!pass || pass.length < 4) {
+      msg.textContent = 'Password must be at least 4 characters';
+      msg.style.color = '#ff6b6b';
+      return;
+    }
+    if(pass !== confirm) {
+      msg.textContent = 'Passwords do not match';
+      msg.style.color = '#ff6b6b';
+      return;
+    }
+    try {
+      await setDoc(doc(db, 'superadmin', 'config'), { password: pass, created: serverTimestamp() });
+      setSuperAdminModal.style.display = 'none';
+      superAdminModal.style.display = 'block';
+    } catch(e) {
+      msg.textContent = 'Error saving password';
+      msg.style.color = '#ff6b6b';
+    }
+  });
+}
+
+if(document.getElementById('cancelSuperAdmin')) {
+  document.getElementById('cancelSuperAdmin').addEventListener('click', () => {
+    superAdminModal.style.display = 'none';
+  });
+}
+
+if(document.getElementById('closeSuperAdmin')) {
+  document.getElementById('closeSuperAdmin').addEventListener('click', () => {
+    superAdminModal.style.display = 'none';
+    isSuperAdmin = false;
+  });
+}
+
+if(document.getElementById('authSuperAdmin')) {
+  document.getElementById('authSuperAdmin').addEventListener('click', async () => {
+    const password = document.getElementById('superAdminPassword').value;
+    const msg = document.getElementById('superAdminMsg');
+    msg.textContent = 'Verifying...';
+    msg.style.color = 'var(--muted)';
+    const valid = await verifySuperAdminPassword(password);
+    if(valid) {
+      isSuperAdmin = true;
+      msg.textContent = '';
+      document.getElementById('superAdminAuth').style.display = 'none';
+      document.getElementById('superAdminPanel').style.display = 'block';
+      await loadStats();
+      loadRoomsForSuperAdmin(document.getElementById('superAdminRoomsList'));
+      loadUsersForSuperAdmin(document.getElementById('superAdminUsersList'));
+    } else {
+      msg.textContent = 'Invalid password';
+      msg.style.color = '#ff6b6b';
+    }
+  });
+}
+
+if(document.getElementById('superAdminRoomsTab')) {
+  document.getElementById('superAdminRoomsTab').addEventListener('click', function() {
+    this.style.background = 'var(--card)';
+    this.style.color = 'var(--text)';
+    document.getElementById('superAdminUsersTab').style.background = 'transparent';
+    document.getElementById('superAdminUsersTab').style.color = 'var(--muted)';
+    document.getElementById('superAdminRoomsList').style.display = 'block';
+    document.getElementById('superAdminUsersList').style.display = 'none';
+  });
+}
+
+if(document.getElementById('superAdminUsersTab')) {
+  document.getElementById('superAdminUsersTab').addEventListener('click', function() {
+    this.style.background = 'var(--card)';
+    this.style.color = 'var(--text)';
+    document.getElementById('superAdminRoomsTab').style.background = 'transparent';
+    document.getElementById('superAdminRoomsTab').style.color = 'var(--muted)';
+    document.getElementById('superAdminUsersList').style.display = 'block';
+    document.getElementById('superAdminRoomsList').style.display = 'none';
+  });
+}
+
+const superAdminSearch = document.getElementById('superAdminSearch');
+if(superAdminSearch) {
+  superAdminSearch.addEventListener('input', (e) => {
+    const activeTab = document.getElementById('superAdminUsersList').style.display !== 'none' ? 'users' : 'rooms';
+    if(activeTab === 'rooms') {
+      renderRooms(document.getElementById('superAdminRoomsList'), e.target.value);
+    } else {
+      renderUsers(document.getElementById('superAdminUsersList'), e.target.value);
+    }
+  });
+}
+
+if(document.getElementById('superAdminDeleteAllRooms')) {
+  document.getElementById('superAdminDeleteAllRooms').addEventListener('click', async () => {
+    if(await showCustomConfirm('Delete ALL rooms? This will permanently delete every room!', '💥')) {
+      const batch = writeBatch(db);
+      allRoomsData.forEach(room => {
+        batch.delete(doc(db, 'rooms', room.id));
+      });
+      await batch.commit();
+      allRoomsData = [];
+      renderRooms(document.getElementById('superAdminRoomsList'), '');
+      loadStats();
+    }
+  });
+}
+
+// Mark user offline when leaving page
+async function markUserOffline() {
+  const session = localStorage.getItem('session');
+  if(session && !session.startsWith('Guest')) {
+    try {
+      await updateDoc(doc(db, 'users', session), { isOnline: false, lastSeen: serverTimestamp() });
+    } catch(e) {}
+  }
+}
+
+async function markUserOnline() {
+  const session = localStorage.getItem('session');
+  if(session && !session.startsWith('Guest')) {
+    try {
+      await updateDoc(doc(db, 'users', session), { isOnline: true, lastSeen: serverTimestamp() });
+    } catch(e) {}
+  }
+}
+
+document.addEventListener('visibilitychange', async () => {
+  if(document.visibilityState === 'hidden') {
+    markUserOffline();
+  } else if(document.visibilityState === 'visible') {
+    markUserOnline();
+  }
+});
+
+window.addEventListener('beforeunload', () => {
+  markUserOffline();
+});
+
+// Also mark online when user interacts with the page
+document.addEventListener('click', markUserOnline, { once: true });
+document.addEventListener('keydown', markUserOnline, { once: true });
+document.addEventListener('mousemove', markUserOnline, { once: true });
 </script>
 </body>
 </html>
