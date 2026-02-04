@@ -1,97 +1,117 @@
- rules_version = '2';
- service cloud.firestore {
-   match /databases/{database}/documents {
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
 
-     // USERNAMES - mapping collection for username -> UID lookup (case-insensitive)
-     match /usernames/{usernameLower} {
-       allow read: if true;
-       allow write: if true;
-     }
+    // USERNAMES - mapping collection for username -> UID lookup (case-insensitive)
+    match /usernames/{usernameLower} {
+      allow read: if true;
+      allow write: if true;
+    }
 
-     // USERS - stored by UID
-     match /users/{uid} {
-       allow read: if true;
-       allow create: if true;
-       allow update: if true;
-       allow delete: if true;
-     }
+    // USERS - stored by UID
+    match /users/{uid} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if true;
+    }
 
-     // ROOMS
-     match /rooms/{roomId} {
-       allow read: if true;
-       allow create, update, delete: if true;
+    // ROOMS
+    match /rooms/{roomId} {
+      allow read: if true;
+      allow create, update, delete: if true;
 
-       // MESSAGES
-       match /messages/{msgId} {
-         allow read: if true;
-
-         // Create: basic validation - allows text-only, gif-only, or both
-         allow create: if
-           request.resource.data.name is string &&
-           request.resource.data.name.size() > 0 &&
-           request.resource.data.color is string &&
-           request.resource.data.time is timestamp &&
-           (
-             // Either has text content
-             (request.resource.data.keys().hasAll(['text']) && 
-              request.resource.data.text is string && 
-              request.resource.data.text.size() <= 4000) ||
-             // Or has GIF content
-             (request.resource.data.keys().hasAll(['gif']) && 
-              request.resource.data.gif is string &&
-              request.resource.data.gif.matches('^https://.*')) ||
-             // Or has both
-             (request.resource.data.keys().hasAll(['text', 'gif']) && 
-              request.resource.data.text is string && 
-              request.resource.data.text.size() <= 4000 &&
-              request.resource.data.gif is string &&
-              request.resource.data.gif.matches('^https://.*'))
-           );
-
-         // Update: only original author can update (works because request.resource exists on update)
-         allow update: if
-           request.resource.data.name == resource.data.name &&
-           (
-             (request.resource.data.text is string && request.resource.data.text.size() <= 4000) ||
-             (request.resource.data.gif is string && request.resource.data.gif.matches('^https://.*'))
-           );
-
-         // Delete: because client performs batch deletes (no Auth), allow deletes.
-         allow delete: if true;
-       }
-
-       // seen subcollection
-       match /messages/{msgId}/seen/{seenId} {
-         allow read: if true;
-         allow create: if true;
-         allow delete: if true;
-         allow update: if false;
-       }
-
-       // reactions subcollection
-       match /messages/{msgId}/reactions/{userId} {
-         allow read: if true;
-         allow create: if 
-           request.resource.data.name is string &&
-           request.resource.data.emoji is string &&
-           request.resource.data.time is timestamp;
-         allow update: if 
-           request.resource.data.name == resource.data.name &&
-           request.resource.data.emoji is string;
-         allow delete: if true;
-       }
-
-       // typing docs
-       match /typing/{userName} {
-         allow read: if true;
-         allow create, update, delete: if true;
-      // SUPER ADMIN - only owner knows the password (stored in client code)
-      match /superadmin/{docId} {
+      // MESSAGES
+      match /messages/{msgId} {
         allow read: if true;
-        allow write: if true;
+
+        // Create: basic validation - allows text-only, gif-only, or both
+        allow create: if
+          request.resource.data.name is string &&
+          request.resource.data.name.size() > 0 &&
+          request.resource.data.color is string &&
+          request.resource.data.time is timestamp &&
+          (
+            // Either has text content
+            (request.resource.data.keys().hasAll(['text']) &&
+             request.resource.data.text is string &&
+             request.resource.data.text.size() <= 4000) ||
+            // Or has GIF content
+            (request.resource.data.keys().hasAll(['gif']) &&
+             request.resource.data.gif is string &&
+             request.resource.data.gif.matches('^https://.*')) ||
+            // Or has both
+            (request.resource.data.keys().hasAll(['text', 'gif']) &&
+             request.resource.data.text is string &&
+             request.resource.data.text.size() <= 4000 &&
+             request.resource.data.gif is string &&
+             request.resource.data.gif.matches('^https://.*'))
+          );
+
+        // Update: only original author can update
+        allow update: if
+          request.resource.data.name == resource.data.name &&
+          (
+            (request.resource.data.text is string && request.resource.data.text.size() <= 4000) ||
+            (request.resource.data.gif is string && request.resource.data.gif.matches('^https://.*'))
+          );
+
+        allow delete: if true;
       }
 
+      // seen subcollection
+      match /messages/{msgId}/seen/{seenId} {
+        allow read: if true;
+        allow create: if true;
+        allow delete: if true;
+        allow update: if false;
+      }
+
+      // reactions subcollection
+      match /messages/{msgId}/reactions/{userId} {
+        allow read: if true;
+        allow create: if
+          request.resource.data.name is string &&
+          request.resource.data.emoji is string &&
+          request.resource.data.time is timestamp;
+        allow update: if
+          request.resource.data.name == resource.data.name &&
+          request.resource.data.emoji is string;
+        allow delete: if true;
+      }
+
+      // typing docs
+      match /typing/{userName} {
+        allow read: if true;
+        allow create, update, delete: if true;
+      }
     }
+
+    // DIRECT MESSAGES (DM) - private conversations between two users
+    // Note: Using custom auth (session UID from client), not Firebase Auth
+    match /dms/{dmId} {
+      allow read: if true;  // Client validates ownership in code
+      allow create: if
+        request.resource.data.from is string &&
+        request.resource.data.to is string &&
+        request.resource.data.text is string &&
+        request.resource.data.text.size() > 0 &&
+        request.resource.data.text.size() <= 4000 &&
+        request.resource.data.time is timestamp;
+      allow delete: if true;  // Client validates ownership in code
+    }
+
+    // DM conversations metadata
+    match /dm_conversations/{convId} {
+      allow read: if true;  // Client validates ownership in code
+      allow write: if true;  // Client validates ownership in code
+    }
+
+    // SUPER ADMIN - only owner knows the password (stored in client code)
+    match /superadmin/{docId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
   }
 }
- }

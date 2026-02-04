@@ -27,8 +27,8 @@
 
   /* Top Controls */
   #topRightControls{position:fixed;top:12px;right:12px;display:flex;gap:10px;align-items:center;z-index:120;pointer-events:auto}
-  #howBtn,#fullBtn,#settingsBtn,#profileBtn{background:transparent;border:0;color:var(--text);font-size:14px;padding:8px 12px;border-radius:10px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;min-height:40px;min-width:40px;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.15)}
-  #howBtn:hover,#fullBtn:hover,#settingsBtn:hover,#profileBtn:hover{background:rgba(255,255,255,.02)}
+  #howBtn,#fullBtn,#settingsBtn,#profileBtn,#openDMPanel{background:transparent;border:0;color:var(--text);font-size:14px;padding:8px 12px;border-radius:10px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;min-height:40px;min-width:40px;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.15)}
+  #howBtn:hover,#fullBtn:hover,#settingsBtn:hover,#profileBtn:hover,#openDMPanel:hover{background:rgba(255,255,255,.02)}
   #fullBtn{font-size:15px;padding:10px 14px;border-radius:12px;font-weight:600}
   #profileBtn{font-weight:500}
 
@@ -90,7 +90,11 @@
  .createRoom{padding:14px 28px;border-radius:12px;background:var(--accent);color:#000;border:0;font-weight:700;cursor:pointer;z-index:10;box-shadow:0 4px 15px rgba(0,0,0,.3);white-space:nowrap;margin-top:200px}
  .createRoom:hover{transform:scale(1.05);box-shadow:0 6px 20px rgba(0,0,0,.4)}
  .nickColorBtn{padding:10px 20px;border-radius:12px;background:transparent;color:var(--text);border:1px solid var(--accent);font-weight:600;cursor:pointer;z-index:10;font-size:14px;white-space:nowrap;margin-top:15px}
- .nickColorBtn:hover{background:var(--accent);color:#000;transform:scale(1.05)}
+  .nickColorBtn:hover{background:var(--accent);color:#000;transform:scale(1.05)}
+  #startDmBtn{color:#845ef7 !important}
+  #startDmBtn:hover{background:#845ef7 !important;color:#000 !important;transform:scale(1.05)}
+  #startDmBtn:active{transform:scale(0.98)}
+  #nickColorBtn:hover{color:#000 !important}
 
  /* Main Chat */
  #main{display:flex;flex-direction:column}
@@ -216,8 +220,39 @@
  #chat::-webkit-scrollbar,#homeLeft::-webkit-scrollbar,#chatSidebar::-webkit-scrollbar{height:8px;width:8px}
  #chat::-webkit-scrollbar-thumb,#homeLeft::-webkit-scrollbar-thumb,#chatSidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.06);border-radius:999px}
  #chat,#homeLeft,#chatSidebar{scrollbar-color:rgba(255,255,255,.06) transparent;scrollbar-width:thin}
- #onlineUsersDrawer.show{transform:translateX(0)}
+  #onlineUsersDrawer.show{transform:translateX(0)}
+
+  .online-user{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;margin-bottom:4px;cursor:pointer;transition:background 150ms}
+  .online-user:hover{background:rgba(255,255,255,0.03)}
+  .dm-action-btn{flex-shrink:0;padding:6px 10px;border-radius:6px;border:0;background:var(--accent);color:#000;font-weight:700;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;opacity:0;transition:all 150ms;visibility:hidden}
+  .online-user:hover .dm-action-btn{opacity:1;visibility:visible}
+
+  /* DM Panel */
+  #dmPanel.show{transform:translateX(0)}
+  #dmPanel .online-user{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;margin-bottom:4px;cursor:pointer;transition:background 150ms}
+  #dmPanel .online-user:hover{background:rgba(255,255,255,0.03)}
+  #dmPanel .dm-conv{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;margin-bottom:6px;cursor:pointer;transition:all 150ms;background:var(--card)}
+  #dmPanel .dm-conv:hover{background:rgba(255,255,255,0.06);transform:translateX(4px)}
+  #dmPanel .dm-conv-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:16px;flex-shrink:0}
+  #dmPanel .dm-conv-info{flex:1;min-width:0}
+  #dmPanel .dm-conv-name{font-weight:600;font-size:14px;margin-bottom:2px}
+  #dmPanel .dm-conv-preview{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #dmPanel .dm-conv-time{font-size:11px;color:var(--muted)}
+  #dmPanel .dm-conv-unread{background:var(--accent);color:#000;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700}
+  .dm-tab{border-bottom:2px solid transparent;transition:all 150ms}
+  .dm-tab.active{border-bottom-color:var(--accent);color:var(--text)}
+  .dm-tab:hover:not(.active){color:var(--text)}
+  #dmEmptyState{display:block}
+
+  /* DM Chat Panel */
+  #dmMessages{background:linear-gradient(180deg,transparent,rgba(255,255,255,.01))}
+  #dmMessages::-webkit-scrollbar,#dmConversations::-webkit-scrollbar,#dmAllUsers::-webkit-scrollbar{height:8px;width:8px}
+  #dmMessages::-webkit-scrollbar-thumb,#dmConversations::-webkit-scrollbar-thumb,#dmAllUsers::-webkit-scrollbar-thumb{background:rgba(255,255,255,.06);border-radius:999px}
+  #dmMessages::-webkit-scrollbar-track,#dmConversations::-webkit-scrollbar-track,#dmAllUsers::-webkit-scrollbar-track{background:transparent}
+  #dmInput:focus{outline:none;box-shadow:0 0 0 2px var(--accent)}
  .online-user{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;margin-bottom:4px;cursor:pointer;transition:background 150ms}
+.online-user:hover{background:rgba(255,255,255,0.03)}
+.online-user:hover .dm-action-btn{opacity:1}
  .online-user:hover{background:rgba(255,255,255,.03)}
  .online-user-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#000}
  .online-user-info{flex:1;min-width:0}
@@ -547,6 +582,7 @@
 
       <button id="createRoom" class="createRoom">Create / Join Room</button>
       <button id="nickColorBtn" class="nickColorBtn" title="Change Name Color">🎨 Color</button>
+      <button id="startDmBtn" class="nickColorBtn" title="Start Direct Message" style="border-color:#845ef7;display:none">💬 New DM</button>
     </main>
 
   </div>
@@ -581,7 +617,7 @@
         <div id="inputBar">
           <button id="emojiBtn" aria-label="Emoji picker"><span class="emoji-icon" aria-hidden="true">😊</span></button>
           <button id="gifBtn" aria-label="GIF picker">GIF</button>
-          <input id="msg" placeholder="Message... (/clear /delete)" autocomplete="off">
+          <input id="msg" placeholder="Message... (↑ for last message, /clear /delete)" autocomplete="off">
           <div id="emojiPicker"></div>
           <div id="gifPicker">
             <input type="text" id="gifSearch" placeholder="Search GIFs..." autocomplete="off">
@@ -594,18 +630,53 @@
   </div>
   
   <!-- Online Users Floating Button -->
-  <button id="toggleOnlineUsers" class="iconbtn" title="Online Users" style="position:fixed;top:120px;right:16px;z-index:96;display:none;font-size:16px;padding:8px 12px;background:var(--panel);border:1px solid var(--border);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.3)">👥</button>
+    <button id="toggleOnlineUsers" class="iconbtn" title="Online Users" style="display:none;font-size:16px;padding:8px 12px;background:var(--panel);border:1px solid #30363d;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.3)">👥</button>
 
-  <!-- Online Users Drawer (positioned relative to viewport) -->
-  <aside id="onlineUsersDrawer" style="position:fixed;right:0;top:56px;height:calc(100% - 56px);width:240px;background:var(--panel);border-left:1px solid #0d1117;padding:12px;transform:translateX(100%);transition:transform 300ms ease;z-index:95;overflow-y:auto;box-shadow:-4px 0 20px rgba(0,0,0,.4);pointer-events:auto">
-    <div class="online-users-header">
-      <div>Online Users</div>
-      <button id="closeOnlineUsers" class="iconbtn" style="font-size:18px">✕</button>
-    </div>
-    <div id="onlineUsersList"></div>
-  </aside>
+   <!-- Online Users Drawer (positioned relative to viewport) -->
+   <aside id="onlineUsersDrawer" style="position:fixed;right:0;top:56px;height:calc(100% - 56px);width:240px;background:var(--panel);border-left:1px solid #0d1117;padding:12px;transform:translateX(100%);transition:transform 300ms ease;z-index:95;overflow-y:auto;box-shadow:-4px 0 20px rgba(0,0,0,.4);pointer-events:auto">
+     <div class="online-users-header">
+       <div>Online Users</div>
+       <button id="closeOnlineUsers" class="iconbtn" style="font-size:18px">✕</button>
+     </div>
+     <div id="onlineUsersList"></div>
+   </aside>
 
-  <!-- Mobile overlay and drawer (kept in DOM but mobile logic removed) -->
+   <!-- DM Panel -->
+   <aside id="dmPanel" style="position:fixed;left:0;top:0;height:100%;width:360px;background:var(--panel);border-right:1px solid #0d1117;transform:translateX(-100%);transition:transform 300ms ease;z-index:100;display:flex;flex-direction:column">
+     <div style="padding:16px;border-bottom:1px solid #0d1117;display:flex;align-items:center;justify-content:space-between">
+       <div style="font-weight:600;font-size:15px">💬 Direct Messages</div>
+       <button id="closeDmPanel" class="iconbtn" style="font-size:18px">✕</button>
+     </div>
+     
+     <!-- Tabs -->
+     <div style="display:flex;border-bottom:1px solid #0d1117">
+       <button id="dmConversationsTab" class="dm-tab active" style="flex:1;padding:12px;border:0;background:transparent;color:var(--text);font-weight:600;cursor:pointer;font-size:13px">Recent</button>
+       <button id="dmAllUsersTab" class="dm-tab" style="flex:1;padding:12px;border:0;background:transparent;color:var(--muted);font-weight:600;cursor:pointer;font-size:13px">All Users</button>
+     </div>
+     
+     <div id="dmConversations" style="flex:1;overflow-y:auto;padding:8px"></div>
+     <div id="dmAllUsers" style="flex:1;overflow-y:auto;padding:8px;display:none"></div>
+     
+     <div id="dmEmptyState" style="padding:12px;border-top:1px solid #0d1117;text-align:center;color:var(--muted);font-size:13px;padding:20px">No conversations yet.<br>Click on a user to start a DM.</div>
+   </aside>
+
+   <!-- DM Chat View (Full Screen Mode) -->
+   <aside id="dmChatPanel" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:110;flex-direction:column">
+     <div style="height:56px;background:var(--panel);display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid #0d1117">
+       <button id="backFromDm" class="iconbtn" style="font-size:18px;margin-right:8px" title="Back">←</button>
+       <div id="dmChatHeader" style="flex:1">
+         <div id="dmChatUsername" style="font-weight:700;font-size:16px"></div>
+         <div id="dmChatStatus" style="font-size:12px;color:var(--muted)"></div>
+       </div>
+     </div>
+     <div id="dmMessages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,transparent,rgba(255,255,255,.01))"></div>
+     <div id="dmInputArea" style="padding:12px;background:var(--panel);border-top:1px solid #0d1117;display:flex;gap:8px;align-items:center">
+        <input id="dmInput" placeholder="Type a message... (↑ for last message, /clear to delete all)" style="flex:1;padding:12px;border-radius:10px;border:0;background:var(--card);color:var(--text);font-size:14px;outline:none">
+       <button id="dmSendBtn" style="padding:12px 20px;border-radius:10px;border:0;background:var(--accent);color:#000;font-weight:700;cursor:pointer;font-size:14px">Send</button>
+     </div>
+   </aside>
+
+   <!-- Mobile overlay and drawer (kept in DOM but mobile logic removed) -->
   <div id="mobileOverlay" class="mobile-overlay" aria-hidden="true"></div>
   <div id="mobileDrawer" class="mobile-lobby-drawer" aria-hidden="true">
     <div class="drawer-header">
@@ -843,6 +914,7 @@ let nickColor = localStorage.getItem('nickColor')||'#58a6ff';
 let room = '';
 let replyTo = null;
 let lastMessageTime = 0;
+let lastOwnMessage = '';
 let typingTimeout = null;
 let messagesUnsub = null;
 let typingUnsub = null;
@@ -885,11 +957,18 @@ function showHome(){
   login.style.display = 'none';
   home.style.display = 'flex';
   main.style.display = 'none';
+  // Update nickColor from localStorage on home load
+  nickColor = localStorage.getItem('nickColor') || '#58a6ff';
   // show top-right controls on home
   if(howBtn) howBtn.style.display = '';
   if(fullBtn) fullBtn.style.display = '';
   if(settingsBtn) settingsBtn.style.display = '';
   if(profileBtn) profileBtn.style.display = '';
+  if(document.getElementById('openDMPanel')) document.getElementById('openDMPanel').style.display = '';
+  if(document.getElementById('startDmBtn')) {
+    const session = localStorage.getItem('session');
+    document.getElementById('startDmBtn').style.display = session && !session.startsWith('Guest') ? '' : 'none';
+  }
   // hide online users button and close drawer
   if(toggleOnlineUsers) toggleOnlineUsers.style.display = 'none';
   if(onlineUsersDrawer) {
@@ -918,6 +997,8 @@ function showLogin(){
   if(fullBtn) fullBtn.style.display = 'none';
   if(settingsBtn) settingsBtn.style.display = 'none';
   if(profileBtn) profileBtn.style.display = 'none';
+  if(document.getElementById('openDMPanel')) document.getElementById('openDMPanel').style.display = 'none';
+  if(document.getElementById('startDmBtn')) document.getElementById('startDmBtn').style.display = 'none';
   // hide online users button and close drawer
   if(toggleOnlineUsers) toggleOnlineUsers.style.display = 'none';
   if(onlineUsersDrawer) {
@@ -936,6 +1017,8 @@ function showMain(){
   if(fullBtn) fullBtn.style.display = '';
   if(settingsBtn) settingsBtn.style.display = '';
   if(profileBtn) profileBtn.style.display = '';
+  if(document.getElementById('openDMPanel')) document.getElementById('openDMPanel').style.display = '';
+  if(document.getElementById('startDmBtn')) document.getElementById('startDmBtn').style.display = 'none';
   // show online users button in chat
   if(toggleOnlineUsers) toggleOnlineUsers.style.display = 'block';
   updateOpenLobbyBtnVisibility();
@@ -1592,9 +1675,11 @@ async function joinRoom(r){
 /* Nick Color Picker handlers */
 if(nickColorBtn) {
   nickColorBtn.onclick = () => {
+    console.log('Color button clicked');
     nickColorModal.style.display = 'block';
     // Highlight current color
     const currentColor = localStorage.getItem('nickColor') || '#58a6ff';
+    console.log('Current color:', currentColor);
     document.querySelectorAll('.color-option').forEach(opt => {
       if(opt.dataset.color === currentColor) {
         opt.style.borderColor = '#fff';
@@ -1613,29 +1698,33 @@ if(cancelNickColor) {
   });
 }
 
-// Color option click handlers
-document.querySelectorAll('.color-option').forEach(option => {
-  option.addEventListener('click', async () => {
+// Color option click handlers - using event delegation
+document.addEventListener('click', async (e) => {
+  if(e.target.classList.contains('color-option')) {
+    const option = e.target;
     const selectedColor = option.dataset.color;
+    console.log('Color selected:', selectedColor);
     const session = localStorage.getItem('session');
 
     // Save to localStorage
     localStorage.setItem('nickColor', selectedColor);
     nickColor = selectedColor;
+    console.log('Color saved, nickColor:', nickColor);
 
     // Update user doc in Firebase if logged in (by UID)
     if(session && !session.startsWith('Guest')) {
       try {
         const userRef = doc(db, 'users', session);
         await updateDoc(userRef, { color: selectedColor });
-      } catch(e) {
-        console.error('Error saving color:', e);
+        console.log('Color updated in Firestore');
+      } catch(err) {
+        console.error('Error saving color:', err);
       }
     }
 
     // Close modal
     nickColorModal.style.display = 'none';
-  });
+  }
 });
 
 /* enterRoom performs the actual subscription and view switch */
@@ -2406,8 +2495,16 @@ scrollBottomBtn.addEventListener('click', () => scrollChatToBottom(true));
 
 /* send messages */
 msg.addEventListener('keydown', async (e)=>{
+  if(e.key === 'ArrowUp' && msg.value === '') {
+    e.preventDefault();
+    console.log('ArrowUp pressed, lastOwnMessage:', lastOwnMessage);
+    msg.value = lastOwnMessage;
+    return;
+  }
   if(e.key !== 'Enter') return;
   const textRaw = msg.value.trim(); msg.value = ''; if(!textRaw) return;
+  lastOwnMessage = textRaw;
+  console.log('Message sent, saved lastOwnMessage:', lastOwnMessage);
   if(!room){ await showCustomAlert('You are not in a room', '🚪'); return; }
 
   // Check if user is banned before sending (by UID)
@@ -3594,19 +3691,25 @@ let usersUnsub = null;
 
 // Simple toggle function
 function toggleOnlineUsersDrawer() {
+  console.log('toggleOnlineUsersDrawer called');
   const drawer = document.getElementById('onlineUsersDrawer');
+  const btn = document.getElementById('toggleOnlineUsers');
+  console.log('drawer:', drawer, 'btn:', btn);
   if(!drawer) return;
   
   const isCurrentlyOpen = drawer.classList.contains('show');
+  console.log('isCurrentlyOpen:', isCurrentlyOpen);
   
   if(isCurrentlyOpen) {
     drawer.classList.remove('show');
     drawer.style.transform = 'translateX(100%)';
     drawer.setAttribute('aria-hidden', 'true');
+    btn.style.display = 'block';
   } else {
     drawer.classList.add('show');
     drawer.style.transform = 'translateX(0px)';
     drawer.setAttribute('aria-hidden', 'false');
+    btn.style.display = 'none';
     loadOnlineUsersList();
   }
 }
@@ -3614,11 +3717,13 @@ function toggleOnlineUsersDrawer() {
 // Close function
 function closeOnlineUsersDrawer() {
   const drawer = document.getElementById('onlineUsersDrawer');
+  const btn = document.getElementById('toggleOnlineUsers');
   if(drawer) {
     drawer.classList.remove('show');
     drawer.style.transform = 'translateX(100%)';
     drawer.setAttribute('aria-hidden', 'true');
   }
+  if(btn) btn.style.display = 'block';
 }
 
 // Add click listeners
@@ -3857,14 +3962,20 @@ loadUserRole();
 
 // Load online users
 async function loadOnlineUsersList() {
+  console.log('loadOnlineUsersList called');
   const listEl = document.getElementById('onlineUsersList');
-  if(!listEl) return;
+  if(!listEl) {
+    console.log('listEl not found');
+    return;
+  }
 
   listEl.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">Loading...</div>';
 
   try {
+    console.log('Fetching users from Firestore...');
     const usersCol = collection(db, 'users');
     const snapshot = await getDocs(usersCol);
+    console.log('Fetched', snapshot.size, 'users');
 
     const now = Date.now();
     const users = [];
@@ -3891,6 +4002,8 @@ async function loadOnlineUsersList() {
       });
     });
 
+    console.log('Processed', users.length, 'registered users');
+
     users.sort((a, b) => {
       if(a.isOnline && !b.isOnline) return -1;
       if(!a.isOnline && b.isOnline) return 1;
@@ -3906,8 +4019,13 @@ async function loadOnlineUsersList() {
 
     users.forEach(user => {
       const userEl = document.createElement('div');
+      userEl.dataset.uid = user.uid;
+      userEl.dataset.username = user.username;
+      userEl.className = 'online-user';
       userEl.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;margin-bottom:4px;cursor:pointer;transition:background 150ms';
+      
       const roomInfo = user.currentRoom && user.isOnline ? `<span style="color:var(--accent);font-size:11px;margin-left:4px">#${user.currentRoom}</span>` : '';
+      
       userEl.innerHTML = `
         <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#000;background:${user.color}">${user.username[0]}</div>
         <div style="flex:1;min-width:0">
@@ -3917,8 +4035,12 @@ async function loadOnlineUsersList() {
             ${user.isOnline ? 'Online' : 'Offline'}
           </div>
         </div>
+        <button class="dm-action-btn" data-uid="${user.uid}" data-username="${user.username}" data-color="${user.color}" title="Send DM">✉️</button>
       `;
-      userEl.onclick = () => {
+      
+      userEl.onclick = (e) => {
+        // Don't show profile if clicking on DM button
+        if(e.target.classList.contains('dm-action-btn')) return;
         // Hide any existing profile card first
         profileCard.classList.remove('show');
         profileCard.setAttribute('aria-hidden', 'true');
@@ -3940,10 +4062,9 @@ async function loadOnlineUsersList() {
       };
       listEl.appendChild(userEl);
     });
-
   } catch(err) {
     console.error('Error loading online users:', err);
-    listEl.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">Error loading users</div>';
+    listEl.innerHTML = '<div style="color:#ff6b6b;font-size:13px;text-align:center;padding:20px">Error loading users</div>';
   }
 }
 
@@ -4311,6 +4432,485 @@ window.addEventListener('beforeunload', () => {
 document.addEventListener('click', markUserOnline, { once: true });
 document.addEventListener('keydown', markUserOnline, { once: true });
 document.addEventListener('mousemove', markUserOnline, { once: true });
+
+/* ========== DIRECT MESSAGES (DM) ========== */
+let currentDmPartner = null;
+let dmUnsub = null;
+let dmConversations = [];
+
+const dmPanel = document.getElementById('dmPanel');
+const dmChatPanel = document.getElementById('dmChatPanel');
+const dmConversationsEl = document.getElementById('dmConversations');
+const dmMessagesEl = document.getElementById('dmMessages');
+const dmInput = document.getElementById('dmInput');
+const dmEmptyState = document.getElementById('dmEmptyState');
+
+async function getOrCreateDmConversation(otherUid) {
+  const session = localStorage.getItem('session');
+  if(!session || session.startsWith('Guest')) return null;
+  
+  const participants = [session, otherUid].sort();
+  const convId = participants.join('_');
+  
+  const convRef = doc(db, 'dm_conversations', convId);
+  const convSnap = await getDoc(convRef);
+  
+  if(!convSnap.exists()) {
+    const otherUserSnap = await getDoc(doc(db, 'users', otherUid));
+    const otherUserData = otherUserSnap.data();
+    await setDoc(convRef, {
+      participants: participants,
+      participantData: {
+        [session]: { username: localStorage.getItem('nick'), color: localStorage.getItem('nickColor') },
+        [otherUid]: { username: otherUserData?.username || 'Unknown', color: otherUserData?.color || '#58a6ff' }
+      },
+      lastMessage: null,
+      lastMessageTime: null,
+      unreadCount: { [session]: 0, [otherUid]: 0 },
+      created: serverTimestamp()
+    });
+  }
+  
+  return convId;
+}
+
+async function loadDmConversations() {
+  const session = localStorage.getItem('session');
+  if(!session || session.startsWith('Guest')) return;
+  
+  dmConversationsEl.innerHTML = '';
+  dmConversations = [];
+  
+  try {
+    const convsQuery = query(collection(db, 'dm_conversations'), where('participants', 'array-contains', session));
+    const snapshot = await getDocs(convsQuery);
+    
+    const convs = [];
+    snapshot.forEach(doc => {
+      convs.push({ id: doc.id, ...doc.data() });
+    });
+    
+    convs.sort((a, b) => {
+      if(!a.lastMessageTime) return 1;
+      if(!b.lastMessageTime) return -1;
+      return b.lastMessageTime.toMillis() - a.lastMessageTime.toMillis();
+    });
+    
+    dmConversations = convs;
+    
+    if(convs.length === 0) {
+      dmEmptyState.style.display = 'block';
+      return;
+    }
+    
+    dmEmptyState.style.display = 'none';
+    
+    convs.forEach(conv => {
+      const otherUid = conv.participants.find(p => p !== session);
+      const otherData = conv.participantData?.[otherUid] || {};
+      const isOnline = conv.participantData?.[otherUid]?.isOnline || false;
+      const lastMsg = conv.lastMessage || 'No messages yet';
+      const time = conv.lastMessageTime ? new Date(conv.lastMessageTime.toMillis()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
+      const unread = conv.unreadCount?.[session] || 0;
+      
+      const convEl = document.createElement('div');
+      convEl.className = 'dm-conv';
+      convEl.innerHTML = `
+        <div class="dm-conv-avatar" style="background:${otherData.color || '#58a6ff'}">${(otherData.username || '?')[0]}</div>
+        <div class="dm-conv-info">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="dm-conv-name">${otherData.username || 'Unknown'}</div>
+            <div class="dm-conv-time">${time}</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="dm-conv-preview">${lastMsg}</div>
+            ${unread > 0 ? `<div class="dm-conv-unread">${unread}</div>` : ''}
+          </div>
+        </div>
+      `;
+      convEl.onclick = () => openDmChat(conv.id, otherUid, otherData);
+      convEl.onmouseenter = () => convEl.style.background = 'rgba(255,255,255,0.05)';
+      convEl.onmouseleave = () => convEl.style.background = 'transparent';
+      dmConversationsEl.appendChild(convEl);
+    });
+  } catch(err) {
+    console.error('Error loading DM conversations:', err);
+  }
+}
+
+async function openDmChat(convId, otherUid, otherData) {
+  currentDmPartner = { uid: otherUid, ...otherData };
+  
+  // Hide lobby and DM panel, show full-screen DM
+  home.style.display = 'none';
+  main.style.display = 'none';
+  dmPanel.style.transform = 'translateX(-100%)';
+  dmChatPanel.style.display = 'flex';
+  
+  document.getElementById('dmChatUsername').textContent = otherData.username || 'Unknown';
+  document.getElementById('dmChatStatus').textContent = 'Loading...';
+  
+  // Load other user status
+  try {
+    const userSnap = await getDoc(doc(db, 'users', otherUid));
+    const userData = userSnap.data();
+    const isOnline = userData?.lastSeen ? (Date.now() - (userData.lastSeen.toMillis ? userData.lastSeen.toMillis() : userData.lastSeen) < 300000) : false;
+    document.getElementById('dmChatStatus').textContent = isOnline ? 'Online' : 'Offline';
+    document.getElementById('dmChatStatus').style.color = isOnline ? '#3fb950' : 'var(--muted)';
+  } catch(e) {
+    document.getElementById('dmChatStatus').textContent = 'Unknown';
+  }
+    
+  // Clear and load messages
+  dmMessagesEl.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:14px;padding:40px">Loading messages...</div>';
+    
+  if(dmUnsub) dmUnsub();
+  
+  // Fetch messages without orderBy (to avoid needing an index)
+  const messagesCol = collection(db, 'dms');
+  const messagesQuery = query(messagesCol, where('conversationId', '==', convId));
+  dmUnsub = onSnapshot(messagesQuery, async (snapshot) => {
+    dmMessagesEl.innerHTML = '';
+    
+    if(snapshot.empty) {
+      dmMessagesEl.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:14px;padding:40px">No messages yet. Say hi!</div>';
+      return;
+    }
+    
+    // Sort messages by time in JavaScript
+    const messages = [];
+    snapshot.forEach(doc => {
+      messages.push({ id: doc.id, ...doc.data() });
+    });
+    messages.sort((a, b) => {
+      const timeA = a.time?.toMillis?.() || 0;
+      const timeB = b.time?.toMillis?.() || 0;
+      return timeA - timeB;
+    });
+    
+    const session = localStorage.getItem('session');
+    messages.forEach(msg => {
+      const isOwn = msg.from === session;
+      const time = msg.time?.toMillis ? new Date(msg.time.toMillis()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
+      
+      const msgEl = document.createElement('div');
+      msgEl.style.cssText = `max-width:75%;padding:12px 16px;border-radius:18px;font-size:14px;line-height:1.5;${isOwn ? 'align-self:flex-end;background:var(--accent);color:#000;margin-left:auto;border-bottom-right-radius:4px' : 'align-self:flex-start;background:var(--card);border-bottom-left-radius:4px'}`.replace(/\s+/g, ' ').trim();
+      msgEl.innerHTML = `
+        <div style="word-wrap:break-word">${escapeHtml(msg.text)}</div>
+        <div style="font-size:11px;opacity:0.6;margin-top:6px;text-align:${isOwn ? 'right' : 'left'}">${time}</div>
+      `;
+      dmMessagesEl.appendChild(msgEl);
+    });
+    
+    dmMessagesEl.scrollTop = dmMessagesEl.scrollHeight;
+  });
+  
+  // Mark as read
+  try {
+    const convRef = doc(db, 'dm_conversations', convId);
+    const convSnap = await getDoc(convRef);
+    if(convSnap.exists()) {
+      const unread = convSnap.data().unreadCount || {};
+      unread[localStorage.getItem('session')] = 0;
+      await updateDoc(convRef, { unreadCount: unread });
+    }
+  } catch(e) {}
+  
+  dmInput.value = '';
+  dmInput.focus();
+}
+
+function closeDmChat() {
+  dmChatPanel.style.display = 'none';
+  currentDmPartner = null;
+  if(dmUnsub) dmUnsub();
+  showHome();
+}
+
+async function sendDm() {
+  if(!currentDmPartner || !dmInput.value.trim()) return;
+  
+  const session = localStorage.getItem('session');
+  if(!session || session.startsWith('Guest')) {
+    await showCustomAlert('Please sign in to send direct messages.', '💬');
+    return;
+  }
+  
+  const text = dmInput.value.trim();
+  lastOwnMessage = text;
+  console.log('DM sent, saved lastOwnMessage:', lastOwnMessage);
+  const convId = [session, currentDmPartner.uid].sort().join('_');
+  const participants = [session, currentDmPartner.uid].sort();
+  
+  // /clear: delete all DM messages
+  if(text === '/clear') {
+    const confirmed = await showCustomConfirm('Delete all messages in this conversation?', '🗑️');
+    if(!confirmed) {
+      dmInput.value = '';
+      return;
+    }
+    try{
+      const msgs = await getDocs(collection(db, 'dms'));
+      const refsToDelete = [];
+      msgs.docs.forEach(d => {
+        if(d.data().conversationId === convId) {
+          refsToDelete.push(d.ref);
+        }
+      });
+      if(refsToDelete.length) await deleteDocsInBatches(refsToDelete);
+      dmInput.value = '';
+    } catch(e) {
+      console.error('/clear error', e);
+      await showCustomAlert('Failed to clear messages.', '❌');
+    }
+    return;
+  }
+  
+  try {
+    await addDoc(collection(db, 'dms'), {
+      conversationId: convId,
+      from: session,
+      to: currentDmPartner.uid,
+      text: text,
+      time: serverTimestamp()
+    });
+    
+    // Update conversation
+    const convRef = doc(db, 'dm_conversations', convId);
+    const convData = (await getDoc(convRef)).data();
+    await updateDoc(convRef, {
+      lastMessage: text,
+      lastMessageTime: serverTimestamp(),
+      [`unreadCount.${currentDmPartner.uid}`]: (convData?.unreadCount?.[currentDmPartner.uid] || 0) + 1
+    });
+    
+    dmInput.value = '';
+  } catch(err) {
+    console.error('Error sending DM:', err);
+    await showCustomAlert('Failed to send message.', '❌');
+  }
+}
+
+// Add DM button click handler using event delegation
+document.addEventListener('click', async (e) => {
+  if(e.target.classList.contains('dm-action-btn')) {
+    e.stopPropagation();
+    const uid = e.target.dataset.uid;
+    const username = e.target.dataset.username;
+    const color = e.target.dataset.color;
+    console.log('DM button clicked for', username);
+    const convId = await getOrCreateDmConversation(uid);
+    if(convId) {
+      dmPanel.style.transform = 'translateX(-100%)';
+      await new Promise(r => setTimeout(r, 300));
+      openDmChat(convId, uid, { username, color });
+    }
+  }
+});
+
+// Back from DM handler
+document.getElementById('backFromDm')?.addEventListener('click', () => {
+  closeDmChat();
+});
+
+// DM panel close handler
+document.getElementById('closeDmPanel')?.addEventListener('click', () => {
+  dmPanel.style.transform = 'translateX(-100%)';
+  dmChatPanel.style.display = 'none';
+});
+
+// Start DM button
+document.getElementById('startDmBtn')?.addEventListener('click', async () => {
+  const session = localStorage.getItem('session');
+  if(!session || session.startsWith('Guest')) {
+    await showCustomAlert('Please sign in to send direct messages.', '💬');
+    return;
+  }
+  openDMPanel();
+});
+
+// Add DM button to profile card
+const profileCardOriginalHTML = document.getElementById('profileCard')?.innerHTML;
+
+// DM Panel tabs
+document.getElementById('dmConversationsTab')?.addEventListener('click', function() {
+  this.classList.add('active');
+  document.getElementById('dmAllUsersTab').classList.remove('active');
+  document.getElementById('dmConversations').style.display = 'block';
+  document.getElementById('dmAllUsers').style.display = 'none';
+  document.getElementById('dmEmptyState').style.display = loadDmConversations() ? 'none' : 'block';
+});
+
+document.getElementById('dmAllUsersTab')?.addEventListener('click', async function() {
+  this.classList.add('active');
+  document.getElementById('dmConversationsTab').classList.remove('active');
+  document.getElementById('dmConversations').style.display = 'none';
+  document.getElementById('dmAllUsers').style.display = 'block';
+  document.getElementById('dmEmptyState').style.display = 'none';
+  await loadAllUsersForDM();
+});
+
+// Load all users for DM selector
+async function loadAllUsersForDM() {
+  const container = document.getElementById('dmAllUsers');
+  if(!container) return;
+  
+  container.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:13px;padding:30px">Loading users...</div>';
+  
+  const session = localStorage.getItem('session');
+  if(!session || session.startsWith('Guest')) {
+    container.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:13px;padding:30px">Please sign in to message users.</div>';
+    return;
+  }
+  
+  try {
+    const usersCol = collection(db, 'users');
+    const snapshot = await getDocs(usersCol);
+    
+    const users = [];
+    snapshot.forEach(doc => {
+      if(doc.id !== session && !doc.id.startsWith('Guest')) {
+        users.push({ uid: doc.id, ...doc.data() });
+      }
+    });
+    
+    users.sort((a, b) => (a.username || '').localeCompare(b.username || ''));
+    
+    if(users.length === 0) {
+      container.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:13px;padding:30px">No users found.</div>';
+      return;
+    }
+    
+    container.innerHTML = '';
+    
+    users.forEach(user => {
+      const userEl = document.createElement('div');
+      userEl.className = 'online-user';
+      userEl.innerHTML = `
+        <div style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:14px;background:${user.color || '#58a6ff'}">${(user.username || '?')[0]}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${user.username || 'Unknown'}</div>
+        </div>
+        <button class="dm-action-btn" data-uid="${user.uid}" data-username="${user.username}" data-color="${user.color || '#58a6ff'}" title="Send DM">✉️</button>
+      `;
+      container.appendChild(userEl);
+    });
+  } catch(err) {
+    console.error('Error loading users:', err);
+    container.innerHTML = '<div style="text-align:center;color:#ff6b6b;font-size:13px;padding:30px">Error loading users.</div>';
+  }
+}
+
+document.addEventListener('click', async (e) => {
+  if(e.target.closest('#profileCard') && !e.target.closest('button') && !e.target.closest('input') && !e.target.closest('textarea')) {
+    await new Promise(r => setTimeout(r, 50));
+    const card = document.getElementById('profileCard');
+    const name = document.getElementById('profileName')?.textContent;
+    if(card && name && !card.querySelector('.dm-from-profile')) {
+      const cardContent = card.querySelector('.profile-row:last-child');
+      if(cardContent) {
+        const dmBtn = document.createElement('button');
+        dmBtn.className = 'dm-from-profile';
+        dmBtn.textContent = '💬 Send Message';
+        dmBtn.style.cssText = 'width:100%;padding:10px;border-radius:8px;border:0;background:var(--accent);color:#000;font-weight:600;cursor:pointer;margin-top:10px';
+        dmBtn.onclick = async () => {
+          const session = localStorage.getItem('session');
+          if(!session || session.startsWith('Guest')) {
+            await showCustomAlert('Please sign in to send direct messages.', '💬');
+            return;
+          }
+          
+          const usersQuery = query(collection(db, 'users'), where('username', '==', name));
+          const snapshot = await getDocs(usersQuery);
+          if(snapshot.empty) return;
+          
+          const uid = snapshot.docs[0].id;
+          const userData = snapshot.docs[0].data();
+          const convId = await getOrCreateDmConversation(uid);
+          
+          if(convId) {
+            card.classList.remove('show');
+            card.setAttribute('aria-hidden', 'true');
+            dmPanel.style.transform = 'translateX(-100%)';
+            await new Promise(r => setTimeout(r, 300));
+            openDmChat(convId, uid, { username: userData.username, color: userData.color });
+          }
+        };
+        cardContent.parentElement.insertBefore(dmBtn, cardContent);
+      }
+    }
+  }
+});
+
+// Panel toggle
+document.getElementById('closeDmPanel')?.addEventListener('click', () => {
+  dmPanel.style.transform = 'translateX(-100%)';
+  dmChatPanel.style.display = 'none';
+});
+
+// Show conversations tab when opening DM panel
+async function openDMPanel() {
+  dmPanel.style.transform = 'translateX(0)';
+  document.getElementById('dmConversationsTab').classList.add('active');
+  document.getElementById('dmAllUsersTab').classList.remove('active');
+  document.getElementById('dmConversations').style.display = 'block';
+  document.getElementById('dmAllUsers').style.display = 'none';
+  loadDmConversations();
+}
+
+document.getElementById('backToDmList')?.addEventListener('click', () => {
+  dmChatPanel.style.transform = 'translateX(-100%)';
+  if(dmUnsub) dmUnsub();
+  currentDmPartner = null;
+});
+
+// Add DM button to home/chat header
+const headerDMBtn = document.createElement('button');
+headerDMBtn.id = 'openDMPanel';
+headerDMBtn.textContent = '💬';
+headerDMBtn.title = 'Direct Messages';
+document.getElementById('topRightControls')?.appendChild(headerDMBtn);
+
+document.getElementById('openDMPanel')?.addEventListener('click', () => {
+  openDMPanel();
+});
+
+// Send on Enter
+dmInput?.addEventListener('keydown', (e) => {
+  if(e.key === 'ArrowUp' && dmInput.value === '') {
+    e.preventDefault();
+    console.log('DM ArrowUp pressed, lastOwnMessage:', lastOwnMessage);
+    dmInput.value = lastOwnMessage;
+    return;
+  }
+  if(e.key === 'Enter') sendDm();
+});
+
+document.getElementById('dmSendBtn')?.addEventListener('click', sendDm);
+
+// Initialize DM button on online users
+setTimeout(addDmButtonToOnlineUsers, 1000);
+
+// Check for unread DMs periodically
+setInterval(async () => {
+  const session = localStorage.getItem('session');
+  if(!session || session.startsWith('Guest')) return;
+  
+  try {
+    const convsQuery = query(collection(db, 'dm_conversations'), where('participants', 'array-contains', session));
+    const snapshot = await getDocs(convsQuery);
+    let totalUnread = 0;
+    snapshot.forEach(doc => {
+      totalUnread += doc.data().unreadCount?.[session] || 0;
+    });
+    
+    const dmBtn = document.getElementById('openDMPanel');
+    if(dmBtn) {
+      dmBtn.innerHTML = totalUnread > 0 ? `💬<span style="position:absolute;top:-2px;right:-2px;background:#ff6b6b;color:#000;font-size:9px;padding:2px 5px;border-radius:10px;font-weight:700">${totalUnread}</span>` : '💬';
+      dmBtn.style.position = 'relative';
+    }
+  } catch(e) {}
+}, 30000);
 </script>
 </body>
 </html>
