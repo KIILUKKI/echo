@@ -4,6 +4,7 @@ Bugs:
 - Descin nimen väri on väärä.
 - Super admin listta ei pysty scrollaan.
 - Scroll down nappi jää pälle lobbyyn.
+- viestin (dm) ilmoitus napin vierestä ei lähde, vaikka lukisi viestin.
 
 
 Stage 2
