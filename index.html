@@ -85,7 +85,7 @@
  #homeCenter{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative;padding:18px;overflow:hidden}
  #homeCenter::before{content:"";position:absolute;inset:0;z-index:0;background:url(images/lobby_bg.jpg) center/cover no-repeat fixed;pointer-events:none}
   #homeLogo{position:absolute;top:-50px;left:48%;transform:translateX(-50%);width:80%;max-width:920px;z-index:2;pointer-events:none}
-  #clockWidget{position:absolute;top:-42px;left:calc(48% - 200px);font-family:'Clock Classic',Clock-Classic,Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial,sans-serif;font-size:42px;font-weight:300;color:var(--text);z-index:3;pointer-events:none;text-shadow:0 2px 10px rgba(0,0,0,.5);letter-spacing:2px}
+   #clockWidget{position:absolute;top:-42px;left:calc(48% - 200px);font-family:'Clock Classic',Clock-Classic,Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial,sans-serif;font-size:42px;font-weight:300;color:var(--text);z-index:3;pointer-events:none;text-shadow:0 2px 10px rgba(0,0,0,.5);letter-spacing:2px}
   #homeCenter>*:not(#homeLogo){position:relative;z-index:1}
 
  /* Buttons */
@@ -286,14 +286,16 @@
   #roleEmojiTabs::-webkit-scrollbar,#emojiPicker .emoji-tabs::-webkit-scrollbar{height:4px}
   #roleEmojiTabs::-webkit-scrollbar-thumb,#emojiPicker .emoji-tabs::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
   
-  /* Role Color Buttons */
-  .role-color-btn:hover{transform:scale(1.1)}
+   /* Role Color Buttons */
+   .role-color-btn:hover{transform:scale(1.1)}
 
- /* Profile Card */
- .profile-row{display:flex;justify-content:space-between;margin-bottom:6px}
- .profile-row>div:first-child{color:var(--muted)}
+   /* Super Admin Lists Scrollbar */
+   #superAdminRoomsList::-webkit-scrollbar,#superAdminUsersList::-webkit-scrollbar,#superAdminLocalBansList::-webkit-scrollbar{width:8px}
+   #superAdminRoomsList::-webkit-scrollbar-track,#superAdminUsersList::-webkit-scrollbar-track,#superAdminLocalBansList::-webkit-scrollbar-track{background:transparent}
+   #superAdminRoomsList::-webkit-scrollbar-thumb,#superAdminUsersList::-webkit-scrollbar-thumb,#superAdminLocalBansList::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px}
+   #superAdminRoomsList::-webkit-scrollbar-thumb:hover,#superAdminUsersList::-webkit-scrollbar-thumb:hover,#superAdminLocalBansList::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.25)}
 
- /* Sidebar */
+   /* Sidebar */
  .sidebar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:700}
  .online-users-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-weight:700;font-size:14px}
 
@@ -454,53 +456,55 @@
   </div>
 
   <!-- Super Admin Modal -->
-  <div id="superAdminModal" class="modal" style="display:none;min-width:500px;max-width:600px;width:550px;height:550px;z-index:200;flex-direction:column">
-    <div style="flex-shrink:0">
-    <h3 style="display:flex;align-items:center;gap:10px">
-      <span style="font-size:20px">⚠️</span> Super Admin
-      <span id="superAdminBadge" style="font-size:11px;background:#ff6b6b;color:#000;padding:2px 8px;border-radius:4px;font-weight:700">ADMIN</span>
-    </h3>
-    <div id="superAdminAuth" style="display:flex;flex-direction:column;gap:10px">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:5px">Enter your Super Admin password to access admin controls.</p>
-      <input id="superAdminPassword" type="password" placeholder="Super Admin Password" style="padding:12px;font-size:14px">
-      <div class="modal-btns">
-        <button id="cancelSuperAdmin" class="modal-btn modal-btn-cancel">Cancel</button>
-        <button id="authSuperAdmin" class="modal-btn modal-btn-confirm">Authenticate</button>
-      </div>
-      <div id="superAdminMsg" class="modal-msg"></div>
-    </div>
+   <div id="superAdminModal" class="modal" style="display:none;min-width:480px;max-width:550px;width:520px;height:500px;z-index:200;flex-direction:column">
+     <div style="flex-shrink:0">
+     <h3 style="display:flex;align-items:center;gap:8px;font-size:16px">
+       <span style="font-size:16px">⚠️</span> Super Admin
+       <span id="superAdminBadge" style="font-size:10px;background:#ff6b6b;color:#000;padding:2px 6px;border-radius:4px;font-weight:700">ADMIN</span>
+     </h3>
+   <div id="superAdminAuth" style="display:flex;flex-direction:column;gap:8px">
+       <p style="font-size:12px;color:var(--muted);margin-bottom:4px">Enter Super Admin password:</p>
+       <input id="superAdminPassword" type="password" placeholder="Password" style="padding:10px;font-size:13px">
+       <div class="modal-btns">
+         <button id="cancelSuperAdmin" class="modal-btn modal-btn-cancel">Cancel</button>
+         <button id="authSuperAdmin" class="modal-btn modal-btn-confirm">Auth</button>
+       </div>
+       <div id="superAdminMsg" class="modal-msg"></div>
+     </div>
     </div>
     <div id="superAdminPanel" style="display:none;flex-direction:column;flex:1;min-height:0;overflow:hidden">
       <!-- Stats Bar -->
-      <div id="superAdminStats" style="display:flex;gap:15px;margin-bottom:15px;padding:12px;background:var(--card);border-radius:8px;flex-shrink:0">
+      <div id="superAdminStats" style="display:flex;gap:15px;margin-bottom:10px;padding:8px;background:var(--card);border-radius:6px;flex-shrink:0">
         <div style="flex:1;text-align:center">
-          <div id="statRooms" style="font-size:22px;font-weight:700;color:var(--accent)">-</div>
-          <div style="font-size:11px;color:var(--muted)">Rooms</div>
+          <div id="statRooms" style="font-size:18px;font-weight:700;color:var(--accent)">-</div>
+          <div style="font-size:9px;color:var(--muted)">Rooms</div>
         </div>
         <div style="flex:1;text-align:center">
-          <div id="statUsers" style="font-size:22px;font-weight:700;color:#51cf66">-</div>
-          <div style="font-size:11px;color:var(--muted)">Users</div>
+          <div id="statUsers" style="font-size:18px;font-weight:700;color:#51cf66">-</div>
+          <div style="font-size:9px;color:var(--muted)">Users</div>
         </div>
         <div style="flex:1;text-align:center">
-          <div id="statOnline" style="font-size:22px;font-weight:700;color:#ffd43b">-</div>
-          <div style="font-size:11px;color:var(--muted)">Online</div>
+          <div id="statOnline" style="font-size:18px;font-weight:700;color:#ffd43b">-</div>
+          <div style="font-size:9px;color:var(--muted)">Online</div>
         </div>
       </div>
-      <!-- Search -->
-      <input id="superAdminSearch" type="text" placeholder="Search rooms or users..." style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:var(--card);color:var(--text);margin-bottom:12px;box-sizing:border-box;flex-shrink:0">
-      <!-- Tabs -->
-      <div style="display:flex;gap:8px;margin-bottom:15px;flex-shrink:0">
-        <button id="superAdminRoomsTab" class="modal-btn" style="flex:1;padding:10px;border-radius:8px;border:0;background:var(--card);color:var(--text);font-weight:600;cursor:pointer">🏠 Rooms</button>
-        <button id="superAdminUsersTab" class="modal-btn" style="flex:1;padding:10px;border-radius:8px;border:0;background:transparent;color:var(--text);font-weight:600;cursor:pointer">👥 Users</button>
-      </div>
-      <!-- Lists -->
-      <div id="superAdminRoomsList" style="flex:1;overflow-y:auto;min-height:0"></div>
-      <div id="superAdminUsersList" style="display:none;flex:1;overflow-y:auto;min-height:0"></div>
-      <!-- Actions -->
-      <div style="display:flex;gap:10px;margin-top:15px;padding-top:15px;border-top:1px solid rgba(255,255,255,0.1);flex-shrink:0">
-        <button id="superAdminDeleteAllRooms" style="flex:1;padding:10px;border-radius:8px;border:0;background:rgba(255,107,107,0.2);color:#ff6b6b;font-weight:600;cursor:pointer;font-size:13px">💥 Delete All Rooms</button>
-        <button id="closeSuperAdmin" class="modal-btn modal-btn-cancel" style="padding:10px 20px">Close</button>
-      </div>
+        <!-- Search -->
+       <input id="superAdminSearch" type="text" placeholder="Search..." style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:var(--card);color:var(--text);margin-bottom:8px;box-sizing:border-box;flex-shrink:0;font-size:12px">
+         <!-- Tabs -->
+         <div style="display:flex;gap:8px;margin-bottom:8px;flex-shrink:0">
+           <button id="superAdminRoomsTab" class="modal-btn" style="flex:1;padding:6px;border-radius:6px;border:0;background:var(--card);color:var(--text);font-weight:600;cursor:pointer;font-size:11px">🏠</button>
+           <button id="superAdminUsersTab" class="modal-btn" style="flex:1;padding:6px;border-radius:6px;border:0;background:transparent;color:var(--text);font-weight:600;cursor:pointer;font-size:11px">👥</button>
+         </div>
+        <!-- Lists Container -->
+        <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0;max-height:380px">
+          <div id="superAdminRoomsList" style="flex:1;overflow-y:auto;min-height:0"></div>
+          <div id="superAdminUsersList" style="display:none;flex:1;overflow-y:auto;min-height:0"></div>
+        </div>
+       <!-- Actions -->
+       <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.1);flex-shrink:0">
+         <button id="superAdminDeleteAllRooms" style="flex:1;padding:6px;border-radius:6px;border:0;background:rgba(255,107,107,0.2);color:#ff6b6b;font-weight:600;cursor:pointer;font-size:11px">💥</button>
+         <button id="closeSuperAdmin" class="modal-btn modal-btn-cancel" style="padding:6px 12px;font-size:11px">Close</button>
+       </div>
     </div>
   </div>
 
@@ -1093,11 +1097,11 @@ function showMain(){
   updateOpenLobbyBtnVisibility();
  }
 
-/* restore session */
-if(localStorage.getItem('session')) showHome();
-else showLogin();
+ /* restore session */
+ if(localStorage.getItem('session')) showHome();
+ else showLogin();
 
-/* HOW TO click changed to open how.html in a new tab */
+ /* HOW TO click changed to open how.html in a new tab */
 howBtn.addEventListener('click', (e) => { e.stopPropagation(); window.open('how.html','_blank'); });
 document.getElementById('closeHow').addEventListener('click', (e) => {
   e.stopPropagation();
@@ -1738,15 +1742,15 @@ async function joinRoom(r){
 
   const roomData = snap.data();
 
-  // Check if user is banned (by UID)
-  const currentUID = localStorage.getItem('session') || '';
-  const bannedUsers = roomData.bannedUsers || [];
-  if(bannedUsers.includes(currentUID)) {
-    await showCustomAlert('You are banned from this room.', '🚫');
-    return;
-  }
+   // Check if user is banned (by UID)
+   const currentUID = localStorage.getItem('session') || '';
+   const bannedUsers = roomData.bannedUsers || [];
+   if(bannedUsers.includes(currentUID)) {
+     await showCustomAlert('You are banned from this room.', '🚫');
+      return;
+    }
 
-  // Only ask for password if room has a password set
+    // Only ask for password if room has a password set
   if(roomData.password) {
     const pass = await showCustomPrompt('Enter room password:', '', '🔐');
     if(pass !== roomData.password) { await showCustomAlert('Wrong room password', '❌'); return; }
@@ -1845,8 +1849,8 @@ document.addEventListener('click', async (e) => {
 
 /* enterRoom performs the actual subscription and view switch */
 async function enterRoom(r){
-  showMain();
-  room = r;
+   showMain();
+   room = r;
   roomName.textContent = '# ' + r;
 
   // Update user activity with new room
@@ -1866,14 +1870,14 @@ async function enterRoom(r){
       } else {
         roomAdmins = [];
       }
-      // Check if current user is admin (in the roomAdmins array) using UID
-      const currentUID = localStorage.getItem('session') || '';
-      isAdmin = roomAdmins.includes(currentUID);
-      // Show/hide edit description button
-      if(editDescriptionBtn) {
-        editDescriptionBtn.style.display = isAdmin ? 'inline-block' : 'none';
+       // Check if current user is admin (in the roomAdmins array) using UID
+        const currentUID = localStorage.getItem('session') || '';
+        isAdmin = roomAdmins.includes(currentUID);
+        // Show/hide edit description button
+        if(editDescriptionBtn) {
+          editDescriptionBtn.style.display = isAdmin ? 'inline-block' : 'none';
+        }
       }
-    }
   } catch(e) {
     console.error('Error fetching room admin:', e);
   }
@@ -2238,9 +2242,9 @@ function makeMessageElement(id, m){
         if(us.exists()) {
           const ud = us.data();
           const role = ud.role || null;
-          userCache.set(userIdentifier, { ...(cached || {}), role, color: ud.color || m.color });
+          userCache.set(userIdentifier, { ...(cached || {}), role, color: ud.color || m.color, roleName: ud.roleName, roleIcon: ud.roleIcon, roleColor: ud.roleColor });
           // Update role badge if role exists (admins can have both admin and role badges)
-          if(role && ROLES[role]) {
+          if(role) {
             const senderEl = el.querySelector('.msg-sender');
             if(senderEl && el.isConnected) {
               // Remove any existing role badges first
@@ -2249,7 +2253,7 @@ function makeMessageElement(id, m){
               // Add the role badge after the sender name
               const roleBadgeEl = document.createElement('span');
               roleBadgeEl.dataset.roleBadge = 'true';
-              roleBadgeEl.innerHTML = getRoleBadge(role);
+              roleBadgeEl.innerHTML = getRoleBadge(role, userIdentifier);
               senderEl.insertAdjacentElement('afterend', roleBadgeEl);
             }
           }
@@ -2618,26 +2622,26 @@ msg.addEventListener('keydown', async (e)=>{
   const textRaw = msg.value.trim(); msg.value = ''; if(!textRaw) return;
   lastOwnMessage = textRaw;
   console.log('Message sent, saved lastOwnMessage:', lastOwnMessage);
-  if(!room){ await showCustomAlert('You are not in a room', '🚪'); return; }
+   if(!room){ await showCustomAlert('You are not in a room', '🚪'); return; }
 
-  // Check if user is banned before sending (by UID)
-  const currentUID = localStorage.getItem('session') || '';
-  try {
-    const roomRef = doc(db, 'rooms', room);
-    const roomSnap = await getDoc(roomRef);
-    if(roomSnap.exists()) {
-      const roomData = roomSnap.data();
-      const bannedUsers = roomData.bannedUsers || [];
-      if(bannedUsers.includes(currentUID)) {
-        await showCustomAlert('You are banned from this room.', '🚫');
-        return;
+   // Check if user is banned before sending (by UID)
+    const currentUID = localStorage.getItem('session') || '';
+    try {
+      const roomRef = doc(db, 'rooms', room);
+      const roomSnap = await getDoc(roomRef);
+      if(roomSnap.exists()) {
+        const roomData = roomSnap.data();
+        const bannedUsers = roomData.bannedUsers || [];
+        if(bannedUsers.includes(currentUID)) {
+          await showCustomAlert('You are banned from this room.', '🚫');
+          return;
+        }
       }
+    } catch(e) {
+      console.error('Error checking ban status:', e);
     }
-  } catch(e) {
-    console.error('Error checking ban status:', e);
-  }
 
-  deleteDoc(doc(db,'rooms',room,'typing',localStorage.getItem('nick')||nick)).catch(()=>{});
+   deleteDoc(doc(db,'rooms',room,'typing',localStorage.getItem('nick')||nick)).catch(()=>{});
 
   // Commands handling
   if(textRaw.startsWith('/')){
@@ -2698,23 +2702,23 @@ async function handleCommand(cmdText){
       "/tableflip — Table flip effect.",
       "/shrug — ¯\\_(ツ)_/¯",
       "/clear — Delete all messages (Admin only).",
-      "/delete (or /delet) — Delete the room (Admin only).",
-      "/giveadmin <username> — Give admin rights to a user (Admin only).",
-      "/ban <username> — Ban a user from the room (Admin only).",
-      "/unban <username> — Unban a user from the room (Admin only).",
-      "/banned — List banned users (Admin only).",
-      "/roles — Open the role selector to choose a role badge.",
-      "",
-      "Room Admin:",
-      "- The user who creates a room becomes the Admin",
-      "- Admin can delete the room and clear all messages",
-      "- Admin can give admin rights to other users",
-      "- Admin can ban users from the room",
-      "- Admin has 👑 ADMIN badge next to their name",
-      "",
-      "Roles:",
-      "- Use /roles to choose a role badge for your profile",
-      "- Roles are displayed next to your name in chat"
+       "/delete (or /delet) — Delete the room (Admin only).",
+       "/giveadmin <username> — Give admin rights to a user (Admin only).",
+       "/ban <username> — Ban a user from the room (Admin only).",
+       "/unban <username> — Unban a user from the room (Admin only).",
+       "/banned — List banned users (Admin only).",
+       "/roles — Open the role selector to choose a role badge.",
+       "",
+       "Room Admin:",
+       "- The user who creates a room becomes the Admin",
+       "- Admin can delete the room and clear all messages",
+       "- Admin can give admin rights to other users",
+       "- Admin can ban users from the room",
+       "- Admin has 👑 ADMIN badge next to their name",
+       "",
+       "Roles:",
+       "- Use /roles to choose a role badge for your profile",
+       "- Roles are displayed next to your name in chat"
     ].join("\n\n");
     await showCustomAlert(helpText, '📖');
     return;
@@ -3028,40 +3032,40 @@ async function handleCommand(cmdText){
     return;
   }
 
-  // /banned: List banned users (Admin only)
-  if(c === '/banned'){
-    if(!isAdmin) {
-      await showCustomAlert('Only room admins can view banned users.', '🔒');
+    // /banned: List banned users (Admin only)
+    if(c === '/banned'){
+      if(!isAdmin) {
+        await showCustomAlert('Only room admins can view banned users.', '🔒');
+        return;
+      }
+      
+      try {
+        const roomRef = doc(db, 'rooms', room);
+        const roomSnap = await getDoc(roomRef);
+        if(!roomSnap.exists()) {
+          await showCustomAlert('Room not found.', '🔍');
+          return;
+        }
+        
+        const roomData = roomSnap.data();
+        const bannedUsers = roomData.bannedUsers || [];
+        
+        if(bannedUsers.length === 0) {
+          await showCustomAlert('No banned users in this room.', '✅');
+          return;
+        }
+        
+        await showCustomAlert('Banned users:\n\n' + bannedUsers.join('\n'), '🚫');
+        
+      } catch(e) {
+        console.error('/banned error', e);
+        await showCustomAlert('Error fetching banned users: ' + (e.message || String(e)), '❌');
+       }
       return;
     }
-    
-    try {
-      const roomRef = doc(db, 'rooms', room);
-      const roomSnap = await getDoc(roomRef);
-      if(!roomSnap.exists()) {
-        await showCustomAlert('Room not found.', '🔍');
-        return;
-      }
-      
-      const roomData = roomSnap.data();
-      const bannedUsers = roomData.bannedUsers || [];
-      
-      if(bannedUsers.length === 0) {
-        await showCustomAlert('No banned users in this room.', '✅');
-        return;
-      }
-      
-      await showCustomAlert('Banned users:\n\n' + bannedUsers.join('\n'), '🚫');
-      
-    } catch(e) {
-      console.error('/banned error', e);
-      await showCustomAlert('Error fetching banned users: ' + (e.message || String(e)), '❌');
-    }
-    return;
-  }
 
-  // unknown command -> echo to system
-  await addDoc(collection(db,'rooms',room,'messages'), {name:'System', text:`Unknown command: ${cmdText}`, color:'#888', time:serverTimestamp()});
+    // unknown command -> echo to system
+   await addDoc(collection(db,'rooms',room,'messages'), {name:'System', text:`Unknown command: ${cmdText}`, color:'#888', time:serverTimestamp()});
 }
 
 /* Enhanced Emoji Picker with Categories */
@@ -3327,24 +3331,24 @@ function displayGifs(gifs){
 async function sendGifMessage(gifUrl){
   if(!room || !nick) return;
 
-  // Check if user is banned before sending (by UID)
-  const currentUID = localStorage.getItem('session') || '';
-  try {
-    const roomRef = doc(db, 'rooms', room);
-    const roomSnap = await getDoc(roomRef);
-    if(roomSnap.exists()) {
-      const roomData = roomSnap.data();
-      const bannedUsers = roomData.bannedUsers || [];
-      if(bannedUsers.includes(currentUID)) {
-        await showCustomAlert('You are banned from this room.', '🚫');
-        return;
+   // Check if user is banned before sending (by UID)
+    const currentUID = localStorage.getItem('session') || '';
+    try {
+      const roomRef = doc(db, 'rooms', room);
+      const roomSnap = await getDoc(roomRef);
+      if(roomSnap.exists()) {
+        const roomData = roomSnap.data();
+        const bannedUsers = roomData.bannedUsers || [];
+        if(bannedUsers.includes(currentUID)) {
+          await showCustomAlert('You are banned from this room.', '🚫');
+          return;
+        }
       }
+    } catch(e) {
+      console.error('Error checking ban status:', e);
     }
-  } catch(e) {
-    console.error('Error checking ban status:', e);
-  }
 
-  // Close picker
+   // Close picker
   gifPicker.classList.remove('show');
   gifSearch.value = '';
   currentGifCategory = 'trending';
@@ -3647,17 +3651,17 @@ loginBtn.addEventListener('click', async (e) => {
     }
 
     // LOGIN
-    const data = snap.data();
-    if(data.passwordHash === passHash){
-      localStorage.setItem('session', uid);
-      localStorage.setItem('nick', data.username || username);
-      if (data.color) localStorage.setItem('nickColor', data.color);
+     const data = snap.data();
+     if(data.passwordHash === passHash){
+       localStorage.setItem('session', uid);
+       localStorage.setItem('nick', data.username || username);
+       if (data.color) localStorage.setItem('nickColor', data.color);
 
-      // Update lastSeen on login
-      updateUserActivity();
+        // Update lastSeen on login
+       updateUserActivity();
 
-      loginMsg.textContent = 'Login successful ✅';
-      showHome();
+       loginMsg.textContent = 'Login successful ✅';
+       showHome();
     } else {
       loginMsg.textContent = 'Wrong password ❌';
     }
@@ -3756,14 +3760,14 @@ registerBtn.addEventListener('click', async (e) => {
     });
 
     localStorage.setItem('session', uid);
-    localStorage.setItem('nick', username);
-    localStorage.setItem('nickColor', nickColor || '#58a6ff');
+     localStorage.setItem('nick', username);
+     localStorage.setItem('nickColor', nickColor || '#58a6ff');
 
-    // Update lastSeen on registration
-    updateUserActivity();
+      // Update lastSeen on registration
+     updateUserActivity();
 
-    loginMsg.textContent = 'Registered and logged in! ✅';
-    showHome();
+     loginMsg.textContent = 'Registered and logged in! ✅';
+     showHome();
   } catch (err) {
     console.error(err);
     loginMsg.textContent = 'Error: ' + (err.message || String(err));
@@ -3791,11 +3795,11 @@ demoBtn.addEventListener('click', async (e) => {
     return;
   }
   
-  localStorage.setItem('session', g);
-  localStorage.setItem('nick', g);
-  const guestColor = getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim() || '#9aa0a6';
-  localStorage.setItem('nickColor', guestColor);
-  showHome();
+   localStorage.setItem('session', g);
+   localStorage.setItem('nick', g);
+   const guestColor = getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim() || '#9aa0a6';
+   localStorage.setItem('nickColor', guestColor);
+   showHome();
 });
 
 /* Ensure rooms are loaded (real-time) */
@@ -4604,24 +4608,24 @@ async function loadRoomsForSuperAdmin(container, filter = '') {
 }
 
 function renderRooms(container, filter = '') {
-  const filtered = allRoomsData.filter(r => r.id.toLowerCase().includes(filter.toLowerCase()));
-  container.innerHTML = '';
-  if(filtered.length === 0) {
-    container.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:30px">' + (filter ? 'No rooms match your search' : 'No rooms found') + '</div>';
-    return;
-  }
-  filtered.forEach(room => {
-    const roomEl = document.createElement('div');
-    roomEl.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px;border-radius:8px;margin-bottom:8px;background:var(--card);transition:background 150ms';
-    roomEl.innerHTML = `
-      <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#845ef7);display:flex;align-items:center;justify-content:center;font-size:18px">#</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:14px">${room.id}</div>
-        <div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${room.description || 'No description'}</div>
-        ${room.password ? '<span style="font-size:10px;color:#ffd43b;margin-top:2px;display:block">🔒 Password protected</span>' : ''}
-      </div>
-      <button class="delete-room-btn" style="padding:8px 14px;border-radius:8px;border:0;background:rgba(255,107,107,0.15);color:#ff6b6b;font-weight:600;cursor:pointer;font-size:12px;transition:all 150ms">Delete</button>
-    `;
+   const filtered = allRoomsData.filter(r => r.id.toLowerCase().includes(filter.toLowerCase()));
+   container.innerHTML = '';
+   if(filtered.length === 0) {
+     container.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:30px;display:flex;align-items:center;justify-content:center;min-height:100px">' + (filter ? 'No rooms match your search' : 'No rooms found') + '</div>';
+     return;
+   }
+   filtered.forEach(room => {
+     const roomEl = document.createElement('div');
+     roomEl.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;margin-bottom:4px;background:var(--card);transition:background 150ms';
+     roomEl.innerHTML = `
+       <div style="width:32px;height:32px;border-radius:6px;background:linear-gradient(135deg,var(--accent),#845ef7);display:flex;align-items:center;justify-content:center;font-size:14px">#</div>
+       <div style="flex:1;min-width:0">
+         <div style="font-weight:600;font-size:12px">${room.id}</div>
+         <div style="font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${room.description || 'No description'}</div>
+         ${room.password ? '<span style="font-size:9px;color:#ffd43b;margin-top:2px;display:block">🔒</span>' : ''}
+       </div>
+       <button class="delete-room-btn" style="padding:4px 10px;border-radius:4px;border:0;background:rgba(255,107,107,0.15);color:#ff6b6b;font-weight:600;cursor:pointer;font-size:10px;transition:all 150ms">✕</button>
+     `;
     roomEl.onmouseenter = () => roomEl.style.background = 'rgba(255,255,255,0.05)';
     roomEl.onmouseleave = () => roomEl.style.background = 'var(--card)';
     roomEl.querySelector('.delete-room-btn').onclick = async (e) => {
@@ -4661,26 +4665,26 @@ function renderUsers(container, filter = '') {
   );
   container.innerHTML = '';
   if(filtered.length === 0) {
-    container.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:30px">' + (filter ? 'No users match your search' : 'No users found') + '</div>';
+    container.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:30px;display:flex;align-items:center;justify-content:center;min-height:100px">' + (filter ? 'No users match your search' : 'No users found') + '</div>';
     return;
   }
   filtered.forEach(user => {
     const userEl = document.createElement('div');
-    userEl.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px;border-radius:8px;margin-bottom:8px;background:var(--card);transition:background 150ms';
+    userEl.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;margin-bottom:4px;background:var(--card);transition:background 150ms';
     userEl.innerHTML = `
       <div style="position:relative">
-        <div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:15px;background:${user.color || '#58a6ff'}">${(user.username || '?')[0]}</div>
-        <div style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;border-radius:50%;background:${user.isOnline ? '#3fb950' : 'var(--muted)'};border:2px solid var(--panel)"></div>
+        <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:13px;background:${user.color || '#58a6ff'}">${(user.username || '?')[0]}</div>
+        <div style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;background:${user.isOnline ? '#3fb950' : 'var(--muted)'};border:2px solid var(--panel)"></div>
       </div>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px">
-          ${user.username || 'Unknown'}
-          ${user.isOnline ? '<span style="font-size:10px;background:#3fb950;color:#000;padding:1px 6px;border-radius:4px;font-weight:600">Online</span>' : ''}
-        </div>
-        <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${user.id}</div>
-      </div>
-      <button class="delete-user-btn" style="padding:8px 14px;border-radius:8px;border:0;background:rgba(255,107,107,0.15);color:#ff6b6b;font-weight:600;cursor:pointer;font-size:12px;transition:all 150ms">Delete</button>
-    `;
+       <div style="flex:1;min-width:0">
+         <div style="font-weight:600;font-size:12px;display:flex;align-items:center;gap:6px">
+           ${user.username || 'Unknown'}
+           ${user.isOnline ? '<span style="font-size:9px;background:#3fb950;color:#000;padding:1px 5px;border-radius:3px;font-weight:600">Online</span>' : ''}
+         </div>
+         <div style="font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${user.id}</div>
+       </div>
+       <button class="delete-user-btn" style="padding:4px 10px;border-radius:4px;border:0;background:rgba(255,107,107,0.15);color:#ff6b6b;font-weight:600;cursor:pointer;font-size:10px;transition:all 150ms">✕</button>
+     `;
     userEl.onmouseenter = () => userEl.style.background = 'rgba(255,255,255,0.05)';
     userEl.onmouseleave = () => userEl.style.background = 'var(--card)';
     userEl.querySelector('.delete-user-btn').onclick = async (e) => {
@@ -4804,11 +4808,13 @@ if(document.getElementById('superAdminUsersTab')) {
 const superAdminSearch = document.getElementById('superAdminSearch');
 if(superAdminSearch) {
   superAdminSearch.addEventListener('input', (e) => {
-    const activeTab = document.getElementById('superAdminUsersList').style.display !== 'none' ? 'users' : 'rooms';
+    const usersList = document.getElementById('superAdminUsersList');
+    const roomsList = document.getElementById('superAdminRoomsList');
+    const activeTab = usersList.style.display !== 'none' ? 'users' : 'rooms';
     if(activeTab === 'rooms') {
-      renderRooms(document.getElementById('superAdminRoomsList'), e.target.value);
-    } else {
-      renderUsers(document.getElementById('superAdminUsersList'), e.target.value);
+      renderRooms(roomsList, e.target.value);
+    } else if(activeTab === 'users') {
+      renderUsers(usersList, e.target.value);
     }
   });
 }
